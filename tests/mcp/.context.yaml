@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-02-14T15:56:34.261Z
-fingerprint: 49b639ce
+last_updated: 2026-02-18T18:20:49.469Z
+fingerprint: 65a55d29
 scope: tests/mcp
 summary: MCP server integration.
 maintenance: |-

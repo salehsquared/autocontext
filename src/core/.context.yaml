@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-02-14T15:56:34.157Z
-fingerprint: 9345d269
+last_updated: 2026-02-18T18:20:49.431Z
+fingerprint: c907e213
 scope: src/core
 summary: Core functionality.
 maintenance: |-
@@ -15,6 +15,10 @@ exports:
   - type FreshnessState
   - "async function checkFreshness( dirPath: string, storedFingerprint: string | undefined, ignorePatterns: string[] =
     [], ): Promise<"
+  - interface HealthSummary
+  - interface EvidenceEntry
+  - interface AggregateEvidenceResult
+  - "async function aggregateEvidence(rootPath: string): Promise<AggregateEvidenceResult>"
   - AGENTS_FILENAME
   - "async function readAgentsMd(rootPath: string): Promise<string | null>"
   - "async function writeAgentsMd(rootPath: string, content: string): Promise<void>"
@@ -34,14 +38,15 @@ exports:
   - type InterfaceEntry
   - type DecisionEntry
   - type SubdirectoryEntry
-  - type ProjectMeta
-  - type StructureEntry
-  - type Evidence
-  - CONTEXT_FILENAME
 dependencies:
   internal:
     - ../generator/markdown.js
+    - ../utils/config.js
+    - ../utils/scan-options.js
+    - ../utils/tokens.js
+    - ./scanner.js
     - ./schema.js
+    - ./writer.js
 derived_fields:
   - version
   - last_updated

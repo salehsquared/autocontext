@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-02-14T15:56:34.251Z
-fingerprint: 94d3a73f
+last_updated: 2026-02-18T18:20:49.443Z
+fingerprint: e9b1ef0c
 scope: src
 summary: Source code.
 maintenance: |-
@@ -44,6 +44,7 @@ dependencies:
     - ./commands/bench.js
     - ./commands/config.js
     - ./commands/doctor.js
+    - ./commands/health.js
     - ./commands/ignore.js
     - ./commands/init.js
     - ./commands/regen.js

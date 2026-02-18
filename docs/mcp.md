@@ -1,6 +1,6 @@
 # MCP Contract
 
-dotcontext exposes three tools via [Model Context Protocol](https://modelcontextprotocol.io) (stdio transport). This document defines their exact request/response shapes.
+dotcontext exposes four tools via [Model Context Protocol](https://modelcontextprotocol.io) (stdio transport). This document defines their exact request/response shapes.
 
 ## Tools Overview
 
@@ -9,8 +9,11 @@ dotcontext exposes three tools via [Model Context Protocol](https://modelcontext
 | `list_contexts` | List all tracked directories with staleness status | First call — discover what scopes exist |
 | `check_freshness` | Check if a specific context is fresh, stale, or missing | Before relying on a context — verify it's current |
 | `query_context` | Retrieve context content with optional field filtering | Read the actual context data for a scope |
+| `aggregate_evidence` | Aggregate code health evidence across all scopes | Get project-wide test, typecheck, lint, and coverage summary |
 
-**Recommended call sequence:** `list_contexts` → `check_freshness` → `query_context`
+**Recommended call sequences:**
+- Content: `list_contexts` → `check_freshness` → `query_context`
+- Health: `list_contexts` → `aggregate_evidence`
 
 ---
 
@@ -236,11 +239,105 @@ Entries are sorted lexicographically by scope. Directories with unsupported sche
 
 ---
 
+## `aggregate_evidence`
+
+Aggregate code health evidence across all tracked scopes. Returns per-scope evidence entries and a project-wide health summary.
+
+### Input
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `path` | `string` | no | Project root path override |
+
+### Success response
+
+```json
+{
+  "root": "/path/to/project",
+  "total_scopes": 6,
+  "scopes_with_evidence": 4,
+  "health": {
+    "tests": {
+      "passing": 3,
+      "failing": 1,
+      "unknown": 0,
+      "total_test_count": 342,
+      "failing_scopes": ["src/auth"]
+    },
+    "typecheck": { "clean": 3, "errors": 0, "unknown": 1 },
+    "lint": { "clean": 2, "errors": 1, "unknown": 1 },
+    "coverage": {
+      "scopes_reported": 3,
+      "average_percent": 85.3,
+      "min_percent": 62.1,
+      "max_percent": 98.0
+    }
+  },
+  "scopes": [
+    { "scope": ".", "has_evidence": true, "evidence": { "collected_at": "2026-02-18T00:00:00Z", "test_status": "passing", "test_count": 120 } },
+    { "scope": "src", "has_evidence": false },
+    { "scope": "src/auth", "has_evidence": true, "evidence": { "collected_at": "2026-02-18T00:00:00Z", "test_status": "failing", "test_count": 45, "failing_tests": ["auth.login"] } }
+  ],
+  "scope_errors": []
+}
+```
+
+`total_scopes` is the number of directories after min-token filtering (same semantics as `total_directories` in `list_contexts`). All filtered directories appear in `scopes`, whether or not they have a `.context.yaml` or evidence.
+
+**`total_test_count` caveat:** Raw sum across all reporting scopes. May double-count when a parent scope's test runner includes child-scope tests. No deduplication is attempted.
+
+**Coverage average:** Computed only over scopes that report `coverage_percent`. Scopes without coverage are excluded from the average.
+
+**Stale contexts:** Evidence is included in the rollup regardless of fingerprint freshness. Staleness means source files changed, not that evidence is invalid.
+
+### Scope errors response
+
+When individual scopes have corrupt or unsupported-version `.context.yaml` files:
+
+```json
+{
+  "root": "/path/to/project",
+  "total_scopes": 3,
+  "scopes_with_evidence": 1,
+  "health": { "..." : "..." },
+  "scopes": [
+    { "scope": ".", "has_evidence": true, "evidence": { "..." : "..." } },
+    { "scope": "lib", "has_evidence": false },
+    { "scope": "src", "has_evidence": false }
+  ],
+  "scope_errors": [
+    { "scope": "src", "error": "Invalid or corrupt .context.yaml at scope \"src\"" }
+  ]
+}
+```
+
+Per-scope errors do not prevent aggregation of valid scopes.
+
+### Error response (global failure)
+
+```json
+{
+  "root": "/nonexistent/path",
+  "total_scopes": 0,
+  "scopes_with_evidence": 0,
+  "health": { "tests": { "passing": 0, "failing": 0, "unknown": 0, "total_test_count": 0, "failing_scopes": [] }, "typecheck": { "clean": 0, "errors": 0, "unknown": 0 }, "lint": { "clean": 0, "errors": 0, "unknown": 0 }, "coverage": { "scopes_reported": 0, "average_percent": null, "min_percent": null, "max_percent": null } },
+  "scopes": [],
+  "scope_errors": [],
+  "error": "Failed to scan project at \"/nonexistent/path\""
+}
+```
+
+### `isError` semantics
+
+`isError: !!result.error` — only on global scan failure. Per-scope errors in `scope_errors` are NOT tool-level errors.
+
+---
+
 ## Common Patterns
 
 ### Path override
 
-All three tools accept an optional `path` parameter that overrides the default project root configured when the MCP server was started. This is useful when a single MCP server instance needs to serve multiple projects.
+All four tools accept an optional `path` parameter that overrides the default project root configured when the MCP server was started. This is useful when a single MCP server instance needs to serve multiple projects.
 
 ### Backslash normalization
 

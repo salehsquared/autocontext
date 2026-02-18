@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-02-13T18:47:48.203Z
-fingerprint: 48e93efe
+last_updated: 2026-02-18T18:20:49.439Z
+fingerprint: 27f01b66
 scope: src/mcp
 summary: MCP server integration.
 maintenance: |-
@@ -23,10 +23,12 @@ exports:
   - "async function handleCheckFreshness( input: CheckFreshnessInput, defaultRoot: string, ):
     Promise<CheckFreshnessResult>"
   - "async function handleListContexts( input: ListContextsInput, defaultRoot: string, ): Promise<ListContextsResult>"
+  - "async function handleAggregateEvidence( input:"
   - "function registerTools(server: McpServer, defaultRoot: string): void"
 dependencies:
   internal:
     - ../core/fingerprint.js
+    - ../core/health.js
     - ../core/scanner.js
     - ../core/schema.js
     - ../core/writer.js

@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-02-13T18:47:48.126Z
-fingerprint: c3d444f2
+last_updated: 2026-02-18T18:20:49.363Z
+fingerprint: 0d53f0b1
 scope: src/commands
 summary: CLI command implementations.
 maintenance: |-
@@ -14,6 +14,7 @@ exports:
   - "async function benchCommand(options: BenchOptions): Promise<void>"
   - "async function configCommand( options:"
   - "async function doctorCommand(options:"
+  - "async function healthCommand(options:"
   - "async function ignoreCommand(targetPath: string, options:"
   - "async function initCommand(options:"
   - "async function regenCommand( targetPath: string | undefined, options:"
@@ -35,6 +36,7 @@ dependencies:
     - ../bench/tasks.js
     - ../bench/types.js
     - ../core/fingerprint.js
+    - ../core/health.js
     - ../core/markdown-writer.js
     - ../core/scanner.js
     - ../core/schema.js
@@ -46,7 +48,6 @@ dependencies:
     - ../providers/index.js
     - ../utils/config.js
     - ../utils/display.js
-    - ../utils/ignore.js
 derived_fields:
   - version
   - last_updated

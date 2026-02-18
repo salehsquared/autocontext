@@ -164,6 +164,8 @@ Requires Node.js >= 18. No accounts, no cloud services, works fully offline. See
 | `context config` | View/edit provider settings |
 | `context config --mode <lean\|full>` | Set default generation mode |
 | `context ignore <path>` | Add directory to `.contextignore` |
+| `context health` | Aggregate code health evidence across all scopes |
+| `context health --json` | Machine-readable health evidence for CI |
 | `context bench` | Benchmark baseline prompts vs `.context.yaml` prompts |
 | `context bench --repo <url>` | Clone and benchmark another repository |
 | `context serve` | Start MCP server for LLM tool integration |
@@ -198,6 +200,7 @@ context doctor
 # CI: machine-readable output
 context status --json
 context doctor --json
+context health --json
 ```
 
 ## Lean vs Full Mode
@@ -243,6 +246,7 @@ Three tools via [Model Context Protocol](https://modelcontextprotocol.io) (stdio
 - **`query_context`** — Retrieve context for a directory, with optional field filtering
 - **`check_freshness`** — Check if context is fresh, stale, or missing
 - **`list_contexts`** — List all directories with staleness status
+- **`aggregate_evidence`** — Aggregate code health evidence (tests, typecheck, lint, coverage) across all scopes
 
 ```bash
 # Claude Code

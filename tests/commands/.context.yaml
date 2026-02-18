@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-02-13T18:47:48.206Z
-fingerprint: 186206cb
+last_updated: 2026-02-18T18:20:49.446Z
+fingerprint: efa3e0c3
 scope: tests/commands
 summary: CLI command implementations.
 maintenance: |-
@@ -15,6 +15,7 @@ dependencies:
     - ../../src/bench/types.js
     - ../../src/commands/config.js
     - ../../src/commands/doctor.js
+    - ../../src/commands/health.js
     - ../../src/commands/ignore.js
     - ../../src/commands/init.js
     - ../../src/commands/regen.js
@@ -31,7 +32,6 @@ dependencies:
     - ../../src/generator/markdown.js
     - ../../src/utils/config.js
     - ../helpers.js
-    - ../lib
 derived_fields:
   - version
   - last_updated

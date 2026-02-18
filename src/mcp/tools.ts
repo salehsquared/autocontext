@@ -11,6 +11,7 @@ import type { FreshnessState } from "../core/fingerprint.js";
 import { loadScanOptions } from "../utils/scan-options.js";
 import { loadConfig } from "../utils/config.js";
 import { filterByMinTokens } from "../utils/tokens.js";
+import { aggregateEvidence, type AggregateEvidenceResult } from "../core/health.js";
 
 // Fields an LLM can request via the filter parameter
 const FILTERABLE_FIELDS = [
@@ -276,6 +277,14 @@ export async function handleListContexts(
   }
 }
 
+export async function handleAggregateEvidence(
+  input: { path?: string },
+  defaultRoot: string,
+): Promise<AggregateEvidenceResult> {
+  const rootPath = resolve(input.path ?? defaultRoot);
+  return aggregateEvidence(rootPath);
+}
+
 // --- MCP tool registration ---
 
 export function registerTools(server: McpServer, defaultRoot: string): void {
@@ -353,6 +362,30 @@ export function registerTools(server: McpServer, defaultRoot: string): void {
     },
     async (input) => {
       const result = await handleListContexts(input, defaultRoot);
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+        isError: !!result.error,
+      };
+    },
+  );
+
+  server.registerTool(
+    "aggregate_evidence",
+    {
+      title: "Aggregate Evidence",
+      description:
+        "Aggregate code health evidence across all tracked scopes. " +
+        "Returns per-scope evidence and a project-wide health summary including " +
+        "test status, typecheck, lint, and coverage metrics. " +
+        "Note: total_test_count is a raw sum and may double-count nested scopes.",
+      inputSchema: {
+        path: z.string().optional().describe(
+          "Project root path override. Defaults to the server's configured root.",
+        ),
+      },
+    },
+    async (input) => {
+      const result = await handleAggregateEvidence(input, defaultRoot);
       return {
         content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
         isError: !!result.error,

@@ -6,6 +6,7 @@ import {
   handleQueryContext,
   handleCheckFreshness,
   handleListContexts,
+  handleAggregateEvidence,
   registerTools,
 } from "../../src/mcp/tools.js";
 import { writeContext } from "../../src/core/writer.js";
@@ -475,7 +476,7 @@ describe("registerTools", () => {
     };
 
     registerTools(server, tmpDir);
-    expect(registered).toHaveLength(3);
+    expect(registered).toHaveLength(4);
   });
 
   it("all tool names are correct", async () => {
@@ -493,6 +494,7 @@ describe("registerTools", () => {
     expect(registered).toContain("query_context");
     expect(registered).toContain("check_freshness");
     expect(registered).toContain("list_contexts");
+    expect(registered).toContain("aggregate_evidence");
   });
 
   it("tool descriptions are non-empty strings", async () => {
@@ -510,6 +512,223 @@ describe("registerTools", () => {
     for (const desc of descriptions) {
       expect(typeof desc).toBe("string");
       expect(desc.length).toBeGreaterThan(0);
+    }
+  });
+});
+
+// --- handleAggregateEvidence ---
+
+describe("handleAggregateEvidence", () => {
+  beforeEach(async () => {
+    await saveConfig(tmpDir, { provider: "anthropic", min_tokens: 0 });
+  });
+
+  it("returns empty health when no scopes have evidence", async () => {
+    await createFile(tmpDir, "index.ts", "code");
+    const fp = await computeFingerprint(tmpDir);
+    await writeContext(tmpDir, makeValidContext({ fingerprint: fp }));
+
+    const result = await handleAggregateEvidence({}, tmpDir);
+    expect(result.scopes_with_evidence).toBe(0);
+    expect(result.health.tests.passing).toBe(0);
+    expect(result.health.tests.failing).toBe(0);
+    expect(result.health.tests.total_test_count).toBe(0);
+    expect(result.health.typecheck.clean).toBe(0);
+    expect(result.health.lint.clean).toBe(0);
+    expect(result.health.coverage.average_percent).toBeNull();
+    expect(result.health.coverage.min_percent).toBeNull();
+    expect(result.health.coverage.max_percent).toBeNull();
+    expect(result.health.coverage.scopes_reported).toBe(0);
+  });
+
+  it("aggregates test_status across scopes with deterministic ordering", async () => {
+    // Create scopes in non-alphabetical order to verify sorting
+    const sub1 = join(tmpDir, "src");
+    await mkdir(sub1, { recursive: true });
+    await createFile(sub1, "app.ts", "app code");
+    const sub1Fp = await computeFingerprint(sub1);
+    await writeContext(sub1, makeValidContext({
+      scope: "src",
+      fingerprint: sub1Fp,
+      evidence: {
+        collected_at: "2026-02-18T00:00:00Z",
+        test_status: "failing",
+        test_count: 5,
+        failing_tests: ["test1"],
+      },
+    }));
+
+    await createFile(tmpDir, "index.ts", "root code");
+    const rootFp = await computeFingerprint(tmpDir);
+    await writeContext(tmpDir, makeValidContext({
+      fingerprint: rootFp,
+      evidence: {
+        collected_at: "2026-02-18T00:00:00Z",
+        test_status: "passing",
+        test_count: 10,
+      },
+    }));
+
+    const result = await handleAggregateEvidence({}, tmpDir);
+    expect(result.scopes_with_evidence).toBe(2);
+    expect(result.health.tests.passing).toBe(1);
+    expect(result.health.tests.failing).toBe(1);
+    expect(result.health.tests.total_test_count).toBe(15);
+    expect(result.health.tests.failing_scopes).toEqual(["src"]);
+
+    // Verify scopes are sorted lexicographically (. before src)
+    const scopeOrder = result.scopes.map((s) => s.scope);
+    expect(scopeOrder).toEqual([...scopeOrder].sort());
+  });
+
+  it("aggregates coverage metrics", async () => {
+    const sub1 = join(tmpDir, "src");
+    await mkdir(sub1, { recursive: true });
+    await createFile(sub1, "app.ts", "app code");
+    const sub1Fp = await computeFingerprint(sub1);
+    await writeContext(sub1, makeValidContext({
+      scope: "src",
+      fingerprint: sub1Fp,
+      evidence: { collected_at: "2026-02-18T00:00:00Z", coverage_percent: 80 },
+    }));
+
+    await createFile(tmpDir, "index.ts", "root code");
+    const rootFp = await computeFingerprint(tmpDir);
+    await writeContext(tmpDir, makeValidContext({
+      fingerprint: rootFp,
+      evidence: { collected_at: "2026-02-18T00:00:00Z", coverage_percent: 90 },
+    }));
+
+    const result = await handleAggregateEvidence({}, tmpDir);
+    expect(result.health.coverage.scopes_reported).toBe(2);
+    expect(result.health.coverage.average_percent).toBe(85);
+    expect(result.health.coverage.min_percent).toBe(80);
+    expect(result.health.coverage.max_percent).toBe(90);
+  });
+
+  it("returns per-scope evidence entries for all dirs", async () => {
+    // Root: has context with evidence
+    await createFile(tmpDir, "index.ts", "root code");
+    const rootFp = await computeFingerprint(tmpDir);
+    await writeContext(tmpDir, makeValidContext({
+      fingerprint: rootFp,
+      evidence: { collected_at: "2026-02-18T00:00:00Z", test_status: "passing" },
+    }));
+
+    // Subdirectory: has context, no evidence
+    const sub1 = join(tmpDir, "lib");
+    await mkdir(sub1, { recursive: true });
+    await createFile(sub1, "util.ts", "util code");
+    const sub1Fp = await computeFingerprint(sub1);
+    await writeContext(sub1, makeValidContext({ scope: "lib", fingerprint: sub1Fp }));
+
+    // Subdirectory: no context at all
+    const sub2 = join(tmpDir, "src");
+    await mkdir(sub2, { recursive: true });
+    await createFile(sub2, "app.ts", "app code");
+
+    const result = await handleAggregateEvidence({}, tmpDir);
+    expect(result.total_scopes).toBe(3);
+    expect(result.scopes).toHaveLength(3);
+
+    const rootEntry = result.scopes.find((s) => s.scope === ".");
+    expect(rootEntry!.has_evidence).toBe(true);
+    expect(rootEntry!.evidence).toBeDefined();
+
+    const libEntry = result.scopes.find((s) => s.scope === "lib");
+    expect(libEntry!.has_evidence).toBe(false);
+    expect(libEntry!.evidence).toBeUndefined();
+
+    const srcEntry = result.scopes.find((s) => s.scope === "src");
+    expect(srcEntry!.has_evidence).toBe(false);
+  });
+
+  it("handles global scan failure gracefully", async () => {
+    const result = await handleAggregateEvidence({}, "/nonexistent/path/that/does/not/exist");
+    expect(result.error).toBeDefined();
+    expect(result.scopes).toEqual([]);
+    expect(result.scope_errors).toEqual([]);
+    expect(result.total_scopes).toBe(0);
+    expect(result.scopes_with_evidence).toBe(0);
+  });
+
+  it("records scope_errors for unsupported version", async () => {
+    // Root: valid context with evidence
+    await createFile(tmpDir, "index.ts", "root code");
+    const rootFp = await computeFingerprint(tmpDir);
+    await writeContext(tmpDir, makeValidContext({
+      fingerprint: rootFp,
+      evidence: { collected_at: "2026-02-18T00:00:00Z", test_status: "passing" },
+    }));
+
+    // Subdirectory: unsupported version 2 context
+    const sub = join(tmpDir, "src");
+    await mkdir(sub, { recursive: true });
+    await createFile(sub, "app.ts", "app code");
+    const v2Context = { ...makeValidContext({ scope: "src" }), version: 2 };
+    await writeFile(join(sub, CONTEXT_FILENAME), stringify(v2Context));
+
+    const result = await handleAggregateEvidence({}, tmpDir);
+    expect(result.scope_errors).toHaveLength(1);
+    expect(result.scope_errors[0].scope).toBe("src");
+    expect(result.scope_errors[0].error).toContain("Unsupported schema version");
+    // Valid root still aggregated
+    expect(result.scopes_with_evidence).toBe(1);
+  });
+
+  it("records scope_errors for corrupt .context.yaml", async () => {
+    await createFile(tmpDir, "index.ts", "code");
+    // Write a file that exists but is not valid YAML schema
+    await writeFile(join(tmpDir, CONTEXT_FILENAME), "not: valid\ncontext: file\n");
+
+    const result = await handleAggregateEvidence({}, tmpDir);
+    expect(result.scope_errors).toHaveLength(1);
+    expect(result.scope_errors[0].scope).toBe(".");
+    expect(result.scope_errors[0].error).toContain("Invalid or corrupt");
+    const rootEntry = result.scopes.find((s) => s.scope === ".");
+    expect(rootEntry!.has_evidence).toBe(false);
+  });
+
+  it("handles minimal evidence (only collected_at)", async () => {
+    await createFile(tmpDir, "index.ts", "code");
+    const fp = await computeFingerprint(tmpDir);
+    await writeContext(tmpDir, makeValidContext({
+      fingerprint: fp,
+      evidence: { collected_at: "2026-02-18T00:00:00Z" },
+    }));
+
+    const result = await handleAggregateEvidence({}, tmpDir);
+    expect(result.scopes_with_evidence).toBe(1);
+    const rootEntry = result.scopes.find((s) => s.scope === ".");
+    expect(rootEntry!.has_evidence).toBe(true);
+    // Health counters should not increment for missing optional fields
+    expect(result.health.tests.passing).toBe(0);
+    expect(result.health.tests.failing).toBe(0);
+    expect(result.health.tests.unknown).toBe(0);
+    expect(result.health.tests.total_test_count).toBe(0);
+    expect(result.health.typecheck.clean).toBe(0);
+    expect(result.health.lint.clean).toBe(0);
+    expect(result.health.coverage.scopes_reported).toBe(0);
+  });
+
+  it("uses path override instead of defaultRoot", async () => {
+    const altRoot = await createTmpDir();
+    try {
+      await saveConfig(altRoot, { provider: "anthropic", min_tokens: 0 });
+      await createFile(altRoot, "index.ts", "alt code");
+      const fp = await computeFingerprint(altRoot);
+      await writeContext(altRoot, makeValidContext({
+        fingerprint: fp,
+        evidence: { collected_at: "2026-02-18T00:00:00Z", test_status: "passing", test_count: 7 },
+      }));
+
+      // defaultRoot is tmpDir (no context), path override points to altRoot
+      const result = await handleAggregateEvidence({ path: altRoot }, tmpDir);
+      expect(result.scopes_with_evidence).toBe(1);
+      expect(result.health.tests.passing).toBe(1);
+      expect(result.health.tests.total_test_count).toBe(7);
+    } finally {
+      await cleanupTmpDir(altRoot);
     }
   });
 });

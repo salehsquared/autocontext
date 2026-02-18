@@ -15,6 +15,7 @@ import { ignoreCommand } from "./commands/ignore.js";
 import { watchCommand } from "./commands/watch.js";
 import { doctorCommand } from "./commands/doctor.js";
 import { statsCommand } from "./commands/stats.js";
+import { healthCommand } from "./commands/health.js";
 import { benchCommand } from "./commands/bench.js";
 import { startMcpServer } from "./mcp/server.js";
 import { loadEnvForCli } from "./utils/env.js";
@@ -32,6 +33,7 @@ export interface CommandHandlers {
   watchCommand: typeof watchCommand;
   doctorCommand: typeof doctorCommand;
   statsCommand: typeof statsCommand;
+  healthCommand: typeof healthCommand;
   benchCommand: typeof benchCommand;
   startMcpServer: typeof startMcpServer;
 }
@@ -48,6 +50,7 @@ const defaultHandlers: CommandHandlers = {
   watchCommand,
   doctorCommand,
   statsCommand,
+  healthCommand,
   benchCommand,
   startMcpServer,
 };
@@ -226,6 +229,15 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
     .option("-p, --path <path>", "Project root path")
     .action(async (opts) => {
       await handlers.statsCommand({ path: opts.path, json: opts.json });
+    });
+
+  program
+    .command("health")
+    .description("Aggregate code health evidence across all scopes")
+    .option("--json", "Output as JSON")
+    .option("-p, --path <path>", "Project root path")
+    .action(async (opts) => {
+      await handlers.healthCommand({ path: opts.path, json: opts.json });
     });
 
   program
