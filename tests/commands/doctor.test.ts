@@ -128,7 +128,7 @@ describe("doctorCommand", () => {
     await doctorCommand({ path: tmpDir });
 
     const output = logs.join("\n");
-    expect(output).toContain("AGENTS.md present with dotcontext section");
+    expect(output).toContain("AGENTS.md present with autocontext section");
   });
 
   it("reports schema validation status", async () => {

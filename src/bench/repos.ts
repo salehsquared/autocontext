@@ -23,7 +23,7 @@ export async function cloneAndInit(
   repo: DefaultRepo,
   initFn: (rootPath: string) => Promise<void>,
 ): Promise<string> {
-  const tempDir = await mkdtemp(join(tmpdir(), `dotcontext-bench-${repo.name}-`));
+  const tempDir = await mkdtemp(join(tmpdir(), `autocontext-bench-${repo.name}-`));
   await cloneRepo(repo.url, tempDir, 100);
   await initFn(tempDir);
   return tempDir;

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Conformance test runner for dotcontext schema.
+ * Conformance test runner for autocontext schema.
  *
  * Validates YAML test cases against the published JSON Schema (via ajv)
  * and against the Zod schema (parity check). Exits with code 1 on any mismatch.

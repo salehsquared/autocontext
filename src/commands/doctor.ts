@@ -165,13 +165,13 @@ export async function doctorCommand(options: { path?: string; json?: boolean }):
       checks.push({
         name: "agents_md",
         status: "pass",
-        message: "AGENTS.md present with dotcontext section",
+        message: "AGENTS.md present with autocontext section",
       });
     } else {
       checks.push({
         name: "agents_md",
         status: "warn",
-        message: "AGENTS.md exists but missing dotcontext section",
+        message: "AGENTS.md exists but missing autocontext section",
         fix: "context regen --all",
       });
     }

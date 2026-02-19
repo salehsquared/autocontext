@@ -1,6 +1,6 @@
 # CI/CD Pipeline Guide
 
-dotcontext integrates into CI pipelines to enforce context quality. The key command is `context validate --strict`.
+autocontext integrates into CI pipelines to enforce context quality. The key command is `context validate --strict`.
 
 ## GitHub Actions
 
@@ -18,7 +18,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-      - run: npm install -g dotcontext
+      - run: npm install -g autocontext
       - run: context validate --strict
 ```
 
@@ -39,7 +39,7 @@ jobs:
         with:
           node-version: 18
           cache: npm
-      - run: npm install -g dotcontext
+      - run: npm install -g autocontext
       - run: context validate --strict
 ```
 
@@ -49,7 +49,7 @@ jobs:
 validate-context:
   image: node:18
   script:
-    - npm install -g dotcontext
+    - npm install -g autocontext
     - context validate --strict
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
@@ -136,7 +136,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-      - run: npm install -g dotcontext
+      - run: npm install -g autocontext
       - run: context regen --all --no-llm
       - name: Commit if changed
         run: |

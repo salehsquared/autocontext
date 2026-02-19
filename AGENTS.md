@@ -1,12 +1,12 @@
 # AGENTS.md
 
 > Instructions for AI coding agents working in this repository.
-> Project: dotcontext
+> Project: autocontext
 
-<!-- dotcontext:agents-section -->
+<!-- autocontext:agents-section -->
 ## Project Context
 
-This project uses [dotcontext](https://github.com/dotcontext/cli) for structured codebase documentation.
+This project uses [autocontext](https://github.com/salehsquared/autocontext) for structured codebase documentation.
 
 **Every directory with source files contains a `.context.yaml` file.** It describes:
 
@@ -25,8 +25,8 @@ This project uses [dotcontext](https://github.com/dotcontext/cli) for structured
 
 | Directory | Summary |
 |-----------|---------|
-| `.` (root) | This directory serves as the project root for dotcontext, which manages folder-level documentation for LLMs through structured \`.context.yaml\` files in each directory. It provides essential context about the project structure, architectural decisions, and required constraints for developers and AI tools.  |
-| `docs` | This directory contains documentation for using and integrating dotcontext within projects, including CI/CD pipeline implementations, integration setups, and user guides. It provides essential guidelines for maintaining context quality and leveraging the MCP server functionalities.  |
+| `.` (root) | This directory serves as the project root for autocontext, which manages folder-level documentation for LLMs through structured \`.context.yaml\` files in each directory. It provides essential context about the project structure, architectural decisions, and required constraints for developers and AI tools.  |
+| `docs` | This directory contains documentation for using and integrating autocontext within projects, including CI/CD pipeline implementations, integration setups, and user guides. It provides essential guidelines for maintaining context quality and leveraging the MCP server functionalities.  |
 | `scripts` | The 'scripts' directory contains utility scripts for managing project workflows, including building grammar files, generating schemas, and configuring git hooks. These scripts automate essential tasks to ensure smooth development and maintenance of the project.  |
 | `src` | The \`src\` directory is responsible for implementing the core functionalities and command-line interface for managing context generation and diagnostics in a project. It provides various commands for initializing configurations, validating context files, and monitoring their freshness.  |
 | `src/bench` | The \`src/bench\` directory provides a framework for benchmarking the performance of AI models using structured tasks. It includes the setup for cloning repositories, generating tasks based on code structure, and scoring the results of model responses.  |
@@ -63,4 +63,4 @@ When you significantly change files in a directory, update its `.context.yaml`:
 - Update `constraints` if hard rules changed
 
 The `maintenance` field in each `.context.yaml` contains specific instructions.
-<!-- dotcontext:agents-section-end -->
+<!-- autocontext:agents-section-end -->

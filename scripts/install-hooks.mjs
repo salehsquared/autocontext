@@ -20,4 +20,4 @@ const preCommitPath = resolve(hooksPath, "pre-commit");
 chmodSync(preCommitPath, 0o755);
 run("git", ["config", "core.hooksPath", ".githooks"], { cwd: rootPath });
 
-process.stdout.write("[dotcontext] Installed git hooks (.githooks/pre-commit).\n");
+process.stdout.write("[autocontext] Installed git hooks (.githooks/pre-commit).\n");

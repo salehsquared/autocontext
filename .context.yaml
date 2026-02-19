@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-02-18T18:20:49.501Z
-fingerprint: 947a6d4c
+last_updated: 2026-02-19T21:46:38.823Z
+fingerprint: 6b2da65e
 scope: .
 summary: Folder-level documentation for LLMs — .context.yaml files for every directory
 maintenance: |-
@@ -22,7 +22,7 @@ subdirectories:
   - name: tests/
     summary: Test suite.
 project:
-  name: dotcontext
+  name: autocontext
   description: Folder-level documentation for LLMs — .context.yaml files for every directory
   language: typescript
   package_manager: npm

@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-02-18T18:20:49.439Z
-fingerprint: 27f01b66
+last_updated: 2026-02-19T21:46:38.753Z
+fingerprint: 85eb46f4
 scope: src/mcp
 summary: MCP server integration.
 maintenance: |-

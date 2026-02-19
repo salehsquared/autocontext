@@ -1,11 +1,8 @@
 version: 1
-last_updated: 2026-02-13T17:38:42.176Z
-fingerprint: 4d62be17
+last_updated: 2026-02-19T21:46:38.645Z
+fingerprint: 7f9378f8
 scope: src/bench
-summary: >
-  The `src/bench` directory provides a framework for benchmarking the performance of AI models using structured tasks.
-  It includes the setup for cloning repositories, generating tasks based on code structure, and scoring the results of
-  model responses.
+summary: Source directory.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
   your changes. Update the summary, and any decisions or constraints that changed.
@@ -13,28 +10,6 @@ maintenance: |-
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-decisions:
-  - what: Tasks are categorized into specific types (e.g., comprehension, dependency, change impact).
-    why: This allows for targeted evaluation and deeper insights into AI model performance across various aspects of the
-      codebase.
-    tradeoff: While this increases complexity in task generation, it enables more nuanced evaluations.
-constraints:
-  - All tasks must adhere to the defined scoring methods and follow the expected output format.
-  - Task generation is based on existing file structure and commit history; tasks cannot be generated for directories
-    with insufficient files or dependencies.
-dependencies:
-  internal:
-    - ../core/scanner.js
-    - ../core/schema.js
-    - ../generator/dependencies.js
-    - ../generator/static.js
-    - ../providers/index.js
-    - ./git.js
-    - ./ground-truth.js
-    - ./prompts.js
-    - ./scorer.js
-    - ./token-estimator.js
-    - ./types.js
 exports:
   - "function isGitRepo(dirPath: string): boolean"
   - "function getFixCommits(repoPath: string, count: number): Commit[]"
@@ -63,10 +38,23 @@ exports:
   - JUDGE_SYSTEM_PROMPT
   - "function detectAbstention(response: string): boolean"
   - "function scoreListCoverage(response: string, expected: string[]): number"
+dependencies:
+  internal:
+    - ../core/scanner.js
+    - ../core/schema.js
+    - ../generator/dependencies.js
+    - ../generator/static.js
+    - ../providers/index.js
+    - ./git.js
+    - ./ground-truth.js
+    - ./prompts.js
+    - ./scorer.js
+    - ./token-estimator.js
+    - ./types.js
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
-  - dependencies.internal
   - exports
+  - dependencies.internal

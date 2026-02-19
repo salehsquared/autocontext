@@ -5,7 +5,7 @@ import type { ContextFile } from "../src/core/schema.js";
 import type { ScanResult } from "../src/core/scanner.js";
 
 export async function createTmpDir(): Promise<string> {
-  return mkdtemp(join(tmpdir(), "dotcontext-test-"));
+  return mkdtemp(join(tmpdir(), "autocontext-test-"));
 }
 
 export async function cleanupTmpDir(dir: string): Promise<void> {

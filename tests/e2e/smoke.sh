@@ -105,7 +105,7 @@ echo "       Output contains version:"
 
 # 4e. Schema file check
 echo "   4e. Schema file accessibility"
-SCHEMA_FILE="$INSTALL_DIR/node_modules/dotcontext/.context.schema.json"
+SCHEMA_FILE="$INSTALL_DIR/node_modules/autocontext/.context.schema.json"
 if [ ! -f "$SCHEMA_FILE" ]; then
   echo "FAIL: Schema file not found at $SCHEMA_FILE"
   exit 1

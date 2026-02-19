@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-02-14T15:56:34.255Z
-fingerprint: fd884143
+last_updated: 2026-02-19T21:46:38.783Z
+fingerprint: fa8df9b1
 scope: tests/generator
 summary: Code generation.
 maintenance: |-

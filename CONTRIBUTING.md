@@ -1,4 +1,4 @@
-# Contributing to dotcontext
+# Contributing to autocontext
 
 ## Requirements
 
@@ -8,8 +8,8 @@
 ## Setup
 
 ```bash
-git clone https://github.com/salehsquared/dotcontext.git
-cd dotcontext
+git clone https://github.com/salehsquared/autocontext.git
+cd autocontext
 npm install
 npm run build
 ```
@@ -72,9 +72,9 @@ If you modify `src/core/schema.ts`:
 
 ## Reporting Issues
 
-Open an issue at [github.com/salehsquared/dotcontext/issues](https://github.com/salehsquared/dotcontext/issues) with:
+Open an issue at [github.com/salehsquared/autocontext/issues](https://github.com/salehsquared/autocontext/issues) with:
 
 - **Expected behavior**
 - **Actual behavior**
 - **Steps to reproduce**
-- **Environment** (Node version, OS, dotcontext version)
+- **Environment** (Node version, OS, autocontext version)

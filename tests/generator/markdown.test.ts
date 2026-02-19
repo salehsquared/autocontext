@@ -173,7 +173,7 @@ describe("applyAgentsSection", () => {
     expect(result).toContain("# My Project");
     expect(result).toContain("Custom instructions.");
     expect(result).toContain(AGENTS_SECTION_START);
-    // User content comes before dotcontext section
+    // User content comes before autocontext section
     expect(result.indexOf("Custom instructions.")).toBeLessThan(
       result.indexOf(AGENTS_SECTION_START),
     );

@@ -185,7 +185,7 @@ describe("initCommand AGENTS.md generation", () => {
     await expect(stat(join(tmpDir, AGENTS_FILENAME))).rejects.toThrow();
   });
 
-  it("appends to existing AGENTS.md without dotcontext section", async () => {
+  it("appends to existing AGENTS.md without autocontext section", async () => {
     await copyFixture("simple-project");
     await writeFile(join(tmpDir, AGENTS_FILENAME), "# Custom Instructions\n\nDo things.\n", "utf-8");
 

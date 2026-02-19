@@ -1,5 +1,5 @@
 {
-  "name": "dotcontext",
+  "name": "autocontext",
   "version": "0.1.0",
   "description": "Folder-level documentation for LLMs — .context.yaml files for every directory",
   "type": "module",
@@ -9,11 +9,11 @@
   "author": "Saleh Mostafa",
   "repository": {
     "type": "git",
-    "url": "https://github.com/salehsquared/dotcontext.git"
+    "url": "https://github.com/salehsquared/autocontext.git"
   },
-  "homepage": "https://github.com/salehsquared/dotcontext",
+  "homepage": "https://github.com/salehsquared/autocontext",
   "bugs": {
-    "url": "https://github.com/salehsquared/dotcontext/issues"
+    "url": "https://github.com/salehsquared/autocontext/issues"
   },
   "files": [
     "dist",

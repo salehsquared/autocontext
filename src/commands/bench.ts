@@ -38,7 +38,7 @@ export async function benchCommand(options: BenchOptions): Promise<void> {
   if (options.repo) {
     const { mkdtemp } = await import("node:fs/promises");
     const { tmpdir } = await import("node:os");
-    tempDir = await mkdtemp(join(tmpdir(), "dotcontext-bench-"));
+    tempDir = await mkdtemp(join(tmpdir(), "autocontext-bench-"));
     console.log(dim(`  cloning ${options.repo}...`));
     await cloneRepo(options.repo, tempDir, 100);
     rootPath = tempDir;
@@ -257,7 +257,7 @@ async function runMultiRepo(options: BenchOptions, configRootPath: string): Prom
     try {
       const { mkdtemp } = await import("node:fs/promises");
       const { tmpdir } = await import("node:os");
-      const tempDir = await mkdtemp(join(tmpdir(), `dotcontext-bench-${repo.name}-`));
+      const tempDir = await mkdtemp(join(tmpdir(), `autocontext-bench-${repo.name}-`));
       tempDirs.push(tempDir);
 
       if (!options.json) process.stdout.write("cloning... ");

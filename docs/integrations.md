@@ -1,6 +1,6 @@
 # Integrations
 
-dotcontext works at two levels: `.context.yaml` files are plain YAML readable by any tool, and the MCP server provides structured access for LLM clients.
+autocontext works at two levels: `.context.yaml` files are plain YAML readable by any tool, and the MCP server provides structured access for LLM clients.
 
 ## MCP Server
 
@@ -86,7 +86,7 @@ All scope parameters are validated against path traversal. Attempting to access 
 ### Setup
 
 ```bash
-claude mcp add dotcontext -- context serve --path /path/to/project
+claude mcp add autocontext -- context serve --path /path/to/project
 ```
 
 Verify it's registered:
@@ -97,7 +97,7 @@ claude mcp list
 
 ### Usage Patterns
 
-Once connected, Claude Code can use dotcontext tools automatically. Useful prompts:
+Once connected, Claude Code can use autocontext tools automatically. Useful prompts:
 
 - "Check if the context for src/core is fresh before you read any files there"
 - "Query just the interfaces for src/api so you know what's exported"
@@ -115,7 +115,7 @@ Add to `.cursor/mcp.json` in your project root:
 ```json
 {
   "mcpServers": {
-    "dotcontext": {
+    "autocontext": {
       "command": "context",
       "args": ["serve", "--path", "."]
     }
@@ -127,7 +127,7 @@ Restart Cursor after adding the config. The MCP server starts automatically when
 
 ### Usage
 
-Cursor's agent mode will discover the dotcontext tools automatically. You can reference them in prompts or let the agent decide when to use them.
+Cursor's agent mode will discover the autocontext tools automatically. You can reference them in prompts or let the agent decide when to use them.
 
 ---
 
@@ -140,7 +140,7 @@ Add to your MCP configuration (check Windsurf docs for the config file location)
 ```json
 {
   "mcpServers": {
-    "dotcontext": {
+    "autocontext": {
       "command": "context",
       "args": ["serve", "--path", "/path/to/project"]
     }

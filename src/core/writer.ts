@@ -10,7 +10,7 @@ import type { ContextFile, ConfigFile } from "./schema.js";
  */
 export class UnsupportedVersionError extends Error {
   constructor(public found: number, public supported: number) {
-    super(`Unsupported schema version ${found} (this CLI supports version ${supported}). Update dotcontext or downgrade the file.`);
+    super(`Unsupported schema version ${found} (this CLI supports version ${supported}). Update autocontext or downgrade the file.`);
     this.name = "UnsupportedVersionError";
   }
 }

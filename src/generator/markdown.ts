@@ -1,8 +1,8 @@
 import type { ContextFile } from "../core/schema.js";
 
 /** Marker comments for idempotent section management in AGENTS.md */
-export const AGENTS_SECTION_START = "<!-- dotcontext:agents-section -->";
-export const AGENTS_SECTION_END = "<!-- dotcontext:agents-section-end -->";
+export const AGENTS_SECTION_START = "<!-- autocontext:agents-section -->";
+export const AGENTS_SECTION_END = "<!-- autocontext:agents-section-end -->";
 
 export interface AgentsEntry {
   scope: string;
@@ -36,7 +36,7 @@ function buildDirectoryTable(entries: AgentsEntry[]): string {
 }
 
 /**
- * Generate the dotcontext section content (between markers, inclusive).
+ * Generate the autocontext section content (between markers, inclusive).
  */
 export function generateAgentsSection(entries: AgentsEntry[]): string {
   const table = buildDirectoryTable(entries);
@@ -44,7 +44,7 @@ export function generateAgentsSection(entries: AgentsEntry[]): string {
   return `${AGENTS_SECTION_START}
 ## Project Context
 
-This project uses [dotcontext](https://github.com/dotcontext/cli) for structured codebase documentation.
+This project uses [autocontext](https://github.com/salehsquared/autocontext) for structured codebase documentation.
 
 **Every directory with source files contains a \`.context.yaml\` file.** It describes:
 

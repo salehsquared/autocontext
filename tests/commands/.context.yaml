@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-02-18T18:20:49.446Z
-fingerprint: efa3e0c3
+last_updated: 2026-02-19T21:46:38.756Z
+fingerprint: 59c1e192
 scope: tests/commands
 summary: CLI command implementations.
 maintenance: |-

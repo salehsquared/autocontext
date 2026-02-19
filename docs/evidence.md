@@ -4,7 +4,7 @@ Evidence is machine-collected code health data embedded in `.context.yaml` files
 
 ## Principles
 
-- **Read-only** — dotcontext never executes test runners, linters, or compilers. It only reads files that already exist on disk. The `commit_sha` field is resolved by reading `.git/HEAD` (pure file I/O, no process execution).
+- **Read-only** — autocontext never executes test runners, linters, or compilers. It only reads files that already exist on disk. The `commit_sha` field is resolved by reading `.git/HEAD` (pure file I/O, no process execution).
 - **Opt-in** — evidence collection requires the `--evidence` flag on `init` or `regen`.
 - **Timestamped** — `collected_at` records when evidence was gathered (ISO 8601).
 - **Commit-anchored** — `commit_sha` records which git commit the evidence corresponds to. Compare against current HEAD to detect staleness.
@@ -68,7 +68,7 @@ Priority: `.vitest-results.json` > `test-results.json` > JUnit XML. First match 
 |---|---|---|
 | `tsconfig.tsbuildinfo` | TypeScript build info (existence + mtime check) | `tsc` |
 
-`tsc --build` only writes `tsbuildinfo` when compilation succeeds. dotcontext compares the artifact's mtime against the newest source file mtime in the directory:
+`tsc --build` only writes `tsbuildinfo` when compilation succeeds. autocontext compares the artifact's mtime against the newest source file mtime in the directory:
 - Artifact mtime >= newest source mtime → `typecheck: "clean"`
 - Artifact mtime < newest source mtime → `typecheck: "unknown"` (stale — sources changed since last build)
 
@@ -121,7 +121,7 @@ This prevents misattribution — a subdirectory appearing "healthy" because it i
 
 ## For Tool Producers
 
-If you want dotcontext to pick up your tool's output, write artifacts in these standard formats:
+If you want autocontext to pick up your tool's output, write artifacts in these standard formats:
 
 - **Test results**: Jest/Vitest JSON format with `success`, `numTotalTests`, `numFailedTests` fields
 - **Type checking**: `tsc --build` produces `tsconfig.tsbuildinfo` automatically

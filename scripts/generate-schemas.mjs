@@ -16,14 +16,14 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
 
 const contextJsonSchema = toJSONSchema(contextSchema, { target: "draft-2020-12" });
-contextJsonSchema.$id = "https://dotcontext.dev/schema/v1/context.json";
+contextJsonSchema.$id = "https://autocontext.dev/schema/v1/context.json";
 contextJsonSchema.title = ".context.yaml";
-contextJsonSchema.description = "Schema for dotcontext directory-level context files (v1)";
+contextJsonSchema.description = "Schema for autocontext directory-level context files (v1)";
 
 const configJsonSchema = toJSONSchema(configSchema, { target: "draft-2020-12" });
-configJsonSchema.$id = "https://dotcontext.dev/schema/v1/config.json";
+configJsonSchema.$id = "https://autocontext.dev/schema/v1/config.json";
 configJsonSchema.title = ".context.config.yaml";
-configJsonSchema.description = "Schema for dotcontext project configuration files (v1)";
+configJsonSchema.description = "Schema for autocontext project configuration files (v1)";
 
 writeFileSync(
   resolve(root, ".context.schema.json"),

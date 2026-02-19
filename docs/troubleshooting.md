@@ -165,5 +165,5 @@
 
 ## Still Stuck?
 
-- Check if the issue is tracked: [github.com/dotcontext/cli/issues](https://github.com/dotcontext/cli/issues)
+- Check if the issue is tracked: [github.com/salehsquared/autocontext/issues](https://github.com/salehsquared/autocontext/issues)
 - File a bug with `context validate` output and your Node.js version

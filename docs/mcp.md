@@ -1,6 +1,6 @@
 # MCP Contract
 
-dotcontext exposes four tools via [Model Context Protocol](https://modelcontextprotocol.io) (stdio transport). This document defines their exact request/response shapes.
+autocontext exposes four tools via [Model Context Protocol](https://modelcontextprotocol.io) (stdio transport). This document defines their exact request/response shapes.
 
 ## Tools Overview
 
@@ -98,7 +98,7 @@ Metadata fields are always present. Only requested filterable fields are include
 {
   "found": false,
   "scope": ".",
-  "error": "Unsupported schema version 2 (this tool supports version 1). Upgrade dotcontext to read this file."
+  "error": "Unsupported schema version 2 (this tool supports version 1). Upgrade autocontext to read this file."
 }
 ```
 

@@ -4,7 +4,7 @@
 
 Every `.context.yaml` file has a required `version` field. Currently: `version: 1`.
 
-The schema version tracks the **structure** of `.context.yaml` files — which fields exist, their types, and validation rules. It is independent of the dotcontext CLI version (currently v0.1.0).
+The schema version tracks the **structure** of `.context.yaml` files — which fields exist, their types, and validation rules. It is independent of the autocontext CLI version (currently v0.1.0).
 
 ## Compatibility Guarantees
 
@@ -39,7 +39,7 @@ If the CLI encounters a `.context.yaml` with a `version` higher than it supports
 - **`context regen`** / **`context rehash`** / **`context watch`** — skips the directory with a warning
 - **No silent data loss** — the file is never modified, deleted, or misinterpreted
 
-Update your CLI (`npm install -g dotcontext@latest`) to get support for newer schema versions.
+Update your CLI (`npm install -g autocontext@latest`) to get support for newer schema versions.
 
 ### For tool developers
 

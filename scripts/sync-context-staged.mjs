@@ -79,4 +79,4 @@ if (contextFiles.length > 0) {
   run("git", ["add", "--", ...contextFiles], { cwd: rootPath });
 }
 
-process.stdout.write(`[dotcontext] Synced and staged ${contextFiles.length} context files.\n`);
+process.stdout.write(`[autocontext] Synced and staged ${contextFiles.length} context files.\n`);

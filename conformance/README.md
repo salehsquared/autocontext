@@ -1,6 +1,6 @@
 # Conformance Test Suite
 
-Data-driven test cases for validating `.context.yaml` parsers against the dotcontext schema.
+Data-driven test cases for validating `.context.yaml` parsers against the autocontext schema.
 
 ## What This Tests
 

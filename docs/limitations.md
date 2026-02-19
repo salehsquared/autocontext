@@ -1,6 +1,6 @@
 # Limitations
 
-dotcontext is honest about what it does and doesn't guarantee. This page documents known boundaries.
+autocontext is honest about what it does and doesn't guarantee. This page documents known boundaries.
 
 ## AST Export Detection
 
@@ -59,7 +59,7 @@ This is intentional: static-generated context files often don't populate interna
 
 ## Evidence Collection
 
-Evidence is **read-only** — dotcontext never runs test commands, linters, or compilers. It only reads existing artifact files. The `commit_sha` field is resolved by reading `.git/HEAD` (file I/O only, no process execution).
+Evidence is **read-only** — autocontext never runs test commands, linters, or compilers. It only reads existing artifact files. The `commit_sha` field is resolved by reading `.git/HEAD` (file I/O only, no process execution).
 
 | What it reads | Format |
 |---|---|
@@ -91,7 +91,7 @@ See [evidence.md](evidence.md) for the full evidence contract.
 
 ## Token Threshold Filtering (`min_tokens`)
 
-dotcontext applies a directory token threshold during scanning (default: `min_tokens: 4096`).
+autocontext applies a directory token threshold during scanning (default: `min_tokens: 4096`).
 
 - Directories below threshold are skipped unless needed to preserve parent-child routing context
 - This affects command scope for `status`, `validate`, `watch`, and MCP `list_contexts`
@@ -119,7 +119,7 @@ The scanner supports common ignore patterns but is **not a full .gitignore imple
 
 ## Concurrency
 
-dotcontext is designed for single-developer use. No file locking or conflict resolution beyond standard git.
+autocontext is designed for single-developer use. No file locking or conflict resolution beyond standard git.
 
 - Two LLMs editing the same `.context.yaml` simultaneously may produce conflicts
 - Standard git conflict resolution applies (these are text files)

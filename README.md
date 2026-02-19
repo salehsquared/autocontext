@@ -1,4 +1,4 @@
-# dotcontext
+# autocontext
 
 Every coding agent gets the same repo-native context via `.context.yaml` — portable across tools, git-visible, local-first.
 
@@ -86,7 +86,7 @@ Why `.context.yaml` helps where README alone does not:
 
 ## Schema
 
-dotcontext files are validated against a [JSON Schema (Draft 2020-12)](https://json-schema.org/draft/2020-12/schema):
+autocontext files are validated against a [JSON Schema (Draft 2020-12)](https://json-schema.org/draft/2020-12/schema):
 
 - **`.context.yaml`** — [`.context.schema.json`](.context.schema.json)
 - **`.context.config.yaml`** — [`.context.config.schema.json`](.context.config.schema.json)
@@ -95,7 +95,7 @@ The schemas are published in the npm package and can be used for editor autocomp
 
 ## How It Compares
 
-| Capability | dotcontext | CLAUDE.md / .cursorrules | Tool-native indexes | Memory tools |
+| Capability | autocontext | CLAUDE.md / .cursorrules | Tool-native indexes | Memory tools |
 |---|---|---|---|---|
 | What it stores | Factual docs (what code does) | Behavioral rules (how AI acts) | Embeddings / vectors | Conversation history |
 | Portable across tools | Yes — plain YAML in git | No — tool-specific | No — proprietary | No — tied to service |
@@ -105,7 +105,7 @@ The schemas are published in the npm package and can be used for editor autocomp
 | Staleness detection | Yes — fingerprint-based | No | Varies | N/A |
 | Self-maintaining | Yes — embedded instructions | No | Auto-updated | Auto-updated |
 
-**dotcontext is not:**
+**autocontext is not:**
 - An agent framework (no tool calling, no execution)
 - A vector database (no embeddings, no semantic search)
 - Behavioral rules (that's what CLAUDE.md is for)
@@ -113,7 +113,7 @@ The schemas are published in the npm package and can be used for editor autocomp
 
 ## Comparison Questions
 
-Use these questions when comparing dotcontext with alternatives (tool-native indexes, memory systems, CLAUDE.md-only workflows, etc.):
+Use these questions when comparing autocontext with alternatives (tool-native indexes, memory systems, CLAUDE.md-only workflows, etc.):
 
 1. Can I fetch context by **directory** and **field** (not just full-text blobs)?
 2. Can I detect **staleness** automatically when code changes?
@@ -128,7 +128,7 @@ Use these questions when comparing dotcontext with alternatives (tool-native ind
 ## Quick Start
 
 ```bash
-npm install -g dotcontext
+npm install -g autocontext
 
 context init                # Generate lean .context.yaml files and AGENTS.md
 context status              # Check which files are fresh/stale
@@ -205,7 +205,7 @@ context health --json
 
 ## Lean vs Full Mode
 
-By default, dotcontext generates **lean** context files — a routing layer that tells LLMs what they need to know without duplicating information available in source code.
+By default, autocontext generates **lean** context files — a routing layer that tells LLMs what they need to know without duplicating information available in source code.
 
 **Lean mode** (default) produces:
 - `summary` — 1-3 sentences describing the directory's purpose
@@ -250,10 +250,10 @@ Three tools via [Model Context Protocol](https://modelcontextprotocol.io) (stdio
 
 ```bash
 # Claude Code
-claude mcp add dotcontext -- context serve --path /path/to/project
+claude mcp add autocontext -- context serve --path /path/to/project
 
 # Cursor (.cursor/mcp.json)
-{ "mcpServers": { "dotcontext": { "command": "context", "args": ["serve", "--path", "."] } } }
+{ "mcpServers": { "autocontext": { "command": "context", "args": ["serve", "--path", "."] } } }
 ```
 
 See [docs/integrations.md](docs/integrations.md) for Windsurf, Continue, generic MCP clients, non-MCP usage, and CI/CD setup.
@@ -320,7 +320,7 @@ context config              # View current settings
 | [CI/CD Guide](docs/ci.md) | GitHub Actions, GitLab CI, fail policies |
 | [Versioning](docs/versioning.md) | Schema version policy and compatibility guarantees |
 | [Troubleshooting](docs/troubleshooting.md) | Common issues with fixes |
-| [Limitations](docs/limitations.md) | What dotcontext does not guarantee |
+| [Limitations](docs/limitations.md) | What autocontext does not guarantee |
 | [MCP Contract](docs/mcp.md) | MCP tool request/response shapes and error semantics |
 | [Evidence](docs/evidence.md) | Evidence contract: artifact formats, search paths, freshness |
 

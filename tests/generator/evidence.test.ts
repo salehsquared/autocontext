@@ -235,7 +235,7 @@ describe("coverage evidence", () => {
 
 describe("commit SHA", () => {
   it("resolves SHA from a real git repo", async () => {
-    // This test runs inside the dotcontext repo itself
+    // This test runs inside the autocontext repo itself
     const sha = await resolveGitHeadSha(process.cwd());
     expect(sha).not.toBeNull();
     expect(sha).toMatch(/^[0-9a-f]{40}$/i);

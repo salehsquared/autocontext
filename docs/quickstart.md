@@ -1,11 +1,11 @@
 # Quickstart
 
-Get dotcontext running in 5 minutes. No API key needed.
+Get autocontext running in 5 minutes. No API key needed.
 
 ## 1. Install
 
 ```bash
-npm install -g dotcontext
+npm install -g autocontext
 ```
 
 Requires Node.js >= 18.
@@ -91,7 +91,7 @@ Strict mode catches phantom files, unlisted files, and phantom interfaces when t
 ### Claude Code
 
 ```bash
-claude mcp add dotcontext -- context serve --path /path/to/project
+claude mcp add autocontext -- context serve --path /path/to/project
 ```
 
 ### Cursor
@@ -101,7 +101,7 @@ Add to `.cursor/mcp.json`:
 ```json
 {
   "mcpServers": {
-    "dotcontext": {
+    "autocontext": {
       "command": "context",
       "args": ["serve", "--path", "/path/to/project"]
     }
