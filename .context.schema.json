@@ -356,7 +356,7 @@
     "maintenance"
   ],
   "additionalProperties": false,
-  "$id": "https://dotcontext.dev/schema/v1/context.json",
+  "$id": "https://autocontext.dev/schema/v1/context.json",
   "title": ".context.yaml",
-  "description": "Schema for dotcontext directory-level context files (v1)"
+  "description": "Schema for autocontext directory-level context files (v1)"
 }

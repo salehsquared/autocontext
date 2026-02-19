@@ -9,8 +9,8 @@ ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
 
 if [[ ! -f "dist/index.js" ]]; then
-  echo "[dotcontext] dist/index.js not found; skipping context sync hook."
-  echo "[dotcontext] Run 'npm run build' once to enable hook-based context sync."
+  echo "[autocontext] dist/index.js not found; skipping context sync hook."
+  echo "[autocontext] Run 'npm run build' once to enable hook-based context sync."
   exit 0
 fi
 

@@ -52,7 +52,7 @@
     "provider"
   ],
   "additionalProperties": false,
-  "$id": "https://dotcontext.dev/schema/v1/config.json",
+  "$id": "https://autocontext.dev/schema/v1/config.json",
   "title": ".context.config.yaml",
-  "description": "Schema for dotcontext project configuration files (v1)"
+  "description": "Schema for autocontext project configuration files (v1)"
 }
