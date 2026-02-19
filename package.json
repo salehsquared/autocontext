@@ -1,6 +1,6 @@
 {
   "name": "autocontext",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Folder-level documentation for LLMs — .context.yaml files for every directory",
   "type": "module",
   "bin": {
