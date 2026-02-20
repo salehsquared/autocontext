@@ -5,16 +5,16 @@ Get autocontext running in 5 minutes. No API key needed.
 ## 1. Install
 
 ```bash
-npm install -g autocontext
+npm install -D autocontext
 ```
 
-Requires Node.js >= 18.
+Requires Node.js >= 18. If you prefer a global binary, use `npm install -g autocontext` and run `context ...`.
 
 ## 2. Generate Context Files
 
 ```bash
 cd your-project
-context init
+npx context init
 ```
 
 ```
@@ -38,7 +38,7 @@ This uses static analysis by default — no API key, no cloud calls, fully offli
 ## 3. Check Freshness
 
 ```bash
-context status
+npx context status
 ```
 
 ```
@@ -53,7 +53,7 @@ All directories show **fresh** because nothing has changed since generation. Edi
 ## 4. View a Context File
 
 ```bash
-context show src/core
+npx context show src/core
 ```
 
 ```yaml
@@ -72,16 +72,16 @@ maintenance: |
 If you want `files`, `interfaces`, and richer dependency detail in generated output:
 
 ```bash
-context init --full
+npx context init --full
 # or
-context regen --all --full
+npx context regen --all --full
 ```
 
 ## 5. Validate
 
 ```bash
-context validate              # Schema compliance check
-context validate --strict     # Cross-reference against actual source code
+npx context validate              # Schema compliance check
+npx context validate --strict     # Cross-reference against actual source code
 ```
 
 Strict mode catches phantom files, unlisted files, and phantom interfaces when those fields are present. In lean contexts (no `files` field), file-list checks are skipped by design.
@@ -91,7 +91,7 @@ Strict mode catches phantom files, unlisted files, and phantom interfaces when t
 ### Claude Code
 
 ```bash
-claude mcp add autocontext -- context serve --path /path/to/project
+claude mcp add autocontext -- npx --no-install context serve --path /path/to/project
 ```
 
 ### Cursor
@@ -102,8 +102,8 @@ Add to `.cursor/mcp.json`:
 {
   "mcpServers": {
     "autocontext": {
-      "command": "context",
-      "args": ["serve", "--path", "/path/to/project"]
+      "command": "npx",
+      "args": ["--no-install", "context", "serve", "--path", "/path/to/project"]
     }
   }
 }
@@ -112,15 +112,15 @@ Add to `.cursor/mcp.json`:
 ### Any MCP Client
 
 ```bash
-context serve --path /path/to/project
+npx context serve --path /path/to/project
 ```
 
 The MCP server exposes three tools: `query_context`, `check_freshness`, and `list_contexts`. See [integrations.md](integrations.md) for detailed recipes.
 
 ## Next Steps
 
-- Want richer summaries? Run `context init --llm` to use an LLM provider
+- Want richer summaries? Run `npx context init --llm` to use an LLM provider
 - Want test evidence? Add `--evidence` flag to collect from existing test artifacts
-- Want real-time monitoring? Run `context watch`
+- Want real-time monitoring? Run `npx context watch`
 - See [schema.md](schema.md) for the full `.context.yaml` field reference
 - See [trust-model.md](trust-model.md) to understand which fields are machine-derived vs LLM-generated

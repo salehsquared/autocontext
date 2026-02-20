@@ -1,17 +1,47 @@
 version: 1
-last_updated: 2026-02-14T15:56:34.154Z
+last_updated: 2026-02-20T16:42:18.498Z
 fingerprint: 5d44e68f
 scope: conformance/valid
 summary: Source directory.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the summary, and any decisions or constraints that changed.
+  your changes. Update the files list, interfaces, and current_state sections.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
+files:
+  - name: full.meta.json
+    purpose: JSON data/configuration
+  - name: full.yaml
+    purpose: YAML configuration
+  - name: lean.meta.json
+    purpose: JSON data/configuration
+  - name: lean.yaml
+    purpose: YAML configuration
+  - name: minimal.meta.json
+    purpose: JSON data/configuration
+  - name: minimal.yaml
+    purpose: YAML configuration
+  - name: root-context.meta.json
+    purpose: JSON data/configuration
+  - name: root-context.yaml
+    purpose: YAML configuration
+  - name: with-evidence.meta.json
+    purpose: JSON data/configuration
+  - name: with-evidence.yaml
+    purpose: YAML configuration
+  - name: with-exports.meta.json
+    purpose: JSON data/configuration
+  - name: with-exports.yaml
+    purpose: YAML configuration
+  - name: with-full-evidence.meta.json
+    purpose: JSON data/configuration
+  - name: with-full-evidence.yaml
+    purpose: YAML configuration
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
+  - files

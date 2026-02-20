@@ -1,23 +1,58 @@
 version: 1
-last_updated: 2026-02-19T21:46:38.783Z
+last_updated: 2026-02-20T16:42:19.002Z
 fingerprint: fa8df9b1
 scope: tests/generator
 summary: Code generation.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the summary, and any decisions or constraints that changed.
+  your changes. Update the files list, interfaces, and current_state sections.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
+files:
+  - name: evidence.test.ts
+    purpose: Test file
+  - name: markdown.test.ts
+    purpose: Test file
 dependencies:
   internal:
     - ../../src/generator/evidence.js
     - ../../src/generator/markdown.js
     - ../helpers.js
+imports:
+  - path: ../../src/generator/evidence.js
+    symbols:
+      - collectBasicEvidence
+      - resolveGitHeadSha
+  - path: ../../src/generator/markdown.js
+    symbols:
+      - AGENTS_SECTION_END
+      - AGENTS_SECTION_START
+      - AgentsEntry
+      - applyAgentsSection
+      - detectAgentsAction
+      - escapeSummary
+      - generateAgentsMd
+      - generateAgentsSection
+  - path: ../helpers.js
+    symbols:
+      - cleanupTmpDir
+      - createFile
+      - createTmpDir
+internals:
+  - name: sampleEntries
+    kind: constant
+    file: markdown.test.ts
+  - name: escapeRegex
+    kind: function
+    file: markdown.test.ts
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
+  - files
   - dependencies.internal
+  - imports
+  - internals

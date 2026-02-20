@@ -1,6 +1,7 @@
 # CI/CD Pipeline Guide
 
 autocontext integrates into CI pipelines to enforce context quality. The key command is `context validate --strict`.
+Examples below assume `autocontext` is in your repo `devDependencies` (`npm install -D autocontext`).
 
 ## GitHub Actions
 
@@ -18,8 +19,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-      - run: npm install -g autocontext
-      - run: context validate --strict
+      - run: npm ci
+      - run: npx context validate --strict
 ```
 
 This fails the build if any `.context.yaml` has schema violations. Strict findings (phantom files, unlisted files) are reported but don't change the exit code — see "Fail Policy" below for stricter options.
@@ -39,8 +40,8 @@ jobs:
         with:
           node-version: 18
           cache: npm
-      - run: npm install -g autocontext
-      - run: context validate --strict
+      - run: npm ci
+      - run: npx context validate --strict
 ```
 
 ## GitLab CI
@@ -49,8 +50,8 @@ jobs:
 validate-context:
   image: node:18
   script:
-    - npm install -g autocontext
-    - context validate --strict
+    - npm ci
+    - npx context validate --strict
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 ```
@@ -81,7 +82,7 @@ validate-context:
 ```yaml
 - name: Validate context (strict)
   run: |
-    OUTPUT=$(context validate --strict 2>&1)
+    OUTPUT=$(npx context validate --strict 2>&1)
     echo "$OUTPUT"
     if echo "$OUTPUT" | grep -q "strict:.*warning"; then
       echo "::error::Strict validation found warnings"
@@ -96,7 +97,7 @@ This enforces tight alignment between context files and source code. Good for pr
 ```yaml
 - name: Validate context (strict)
   run: |
-    OUTPUT=$(context validate --strict 2>&1)
+    OUTPUT=$(npx context validate --strict 2>&1)
     echo "$OUTPUT"
     if echo "$OUTPUT" | grep -q "phantom file"; then
       echo "::error::Context references files that don't exist"
@@ -110,7 +111,7 @@ Catches the worst drift (referencing deleted files) while allowing unlisted new 
 
 ```yaml
 - name: Validate context (strict)
-  run: context validate --strict
+  run: npx context validate --strict
   continue-on-error: true
 ```
 
@@ -136,8 +137,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-      - run: npm install -g autocontext
-      - run: context regen --all --no-llm
+      - run: npm ci
+      - run: npx context regen --all --no-llm
       - name: Commit if changed
         run: |
           git diff --quiet || {
@@ -156,8 +157,8 @@ This uses static analysis only (no LLM, no cost). For LLM regeneration, add API 
 For most teams, start with this and tighten over time:
 
 ```
-Week 1:  context validate              (catch broken YAML)
-Week 2:  context validate --strict     (see drift reports)
+Week 1:  npx context validate              (catch broken YAML)
+Week 2:  npx context validate --strict     (see drift reports)
 Week 4:  Fail on phantom files         (enforce basics)
 Month 2: Fail on all warnings          (enforce full alignment)
 ```

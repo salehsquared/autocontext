@@ -1,21 +1,21 @@
 version: 1
-last_updated: 2026-02-18T18:20:49.443Z
+last_updated: 2026-02-20T16:42:18.829Z
 fingerprint: e9b1ef0c
 scope: src
 summary: Source code.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the summary, and any decisions or constraints that changed.
+  your changes. Update the files list, interfaces, and current_state sections.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
+files:
+  - name: index.ts
+    purpose: "Exports: CommandHandlers, createProgram, runCli"
 subdirectories:
   - name: bench/
-    summary: >
-      The `src/bench` directory provides a framework for benchmarking the performance of AI models using structured
-      tasks. It includes the setup for cloning repositories, generating tasks based on code structure, and scoring the
-      results of model responses.
+    summary: Source directory.
   - name: commands/
     summary: CLI command implementations.
   - name: core/
@@ -25,20 +25,20 @@ subdirectories:
   - name: mcp/
     summary: MCP server integration.
   - name: providers/
-    summary: >
-      This directory contains implementations of different LLM (Large Language Model) providers that adhere to a common
-      interface. Each provider class is responsible for generating responses from its respective model using either SDKs
-      or direct API calls.
+    summary: Abstract LLM provider interface.
   - name: utils/
-    summary: >
-      The src/utils directory provides utility functions for managing configuration, environment variables, and
-      processing tasks with bounded concurrency. It contains functionalities for loading and saving configurations,
-      handling environment variables, and displaying messages. Additionally, it includes methods for token estimation
-      and filtering.
+    summary: Utility functions.
 exports:
   - interface CommandHandlers
   - "function createProgram(handlers: CommandHandlers = defaultHandlers): Command"
   - "async function runCli( argv: string[] = process.argv, handlers: CommandHandlers = defaultHandlers, ): Promise<void>"
+interfaces:
+  - name: CommandHandlers
+    description: Exported from index.ts
+  - name: createProgram
+    description: Exported from index.ts
+  - name: runCli
+    description: Exported from index.ts
 dependencies:
   internal:
     - ./commands/bench.js
@@ -57,11 +57,74 @@ dependencies:
     - ./mcp/server.js
     - ./utils/display.js
     - ./utils/env.js
+imports:
+  - path: ./commands/bench.js
+    symbols:
+      - benchCommand
+  - path: ./commands/config.js
+    symbols:
+      - configCommand
+  - path: ./commands/doctor.js
+    symbols:
+      - doctorCommand
+  - path: ./commands/health.js
+    symbols:
+      - healthCommand
+  - path: ./commands/ignore.js
+    symbols:
+      - ignoreCommand
+  - path: ./commands/init.js
+    symbols:
+      - initCommand
+  - path: ./commands/regen.js
+    symbols:
+      - regenCommand
+  - path: ./commands/rehash.js
+    symbols:
+      - rehashCommand
+  - path: ./commands/show.js
+    symbols:
+      - showCommand
+  - path: ./commands/stats.js
+    symbols:
+      - statsCommand
+  - path: ./commands/status.js
+    symbols:
+      - statusCommand
+  - path: ./commands/validate.js
+    symbols:
+      - validateCommand
+  - path: ./commands/watch.js
+    symbols:
+      - watchCommand
+  - path: ./mcp/server.js
+    symbols:
+      - startMcpServer
+  - path: ./utils/display.js
+    symbols:
+      - errorMsg
+  - path: ./utils/env.js
+    symbols:
+      - loadEnvForCli
+internals:
+  - name: defaultHandlers
+    kind: constant
+    file: index.ts
+  - name: isInvokedDirectly
+    kind: function
+    file: index.ts
+  - name: invokedDirectly
+    kind: constant
+    file: index.ts
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
+  - files
+  - interfaces
   - exports
   - dependencies.internal
+  - imports
+  - internals
   - subdirectories

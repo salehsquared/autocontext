@@ -1,26 +1,32 @@
 version: 1
-last_updated: 2026-02-13T17:38:56.335Z
+last_updated: 2026-02-20T16:42:18.848Z
 fingerprint: 630f3442
 scope: tests/bench
-summary: >
-  The tests/bench directory contains unit tests that evaluate the functionality and performance of the components in the
-  bench module. It ensures that features related to git operations, task generation, scoring, and prompt building work
-  as intended and meet specified requirements.
+summary: Test suite.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the summary, and any decisions or constraints that changed.
+  your changes. Update the files list, interfaces, and current_state sections.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-decisions:
-  - what: Use Vitest as the testing framework
-    why: Vitest is designed for Vite and provides fast and efficient testing capabilities for modern JavaScript projects.
-    tradeoff: It may require developers to learn its specific syntax and features compared to more commonly used frameworks
-      like Jest.
-constraints:
-  - Tests must clean up any temporary resources created during execution to avoid side effects.
-  - Each test should run independently to ensure no shared state interferes with test outcomes.
+files:
+  - name: git.test.ts
+    purpose: Test file
+  - name: ground-truth.test.ts
+    purpose: Test file
+  - name: prompts.test.ts
+    purpose: Test file
+  - name: repos.test.ts
+    purpose: Test file
+  - name: runner.test.ts
+    purpose: Test file
+  - name: scorer.test.ts
+    purpose: Test file
+  - name: tasks.test.ts
+    purpose: Test file
+  - name: token-estimator.test.ts
+    purpose: Test file
 dependencies:
   internal:
     - ../../src/bench/git.js
@@ -37,9 +43,92 @@ dependencies:
     - ./core.js
     - ./core/scanner.js
     - ./utils.js
+imports:
+  - path: ../../src/bench/git.js
+    symbols:
+      - getFeatureCommits
+      - getFixCommits
+      - isGitRepo
+  - path: ../../src/bench/ground-truth.js
+    symbols:
+      - buildDepSets
+      - buildDirFacts
+      - buildFileTree
+      - buildReverseDeps
+      - buildScopedFileTree
+      - computeScopeWindow
+  - path: ../../src/bench/prompts.js
+    symbols:
+      - buildBaselinePrompt
+      - buildContextPrompt
+      - buildJudgePrompt
+      - buildReadmeSnippet
+  - path: ../../src/bench/repos.js
+    symbols:
+      - DEFAULT_REPOS
+  - path: ../../src/bench/runner.js
+    symbols:
+      - runBench
+  - path: ../../src/bench/scorer.js
+    symbols:
+      - aggregateMultiRepo
+      - aggregateResults
+      - detectAbstention
+      - scoreFileSetF1
+      - scoreListCoverage
+      - scoreLlmJudge
+      - scoreMrr
+      - scoreTargetHit
+      - scoreTopkRecall
+  - path: ../../src/bench/tasks.js
+    symbols:
+      - generateTasks
+      - seededSample
+  - path: ../../src/bench/token-estimator.js
+    symbols:
+      - estimateInputTokens
+      - resolveTokenProfile
+  - path: ../../src/bench/types.js
+    symbols:
+      - BenchTask
+      - Commit
+      - DirFacts
+      - TaskResult
+  - path: ../helpers.js
+    symbols:
+      - cleanupTmpDir
+      - createFile
+      - createTmpDir
+      - makeScanResult
+      - makeValidContext
+  - path: ./b.js
+    symbols:
+      - x
+  - path: ./core.js
+    symbols:
+      - scan
+  - path: ./core/scanner.js
+    symbols:
+      - scan
+  - path: ./utils.js
+    symbols:
+      - helper
+internals:
+  - name: initGitRepo
+    kind: function
+    file: git.test.ts
+  - name: commitFile
+    kind: function
+    file: git.test.ts
+  - name: makeInput
+    kind: function
+    file: tasks.test.ts
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
+  - files
   - dependencies.internal
+  - imports
+  - internals

@@ -81,6 +81,20 @@ async function crossReference(dir: ScanResult, context: ContextFile): Promise<St
     }
   }
 
+  // 4. Import bindings vs dependencies.internal
+  // Skip entries whose only symbol is (side-effect) — detectInternalDeps intentionally
+  // does not capture side-effect imports (import "./path"), so these would always mismatch.
+  if (context.imports && context.imports.length > 0 && context.dependencies?.internal) {
+    const internalDepSet = new Set(context.dependencies.internal);
+    for (const imp of context.imports) {
+      const isSideEffectOnly = imp.symbols.length === 1 && imp.symbols[0] === "(side-effect)";
+      if (isSideEffectOnly) continue;
+      if (!internalDepSet.has(imp.path)) {
+        findings.push({ severity: "info", message: `import binding path not in dependencies.internal: ${imp.path}` });
+      }
+    }
+  }
+
   return findings;
 }
 

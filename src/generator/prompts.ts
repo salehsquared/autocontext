@@ -14,7 +14,7 @@ Rules:
 - Output ONLY valid YAML — no markdown fences, no explanatory text.
 - Follow the exact field structure shown in the user prompt.
 - The following fields are machine-derived and will be overlaid automatically. Do NOT generate them:
-  dependencies.external, dependencies.internal, derived_fields, evidence, subdirectories, version, last_updated, fingerprint, scope, maintenance
+  dependencies.external, dependencies.internal, imports, internals, derived_fields, evidence, subdirectories, version, last_updated, fingerprint, scope, maintenance
 - Focus your analysis on narrative fields: summary, files[].purpose, interfaces[].description, decisions, constraints, current_state`;
 
 export const LEAN_SYSTEM_PROMPT = `You are a technical documentation generator producing lean .context.yaml routing files.

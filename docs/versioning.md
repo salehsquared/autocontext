@@ -39,7 +39,7 @@ If the CLI encounters a `.context.yaml` with a `version` higher than it supports
 - **`context regen`** / **`context rehash`** / **`context watch`** — skips the directory with a warning
 - **No silent data loss** — the file is never modified, deleted, or misinterpreted
 
-Update your CLI (`npm install -g autocontext@latest`) to get support for newer schema versions.
+Update your dependency (`npm install -D autocontext@latest`) to get support for newer schema versions.
 
 ### For tool developers
 

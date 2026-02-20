@@ -1,32 +1,25 @@
 version: 1
-last_updated: 2026-02-13T17:38:37.839Z
+last_updated: 2026-02-20T16:42:18.993Z
 fingerprint: 46b5fc2a
 scope: tests/fixtures/monorepo
-summary: >
-  This directory contains the configuration for a monorepo setup, supporting multiple packages under a single workspace.
-  It allows for organized development and shared components across the entire monorepo.
+summary: Source directory.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the summary, and any decisions or constraints that changed.
+  your changes. Update the files list, interfaces, and current_state sections.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-decisions:
-  - what: Utilizing workspaces in package.json
-    why: To manage multiple packages within a single repository while reducing complexity in dependency management.
-    tradeoff: Can lead to increased build times if not managed properly, as all packages are interconnected.
-constraints:
-  - All packages must adhere to the versioning and dependency rules defined in the monorepo package.json.
+files:
+  - name: package.json
+    purpose: Node.js project configuration and dependencies
 subdirectories:
   - name: packages/
-    summary: >
-      This directory contains the packages of a monorepo, including the API package and shared type definitions. It
-      serves to encapsulate the API functionality and provide consistent typing across various components of the
-      monorepo.
+    summary: Source directory.
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
+  - files
   - subdirectories

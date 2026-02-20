@@ -6,6 +6,8 @@ import { SCHEMA_VERSION, DEFAULT_MAINTENANCE, FULL_MAINTENANCE } from "../core/s
 import { computeFingerprint } from "../core/fingerprint.js";
 import { detectExportsAST, detectExportSignaturesAST } from "./ast.js";
 import { detectExternalDeps, detectInternalDeps } from "./dependencies.js";
+import { detectImportBindings } from "./imports.js";
+import { detectInternals } from "./internals.js";
 import { collectBasicEvidence } from "./evidence.js";
 
 export type SummarySource = "project" | "docstring" | "dirname" | "pattern" | "fallback";
@@ -103,6 +105,20 @@ export async function generateStaticContext(
     if (internalDeps.length > 0) context.dependencies.internal = internalDeps;
   }
 
+  // Import bindings (both lean and full — high-value routing data)
+  const importBindings = await detectImportBindings(scanResult);
+  if (importBindings.length > 0) {
+    context.imports = importBindings;
+  }
+
+  // Internals: non-exported declarations (full mode only)
+  if (isFull) {
+    const internals = await detectInternals(scanResult);
+    if (internals.length > 0) {
+      context.internals = internals;
+    }
+  }
+
   // Root-level: always add project metadata and structure
   if (isRoot) {
     context.project = (await detectProjectMeta(scanResult.path)) ?? {
@@ -146,6 +162,8 @@ export async function generateStaticContext(
   if (context.exports) derivedFields.push("exports");
   if (context.dependencies?.external) derivedFields.push("dependencies.external");
   if (context.dependencies?.internal) derivedFields.push("dependencies.internal");
+  if (context.imports) derivedFields.push("imports");
+  if (context.internals) derivedFields.push("internals");
   if (context.subdirectories) derivedFields.push("subdirectories");
   if (context.project) derivedFields.push("project");
   if (context.structure) derivedFields.push("structure");

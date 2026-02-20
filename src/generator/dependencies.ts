@@ -134,26 +134,29 @@ export async function detectInternalDeps(scanResult: ScanResult): Promise<string
       continue;
     }
 
+    // Strip comments to avoid matching import-like patterns in documentation
+    const stripped = stripDepsComments(content, ext);
+
     if ([".ts", ".tsx", ".js", ".jsx"].includes(ext)) {
       // ES import: import ... from "./..."
-      const esImports = content.matchAll(/import\s+(?:[\s\S]*?)\s+from\s+["'](\.[^"']+)["']/g);
+      const esImports = stripped.matchAll(/import\s+(?:[\s\S]*?)\s+from\s+["'](\.[^"']+)["']/g);
       for (const match of esImports) {
         imports.add(match[1]);
       }
       // require("./...")
-      const cjsImports = content.matchAll(/require\(["'](\.[^"']+)["']\)/g);
+      const cjsImports = stripped.matchAll(/require\(["'](\.[^"']+)["']\)/g);
       for (const match of cjsImports) {
         imports.add(match[1]);
       }
     } else if (ext === ".py") {
       // from .foo import bar (relative imports only)
-      const pyImports = content.matchAll(/from\s+(\.[a-zA-Z0-9_.]+)\s+import/g);
+      const pyImports = stripped.matchAll(/from\s+(\.[a-zA-Z0-9_.]+)\s+import/g);
       for (const match of pyImports) {
         imports.add(match[1]);
       }
     } else if (ext === ".rs") {
       // use crate::module
-      const rsImports = content.matchAll(/use\s+crate::([a-zA-Z0-9_]+)/g);
+      const rsImports = stripped.matchAll(/use\s+crate::([a-zA-Z0-9_]+)/g);
       for (const match of rsImports) {
         imports.add(`crate::${match[1]}`);
       }
@@ -161,4 +164,16 @@ export async function detectInternalDeps(scanResult: ScanResult): Promise<string
   }
 
   return [...imports].sort().slice(0, 20);
+}
+
+function stripDepsComments(content: string, ext: string): string {
+  if ([".ts", ".tsx", ".js", ".jsx", ".rs"].includes(ext)) {
+    return content
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/\/\/.*$/gm, "");
+  }
+  if (ext === ".py") {
+    return content.replace(/#.*$/gm, "");
+  }
+  return content;
 }

@@ -85,6 +85,101 @@ const LANGUAGE_CONFIGS: Record<string, LanguageConfig> = {
   },
 };
 
+// --- All top-level declarations (for internals extraction) ---
+// These queries capture ALL declarations at module scope, both exported and non-exported.
+// The caller subtracts exports (from detectExportsAST) to derive internals.
+// Capture names indicate the kind: @function, @constant, @class, @type, @interface, @enum.
+
+interface AllDeclsConfig {
+  wasmFile: string;
+  query: string;
+}
+
+const ALL_DECL_CONFIGS: Record<string, AllDeclsConfig> = {
+  ".ts": {
+    wasmFile: "tree-sitter-typescript.wasm",
+    query: `
+      (program (function_declaration name: (identifier) @function))
+      (program (export_statement (function_declaration name: (identifier) @function)))
+      (program (lexical_declaration (variable_declarator name: (identifier) @constant)))
+      (program (export_statement (lexical_declaration (variable_declarator name: (identifier) @constant))))
+      (program (class_declaration name: (type_identifier) @class))
+      (program (export_statement (class_declaration name: (type_identifier) @class)))
+      (program (type_alias_declaration name: (type_identifier) @type))
+      (program (export_statement (type_alias_declaration name: (type_identifier) @type)))
+      (program (interface_declaration name: (type_identifier) @interface))
+      (program (export_statement (interface_declaration name: (type_identifier) @interface)))
+      (program (enum_declaration name: (identifier) @enum))
+      (program (export_statement (enum_declaration name: (identifier) @enum)))
+    `,
+  },
+  ".tsx": {
+    wasmFile: "tree-sitter-typescript.wasm",
+    query: `
+      (program (function_declaration name: (identifier) @function))
+      (program (export_statement (function_declaration name: (identifier) @function)))
+      (program (lexical_declaration (variable_declarator name: (identifier) @constant)))
+      (program (export_statement (lexical_declaration (variable_declarator name: (identifier) @constant))))
+      (program (class_declaration name: (type_identifier) @class))
+      (program (export_statement (class_declaration name: (type_identifier) @class)))
+      (program (type_alias_declaration name: (type_identifier) @type))
+      (program (export_statement (type_alias_declaration name: (type_identifier) @type)))
+      (program (interface_declaration name: (type_identifier) @interface))
+      (program (export_statement (interface_declaration name: (type_identifier) @interface)))
+      (program (enum_declaration name: (identifier) @enum))
+      (program (export_statement (enum_declaration name: (identifier) @enum)))
+    `,
+  },
+  ".js": {
+    wasmFile: "tree-sitter-javascript.wasm",
+    query: `
+      (program (function_declaration name: (identifier) @function))
+      (program (export_statement (function_declaration name: (identifier) @function)))
+      (program (lexical_declaration (variable_declarator name: (identifier) @constant)))
+      (program (export_statement (lexical_declaration (variable_declarator name: (identifier) @constant))))
+      (program (class_declaration name: (identifier) @class))
+      (program (export_statement (class_declaration name: (identifier) @class)))
+    `,
+  },
+  ".jsx": {
+    wasmFile: "tree-sitter-javascript.wasm",
+    query: `
+      (program (function_declaration name: (identifier) @function))
+      (program (export_statement (function_declaration name: (identifier) @function)))
+      (program (lexical_declaration (variable_declarator name: (identifier) @constant)))
+      (program (export_statement (lexical_declaration (variable_declarator name: (identifier) @constant))))
+      (program (class_declaration name: (identifier) @class))
+      (program (export_statement (class_declaration name: (identifier) @class)))
+    `,
+  },
+  ".py": {
+    wasmFile: "tree-sitter-python.wasm",
+    query: `
+      (module (function_definition name: (identifier) @function))
+      (module (decorated_definition (function_definition name: (identifier) @function)))
+      (module (class_definition name: (identifier) @class))
+      (module (decorated_definition (class_definition name: (identifier) @class)))
+    `,
+  },
+  ".go": {
+    wasmFile: "tree-sitter-go.wasm",
+    query: `
+      (function_declaration name: (identifier) @function)
+      (method_declaration name: (field_identifier) @function)
+      (type_declaration (type_spec name: (type_identifier) @type))
+    `,
+  },
+  ".rs": {
+    wasmFile: "tree-sitter-rust.wasm",
+    query: `
+      (function_item name: (identifier) @function)
+      (struct_item name: (type_identifier) @type)
+      (enum_item name: (type_identifier) @enum)
+      (trait_item name: (type_identifier) @interface)
+    `,
+  },
+};
+
 // Singleton parser and language cache
 let parserInstance: InstanceType<typeof import("web-tree-sitter").Parser> | null = null;
 const languageCache = new Map<string, InstanceType<typeof import("web-tree-sitter").Language>>();
@@ -320,6 +415,88 @@ function cleanFunctionSignature(text: string, lang: "ts" | "py" | "go" | "rs"): 
 
 function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export interface TopLevelDecl {
+  name: string;
+  kind: string;
+}
+
+/**
+ * Detect ALL top-level declarations using tree-sitter AST parsing.
+ * Returns all module-scope declarations with their kind, regardless of export status.
+ * Caller can subtract exports (from detectExportsAST) to derive internals.
+ * Returns null if tree-sitter is not available or the language is unsupported.
+ *
+ * For TS/JS: skips `let`/`var` declarations (only `const` → "constant").
+ * For Rust: includes all items (both pub and non-pub).
+ */
+export async function detectAllTopLevelAST(
+  content: string,
+  ext: string,
+): Promise<TopLevelDecl[] | null> {
+  const config = ALL_DECL_CONFIGS[ext];
+  if (!config) return null;
+
+  const grammarsDir = getGrammarsDir();
+  if (!existsSync(join(grammarsDir, config.wasmFile))) return null;
+
+  try {
+    const loaded = await loadTreeSitter();
+    if (!loaded) return null;
+
+    const parser = await getParser();
+    const language = await getLanguage(config.wasmFile);
+    parser.setLanguage(language);
+
+    const tree = parser.parse(content);
+    if (!tree) return null;
+    const query = getQuery(language, config.query);
+    const matches = query.matches(tree.rootNode);
+
+    const results: TopLevelDecl[] = [];
+    const seen = new Set<string>();
+
+    for (const match of matches) {
+      for (const capture of match.captures) {
+        const kind = capture.name; // capture name = kind (function, constant, class, etc.)
+        const name = capture.node.text;
+
+        if (seen.has(name)) continue;
+
+        // TS/JS: skip let/var declarations, only keep const
+        if (kind === "constant") {
+          const lexDecl = capture.node.parent?.parent;
+          if (lexDecl?.type === "lexical_declaration") {
+            const keyword = lexDecl.child(0);
+            if (keyword?.text !== "const") continue;
+          }
+        }
+
+        // Rust: skip items with visibility_modifier (those are public/exported)
+        if (ext === ".rs") {
+          const parentNode = capture.node.parent;
+          if (parentNode) {
+            let hasVisibility = false;
+            for (let i = 0; i < parentNode.childCount; i++) {
+              if (parentNode.child(i)?.type === "visibility_modifier") {
+                hasVisibility = true;
+                break;
+              }
+            }
+            if (hasVisibility) continue;
+          }
+        }
+
+        seen.add(name);
+        results.push({ name, kind });
+      }
+    }
+
+    return results;
+  } catch {
+    return null;
+  }
 }
 
 /** Check if tree-sitter WASM can load and grammars are available. */

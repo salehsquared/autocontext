@@ -4,12 +4,12 @@
   "description": "Folder-level documentation for LLMs — .context.yaml files for every directory",
   "type": "module",
   "bin": {
-    "context": "./dist/index.js"
+    "context": "dist/index.js"
   },
   "author": "Saleh Mostafa",
   "repository": {
     "type": "git",
-    "url": "https://github.com/salehsquared/autocontext.git"
+    "url": "git+https://github.com/salehsquared/autocontext.git"
   },
   "homepage": "https://github.com/salehsquared/autocontext",
   "bugs": {
@@ -64,6 +64,7 @@
   "devDependencies": {
     "@types/node": "^25.2.3",
     "ajv": "^8.17.1",
+    "autocontext": "^0.1.1",
     "tree-sitter-cli": "^0.26.5",
     "tree-sitter-go": "^0.25.0",
     "tree-sitter-javascript": "^0.25.0",

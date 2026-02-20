@@ -18,7 +18,7 @@ const FILTERABLE_FIELDS = [
   "summary", "files", "interfaces", "decisions", "constraints",
   "dependencies", "current_state", "subdirectories", "environment",
   "testing", "todos", "data_models", "events", "config",
-  "project", "structure", "maintenance", "exports",
+  "project", "structure", "maintenance", "exports", "imports", "internals",
 ] as const;
 
 // Metadata fields always included in filtered output
@@ -303,7 +303,8 @@ export function registerTools(server: McpServer, defaultRoot: string): void {
         filter: z.array(z.string()).optional().describe(
           "Optional list of fields to include: summary, files, interfaces, decisions, " +
           "constraints, dependencies, current_state, subdirectories, environment, " +
-          "testing, todos, data_models, events, config, project, structure, maintenance. " +
+          "testing, todos, data_models, events, config, project, structure, maintenance, " +
+          "exports, imports, internals. " +
           "Metadata fields (version, scope, fingerprint, last_updated) are always included.",
         ),
         path: z.string().optional().describe(

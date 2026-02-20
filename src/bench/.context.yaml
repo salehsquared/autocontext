@@ -1,15 +1,34 @@
 version: 1
-last_updated: 2026-02-19T21:46:38.645Z
-fingerprint: 7f9378f8
+last_updated: 2026-02-20T16:42:18.559Z
+fingerprint: 43b0dffa
 scope: src/bench
 summary: Source directory.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the summary, and any decisions or constraints that changed.
+  your changes. Update the files list, interfaces, and current_state sections.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
+files:
+  - name: git.ts
+    purpose: "Exports: isGitRepo, getFixCommits, getFeatureCommits (+1 more)"
+  - name: ground-truth.ts
+    purpose: "Exports: buildDepSets, buildReverseDeps, buildDirFacts (+4 more)"
+  - name: prompts.ts
+    purpose: "Exports: BENCH_SYSTEM_PROMPT, buildReadmeSnippet, buildBaselinePrompt (+2 more)"
+  - name: repos.ts
+    purpose: "Exports: DefaultRepo, DEFAULT_REPOS, cloneAndInit (+1 more)"
+  - name: runner.ts
+    purpose: "Exports: RunBenchOptions, runBench"
+  - name: scorer.ts
+    purpose: "Exports: JUDGE_SYSTEM_PROMPT, detectAbstention, scoreListCoverage (+8 more)"
+  - name: tasks.ts
+    purpose: "Exports: seededSample, generateTasks"
+  - name: token-estimator.ts
+    purpose: "Exports: resolveTokenProfile, estimateInputTokens"
+  - name: types.ts
+    purpose: "Exports: TaskCategory, ScoringMethod, ConditionName (+8 more)"
 exports:
   - "function isGitRepo(dirPath: string): boolean"
   - "function getFixCommits(repoPath: string, count: number): Commit[]"
@@ -38,6 +57,37 @@ exports:
   - JUDGE_SYSTEM_PROMPT
   - "function detectAbstention(response: string): boolean"
   - "function scoreListCoverage(response: string, expected: string[]): number"
+interfaces:
+  - name: isGitRepo
+    description: Exported from git.ts
+  - name: getFixCommits
+    description: Exported from git.ts
+  - name: getFeatureCommits
+    description: Exported from git.ts
+  - name: cloneRepo
+    description: Exported from git.ts
+  - name: buildDepSets
+    description: Exported from ground-truth.ts
+  - name: buildReverseDeps
+    description: Exported from ground-truth.ts
+  - name: buildDirFacts
+    description: Exported from ground-truth.ts
+  - name: buildFileTree
+    description: Exported from ground-truth.ts
+  - name: ScopeWindow
+    description: Exported from ground-truth.ts
+  - name: BENCH_SYSTEM_PROMPT
+    description: Exported from prompts.ts
+  - name: buildReadmeSnippet
+    description: Exported from prompts.ts
+  - name: buildBaselinePrompt
+    description: Exported from prompts.ts
+  - name: buildContextPrompt
+    description: Exported from prompts.ts
+  - name: buildJudgePrompt
+    description: Exported from prompts.ts
+  - name: DefaultRepo
+    description: Exported from repos.ts
 dependencies:
   internal:
     - ../core/scanner.js
@@ -51,10 +101,116 @@ dependencies:
     - ./scorer.js
     - ./token-estimator.js
     - ./types.js
+imports:
+  - path: ../core/scanner.js
+    symbols:
+      - ScanResult
+      - flattenBottomUp
+  - path: ../core/schema.js
+    symbols:
+      - ContextFile
+  - path: ../generator/dependencies.js
+    symbols:
+      - detectExternalDeps
+      - detectInternalDeps
+  - path: ../generator/static.js
+    symbols:
+      - detectExportsWithFallback
+  - path: ../providers/index.js
+    symbols:
+      - LLMProvider
+  - path: ./git.js
+    symbols:
+      - cloneRepo
+  - path: ./ground-truth.js
+    symbols:
+      - buildScopedFileTree
+  - path: ./prompts.js
+    symbols:
+      - BENCH_SYSTEM_PROMPT
+      - buildBaselinePrompt
+      - buildContextPrompt
+      - buildJudgePrompt
+      - buildReadmeSnippet
+  - path: ./scorer.js
+    symbols:
+      - JUDGE_SYSTEM_PROMPT
+      - detectAbstention
+      - scoreTask
+  - path: ./token-estimator.js
+    symbols:
+      - estimateInputTokens
+  - path: ./types.js
+    symbols:
+      - BenchReport
+      - BenchTask
+      - Commit
+      - ConditionName
+      - ConditionSummary
+      - DirFacts
+      - MultiRepoReport
+      - TaskCategory
+      - TaskResult
+internals:
+  - name: getChangedFiles
+    kind: function
+    file: git.ts
+  - name: queryCommits
+    kind: function
+    file: git.ts
+  - name: resolveImport
+    kind: function
+    file: ground-truth.ts
+  - name: resolveTrackedScope
+    kind: function
+    file: ground-truth.ts
+  - name: MAX_FILES_PER_SCOPE
+    kind: constant
+    file: ground-truth.ts
+  - name: DEFAULT_README_SNIPPET_CHARS
+    kind: constant
+    file: prompts.ts
+  - name: ABSTENTION_PATTERNS
+    kind: constant
+    file: scorer.ts
+  - name: extractPaths
+    kind: function
+    file: scorer.ts
+  - name: computeStddev
+    kind: function
+    file: scorer.ts
+  - name: summarizeCondition
+    kind: function
+    file: scorer.ts
+  - name: GenerateTasksInput
+    kind: interface
+    file: tasks.ts
+  - name: lcg
+    kind: function
+    file: tasks.ts
+  - name: ROUTING_PATTERNS
+    kind: constant
+    file: tasks.ts
+  - name: proportionalSample
+    kind: function
+    file: tasks.ts
+  - name: TokenProfile
+    kind: interface
+    file: token-estimator.ts
+  - name: DEFAULT_PROFILE
+    kind: constant
+    file: token-estimator.ts
+  - name: normalize
+    kind: function
+    file: token-estimator.ts
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
+  - files
+  - interfaces
   - exports
   - dependencies.internal
+  - imports
+  - internals

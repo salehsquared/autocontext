@@ -1,35 +1,57 @@
 version: 1
-last_updated: 2026-02-19T21:46:38.795Z
-fingerprint: c4661437
+last_updated: 2026-02-20T16:42:19.081Z
+fingerprint: a12e1f33
 scope: tests
 summary: Test suite.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the summary, and any decisions or constraints that changed.
+  your changes. Update the files list, interfaces, and current_state sections.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
+files:
+  - name: ast.test.ts
+    purpose: Test file
+  - name: dependencies.test.ts
+    purpose: Test file
+  - name: env.test.ts
+    purpose: Test file
+  - name: fingerprint.test.ts
+    purpose: Test file
+  - name: generator.test.ts
+    purpose: Test file
+  - name: helpers.ts
+    purpose: "Exports: createTmpDir, cleanupTmpDir, createFile (+4 more)"
+  - name: imports.test.ts
+    purpose: Test file
+  - name: index.test.ts
+    purpose: Test file
+  - name: internals.test.ts
+    purpose: Test file
+  - name: prompts.test.ts
+    purpose: Test file
+  - name: providers.test.ts
+    purpose: Test file
+  - name: scan-options.test.ts
+    purpose: Test file
+  - name: scanner.test.ts
+    purpose: Test file
+  - name: schema.test.ts
+    purpose: Test file
+  - name: writer.test.ts
+    purpose: Test file
 subdirectories:
   - name: bench/
-    summary: >
-      The tests/bench directory contains unit tests that evaluate the functionality and performance of the components in
-      the bench module. It ensures that features related to git operations, task generation, scoring, and prompt
-      building work as intended and meet specified requirements.
+    summary: Test suite.
   - name: commands/
     summary: CLI command implementations.
   - name: core/
-    summary: >
-      This directory contains unit tests for the core functionality of the markdown writer. It focuses on reading,
-      writing, and updating agent-related markdown files, ensuring proper handling of file operations and content
-      management.
+    summary: Core functionality.
   - name: e2e/
     summary: Source directory.
   - name: fixtures/
-    summary: >
-      The tests/fixtures directory provides test fixtures for various scenarios, including a monorepo setup, a simple
-      TypeScript project, and files designated to be ignored during testing. It serves to facilitate organized testing
-      across different project configurations.
+    summary: Test fixtures.
   - name: generator/
     summary: Code generation.
   - name: mcp/
@@ -44,6 +66,17 @@ exports:
   - "function makeValidContext(overrides?: Partial<ContextFile>): ContextFile"
   - "function makeLeanContext(overrides?: Partial<ContextFile>): ContextFile"
   - "function makeScanResult(path: string, overrides?: Partial<ScanResult>): ScanResult"
+interfaces:
+  - name: createTmpDir
+    description: Exported from helpers.ts
+  - name: cleanupTmpDir
+    description: Exported from helpers.ts
+  - name: createFile
+    description: Exported from helpers.ts
+  - name: createNestedFile
+    description: Exported from helpers.ts
+  - name: makeValidContext
+    description: Exported from helpers.ts
 dependencies:
   internal:
     - ../core/scanner.js
@@ -55,6 +88,8 @@ dependencies:
     - ../src/core/writer.js
     - ../src/generator/ast.js
     - ../src/generator/dependencies.js
+    - ../src/generator/imports.js
+    - ../src/generator/internals.js
     - ../src/generator/llm.js
     - ../src/generator/prompts.js
     - ../src/generator/static.js
@@ -63,14 +98,122 @@ dependencies:
     - ../src/utils/config.js
     - ../src/utils/env.js
     - ../src/utils/scan-options.js
-    - ./config.js
-    - ./helper.js
-    - ./helpers.js
+    - ../utils/helper.js
+imports:
+  - path: ../core/scanner.js
+    symbols:
+      - Scanner
+      - flattenBottomUp
+  - path: ../shared/utils.js
+    symbols:
+      - bar
+      - foo
+  - path: ../src/core/fingerprint.js
+    symbols:
+      - checkFreshness
+      - computeFingerprint
+  - path: ../src/core/scanner.js
+    symbols:
+      - ScanResult
+      - flattenBottomUp
+      - groupByDepth
+      - scanProject
+  - path: ../src/core/schema.js
+    symbols:
+      - CONFIG_FILENAME
+      - CONTEXT_FILENAME
+      - ConfigFile
+      - ContextFile
+      - DEFAULT_MAINTENANCE
+      - FULL_MAINTENANCE
+      - SCHEMA_VERSION
+      - configSchema
+      - contextSchema
+  - path: ../src/core/writer.js
+    symbols:
+      - UnsupportedVersionError
+      - readConfig
+      - readContext
+      - writeConfig
+      - writeContext
+  - path: ../src/generator/ast.js
+    symbols:
+      - detectExportsAST
+      - isTreeSitterAvailable
+  - path: ../src/generator/dependencies.js
+    symbols:
+      - detectExternalDeps
+      - detectInternalDeps
+  - path: ../src/generator/imports.js
+    symbols:
+      - detectImportBindings
+  - path: ../src/generator/internals.js
+    symbols:
+      - detectInternals
+  - path: ../src/generator/llm.js
+    symbols:
+      - generateLLMContext
+  - path: ../src/generator/prompts.js
+    symbols:
+      - SYSTEM_PROMPT
+      - buildUserPrompt
+  - path: ../src/generator/static.js
+    symbols:
+      - SummarySource
+      - buildSmartSummary
+      - extractOneSignature
+      - generateStaticContext
+  - path: ../src/index.js
+    symbols:
+      - CommandHandlers
+      - createProgram
+  - path: ../src/providers/index.js
+    symbols:
+      - LLMProvider
+      - createProvider
+  - path: ../src/utils/config.js
+    symbols:
+      - saveConfig
+  - path: ../src/utils/env.js
+    symbols:
+      - loadEnvForCli
+      - loadEnvLocal
+      - parseEnvLine
+      - resolvePathFromArgv
+  - path: ../src/utils/scan-options.js
+    symbols:
+      - loadScanOptions
+  - path: ../utils/helper.js
+    symbols:
+      - default as helper
+  - path: ./alpha.js
+    symbols:
+      - a
+internals:
+  - name: available
+    kind: constant
+    file: ast.test.ts
+  - name: TEST_ENV_KEYS
+    kind: constant
+    file: env.test.ts
+  - name: createMockProvider
+    kind: function
+    file: generator.test.ts
+  - name: makeHandlers
+    kind: function
+    file: index.test.ts
+  - name: parse
+    kind: function
+    file: index.test.ts
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
+  - files
+  - interfaces
   - exports
   - dependencies.internal
+  - imports
+  - internals
   - subdirectories

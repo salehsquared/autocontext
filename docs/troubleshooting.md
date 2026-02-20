@@ -2,6 +2,17 @@
 
 ## Common Issues
 
+### `context` command not found
+
+**Symptom:** `zsh: command not found: context` (or `autocontext`) after installing the package.
+
+**Cause:** `npm install autocontext` installs the CLI locally in `node_modules/.bin`; it does not add a global shell command.
+
+**Fixes:**
+- Run through your local install: `npx context init` (or `npm exec context init`)
+- Or install globally: `npm install -g autocontext` and then run `context ...`
+- Use `context`, not `autocontext`, as the CLI command name
+
 ### `context init` produces no files
 
 **Symptom:** "No directories with source files found."

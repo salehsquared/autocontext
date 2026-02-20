@@ -53,6 +53,18 @@ export function buildContextPrompt(
         prompt += `External deps: ${ctx.dependencies.external.join(", ")}\n`;
       }
     }
+    if (ctx.imports && ctx.imports.length > 0) {
+      const shown = ctx.imports.slice(0, 5);
+      const parts = shown.map(i => `${i.path} [${i.symbols.join(", ")}]`);
+      const suffix = ctx.imports.length > 5 ? `, ... and ${ctx.imports.length - 5} more` : "";
+      prompt += `Imports: ${parts.join(", ")}${suffix}\n`;
+    }
+    if (ctx.internals && ctx.internals.length > 0) {
+      const shown = ctx.internals.slice(0, 5);
+      const parts = shown.map(i => `${i.name} (${i.kind}, ${i.file})`);
+      const suffix = ctx.internals.length > 5 ? `, ... and ${ctx.internals.length - 5} more` : "";
+      prompt += `Internals: ${parts.join(", ")}${suffix}\n`;
+    }
     if (ctx.files && ctx.files.length > 0) {
       prompt += `Files:\n`;
       for (const f of ctx.files) {

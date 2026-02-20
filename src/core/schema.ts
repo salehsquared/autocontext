@@ -35,6 +35,17 @@ const subdirectoryEntrySchema = z.object({
   summary: z.string().describe("One-line summary of what this subdirectory contains"),
 });
 
+const importEntrySchema = z.object({
+  path: z.string().describe("Relative import path (matches dependencies.internal entry)"),
+  symbols: z.array(z.string()).describe("Imported symbol names, sorted alphabetically"),
+});
+
+const internalEntrySchema = z.object({
+  name: z.string().describe("Symbol name"),
+  kind: z.enum(["function", "class", "interface", "type", "constant", "enum"]),
+  file: z.string().describe("Source filename within this directory"),
+});
+
 // --- Root-only: project metadata ---
 
 const projectSchema = z.object({
@@ -97,6 +108,10 @@ export const contextSchema = z.object({
   config: z.array(z.string()).optional(),
   exports: z.array(z.string()).optional()
     .describe("Compact method signatures and API surface"),
+  imports: z.array(importEntrySchema).optional()
+    .describe("Symbol-level import bindings from relative imports"),
+  internals: z.array(internalEntrySchema).optional()
+    .describe("Non-exported top-level declarations (full mode only)"),
 
   // Root-only fields (optional, only present in root .context.yaml)
   project: projectSchema.optional(),
@@ -133,6 +148,8 @@ export type SubdirectoryEntry = z.infer<typeof subdirectoryEntrySchema>;
 export type ProjectMeta = z.infer<typeof projectSchema>;
 export type StructureEntry = z.infer<typeof structureEntrySchema>;
 export type Evidence = z.infer<typeof evidenceSchema>;
+export type ImportEntry = z.infer<typeof importEntrySchema>;
+export type InternalEntry = z.infer<typeof internalEntrySchema>;
 
 // --- Constants ---
 

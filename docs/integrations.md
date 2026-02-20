@@ -1,6 +1,7 @@
 # Integrations
 
 autocontext works at two levels: `.context.yaml` files are plain YAML readable by any tool, and the MCP server provides structured access for LLM clients.
+Examples below assume a local install (`npm install -D autocontext`) and use `npx context ...`.
 
 ## MCP Server
 
@@ -9,7 +10,7 @@ The MCP server exposes three tools via stdio transport (JSON-RPC over stdin/stdo
 ### Starting the Server
 
 ```bash
-context serve --path /path/to/project
+npx context serve --path /path/to/project
 ```
 
 The server runs until terminated. Protocol traffic uses stdin/stdout; startup logs are written to stderr.
@@ -86,7 +87,7 @@ All scope parameters are validated against path traversal. Attempting to access 
 ### Setup
 
 ```bash
-claude mcp add autocontext -- context serve --path /path/to/project
+claude mcp add autocontext -- npx --no-install context serve --path /path/to/project
 ```
 
 Verify it's registered:
@@ -116,8 +117,8 @@ Add to `.cursor/mcp.json` in your project root:
 {
   "mcpServers": {
     "autocontext": {
-      "command": "context",
-      "args": ["serve", "--path", "."]
+      "command": "npx",
+      "args": ["--no-install", "context", "serve", "--path", "."]
     }
   }
 }
@@ -141,8 +142,8 @@ Add to your MCP configuration (check Windsurf docs for the config file location)
 {
   "mcpServers": {
     "autocontext": {
-      "command": "context",
-      "args": ["serve", "--path", "/path/to/project"]
+      "command": "npx",
+      "args": ["--no-install", "context", "serve", "--path", "/path/to/project"]
     }
   }
 }
@@ -163,8 +164,8 @@ Add to `.continue/config.json`:
       {
         "transport": {
           "type": "stdio",
-          "command": "context",
-          "args": ["serve", "--path", "."]
+          "command": "npx",
+          "args": ["--no-install", "context", "serve", "--path", "."]
         }
       }
     ]
@@ -179,7 +180,7 @@ Add to `.continue/config.json`:
 Any MCP client that supports stdio transport can connect:
 
 ```bash
-context serve --path /path/to/project
+npx context serve --path /path/to/project
 ```
 
 The server speaks JSON-RPC 2.0 over stdin/stdout. Stderr is used for logging.

@@ -1,32 +1,25 @@
 version: 1
-last_updated: 2026-02-13T17:38:32.380Z
+last_updated: 2026-02-20T16:42:18.989Z
 fingerprint: 7f8b642c
 scope: tests/fixtures/monorepo/packages/api
-summary: >
-  This directory contains the API package of the monorepo, providing the source code necessary for the API server
-  implementation. It handles incoming requests and manages server startup on a designated port.
+summary: API layer.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the summary, and any decisions or constraints that changed.
+  your changes. Update the files list, interfaces, and current_state sections.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-decisions:
-  - what: The API server is designed as a standalone package within a monorepo architecture.
-    why: This allows for better modularization and easier maintenance of services while promoting code reusability across
-      different packages.
-    tradeoff: Increased complexity in managing inter-package dependencies compared to a single monolithic application.
-constraints:
-  - The server must listen on the specified port as defined in the configuration.
+files:
+  - name: package.json
+    purpose: Node.js project configuration and dependencies
 subdirectories:
   - name: src/
-    summary: >
-      This directory contains the source code for the API server implementation of the monorepo. It is responsible for
-      handling incoming requests and starting the server on a specified port.
+    summary: Source code.
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
+  - files
   - subdirectories

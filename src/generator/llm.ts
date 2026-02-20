@@ -8,6 +8,8 @@ import { SCHEMA_VERSION, DEFAULT_MAINTENANCE, FULL_MAINTENANCE, contextSchema } 
 import { computeFingerprint } from "../core/fingerprint.js";
 import { SYSTEM_PROMPT, LEAN_SYSTEM_PROMPT, buildUserPrompt } from "./prompts.js";
 import { detectExternalDeps, detectInternalDeps } from "./dependencies.js";
+import { detectImportBindings } from "./imports.js";
+import { detectInternals } from "./internals.js";
 import { collectBasicEvidence } from "./evidence.js";
 import { detectExportSignaturesAST } from "./ast.js";
 import { detectExportsWithFallback, extractOneSignature } from "./static.js";
@@ -128,6 +130,20 @@ export async function generateLLMContext(
     context.exports = exportSigs;
   }
 
+  // Overlay machine-derived import bindings (both lean and full)
+  const importBindings = await detectImportBindings(scanResult);
+  if (importBindings.length > 0) {
+    context.imports = importBindings;
+  }
+
+  // Overlay machine-derived internals (full mode only)
+  if (isFull) {
+    const internals = await detectInternals(scanResult);
+    if (internals.length > 0) {
+      context.internals = internals;
+    }
+  }
+
   // Collect evidence (per-directory, opt-in)
   if (options?.evidence) {
     // Compute newest source file mtime for staleness comparison
@@ -151,6 +167,8 @@ export async function generateLLMContext(
   if (preDetectedDeps.length > 0) derivedFields.push("dependencies.external");
   if (internalDeps.length > 0) derivedFields.push("dependencies.internal");
   if (context.exports) derivedFields.push("exports");
+  if (context.imports) derivedFields.push("imports");
+  if (context.internals) derivedFields.push("internals");
   if (context.subdirectories) derivedFields.push("subdirectories");
   if (context.project) derivedFields.push("project");
   if (context.evidence) derivedFields.push("evidence");

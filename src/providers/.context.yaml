@@ -1,27 +1,26 @@
 version: 1
-last_updated: 2026-02-13T17:38:44.872Z
+last_updated: 2026-02-20T16:42:18.809Z
 fingerprint: b0038652
 scope: src/providers
-summary: >
-  This directory contains implementations of different LLM (Large Language Model) providers that adhere to a common
-  interface. Each provider class is responsible for generating responses from its respective model using either SDKs or
-  direct API calls.
+summary: Abstract LLM provider interface.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the summary, and any decisions or constraints that changed.
+  your changes. Update the files list, interfaces, and current_state sections.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-decisions:
-  - what: The GoogleProvider uses a direct REST API call instead of an SDK.
-    why: This choice minimizes dependencies and potentially reduces the overhead of using a full SDK.
-    tradeoff: This may result in less convenience and additional manual handling of API details.
-constraints:
-  - Each provider must implement the LLMProvider interface with the generate method.
-dependencies:
-  internal:
-    - ./index.js
+files:
+  - name: anthropic.ts
+    purpose: "Exports: AnthropicProvider"
+  - name: google.ts
+    purpose: "Exports: GoogleProvider"
+  - name: index.ts
+    purpose: "* Abstract LLM provider interface."
+  - name: ollama.ts
+    purpose: "Exports: OllamaProvider"
+  - name: openai.ts
+    purpose: "Exports: OpenAIProvider"
 exports:
   - class AnthropicProvider
   - class GoogleProvider
@@ -30,10 +29,35 @@ exports:
   - "async function createProvider( name: ProviderName, credential?: string, model?: string, ): Promise<LLMProvider>"
   - class OllamaProvider
   - class OpenAIProvider
+interfaces:
+  - name: AnthropicProvider
+    description: Exported from anthropic.ts
+  - name: GoogleProvider
+    description: Exported from google.ts
+  - name: LLMProvider
+    description: Exported from index.ts
+  - name: ProviderName
+    description: Exported from index.ts
+  - name: createProvider
+    description: Exported from index.ts
+  - name: OllamaProvider
+    description: Exported from ollama.ts
+  - name: OpenAIProvider
+    description: Exported from openai.ts
+dependencies:
+  internal:
+    - ./index.js
+imports:
+  - path: ./index.js
+    symbols:
+      - LLMProvider
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
-  - dependencies.internal
+  - files
+  - interfaces
   - exports
+  - dependencies.internal
+  - imports

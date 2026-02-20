@@ -1,32 +1,43 @@
 version: 1
-last_updated: 2026-02-13T17:38:48.966Z
+last_updated: 2026-02-20T16:42:18.982Z
 fingerprint: "06795230"
 scope: tests/core
-summary: >
-  This directory contains unit tests for the core functionality of the markdown writer. It focuses on reading, writing,
-  and updating agent-related markdown files, ensuring proper handling of file operations and content management.
+summary: Core functionality.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the summary, and any decisions or constraints that changed.
+  your changes. Update the files list, interfaces, and current_state sections.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-decisions:
-  - what: Using temporary directories for tests
-    why: To isolate tests from each other and ensure a clean environment for each test case.
-    tradeoff: Increased complexity in test setup and teardown.
-constraints:
-  - Tests must clean up any temporary files created to avoid polluting the filesystem.
-  - All test files should follow the naming convention '*.test.ts'.
+files:
+  - name: markdown-writer.test.ts
+    purpose: Test file
 dependencies:
   internal:
     - ../../src/core/markdown-writer.js
     - ../../src/generator/markdown.js
     - ../helpers.js
+imports:
+  - path: ../../src/core/markdown-writer.js
+    symbols:
+      - AGENTS_FILENAME
+      - readAgentsMd
+      - updateAgentsMd
+      - writeAgentsMd
+  - path: ../../src/generator/markdown.js
+    symbols:
+      - AGENTS_SECTION_END
+      - AGENTS_SECTION_START
+  - path: ../helpers.js
+    symbols:
+      - cleanupTmpDir
+      - createTmpDir
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
+  - files
   - dependencies.internal
+  - imports

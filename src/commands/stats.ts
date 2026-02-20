@@ -44,6 +44,8 @@ interface DirStats {
   hasDecisions: boolean;
   hasConstraints: boolean;
   hasDependencies: boolean;
+  hasImports: boolean;
+  hasInternals: boolean;
   summaryIsFallback: boolean;
   contextLagHours: number | null;
   extensions: string[];
@@ -136,6 +138,8 @@ export async function statsCommand(options: { path?: string; json?: boolean }): 
   let dirsWithDecisions = 0;
   let dirsWithConstraints = 0;
   let dirsWithDependencies = 0;
+  let dirsWithImports = 0;
+  let dirsWithInternals = 0;
 
   for (const dir of dirs) {
     const sourceTokens = await estimateDirectoryTokens(dir);
@@ -182,6 +186,8 @@ export async function statsCommand(options: { path?: string; json?: boolean }): 
     const hasConstraints = (context?.constraints?.length ?? 0) > 0;
     const hasDependencies = context?.dependencies !== undefined &&
       ((context.dependencies.internal?.length ?? 0) > 0 || (context.dependencies.external?.length ?? 0) > 0);
+    const hasImports = (context?.imports?.length ?? 0) > 0;
+    const hasInternals = (context?.internals?.length ?? 0) > 0;
 
     if (context) {
       if (summaryIsFallback) fallbackCount++;
@@ -189,6 +195,8 @@ export async function statsCommand(options: { path?: string; json?: boolean }): 
       if (hasDecisions) dirsWithDecisions++;
       if (hasConstraints) dirsWithConstraints++;
       if (hasDependencies) dirsWithDependencies++;
+      if (hasImports) dirsWithImports++;
+      if (hasInternals) dirsWithInternals++;
     }
 
     const reductionPercent = sourceTokens > 0 ? round1((1 - contextTokens / sourceTokens) * 100) : 0;
@@ -204,6 +212,8 @@ export async function statsCommand(options: { path?: string; json?: boolean }): 
       hasDecisions,
       hasConstraints,
       hasDependencies,
+      hasImports,
+      hasInternals,
       summaryIsFallback,
       contextLagHours: lagHours,
       extensions: dirExtensions(dir.files),
@@ -255,6 +265,8 @@ export async function statsCommand(options: { path?: string; json?: boolean }): 
         has_decisions: e.hasDecisions,
         has_constraints: e.hasConstraints,
         has_dependencies: e.hasDependencies,
+        has_imports: e.hasImports,
+        has_internals: e.hasInternals,
         summary_is_fallback: e.summaryIsFallback,
         context_lag_hours: e.contextLagHours,
         extensions: e.extensions,
@@ -287,6 +299,8 @@ export async function statsCommand(options: { path?: string; json?: boolean }): 
         decisions_coverage: tracked > 0 ? round1((dirsWithDecisions / tracked) * 1000) / 1000 : 0,
         constraints_coverage: tracked > 0 ? round1((dirsWithConstraints / tracked) * 1000) / 1000 : 0,
         dependencies_coverage: tracked > 0 ? round1((dirsWithDependencies / tracked) * 1000) / 1000 : 0,
+        imports_coverage: tracked > 0 ? round1((dirsWithImports / tracked) * 1000) / 1000 : 0,
+        internals_coverage: tracked > 0 ? round1((dirsWithInternals / tracked) * 1000) / 1000 : 0,
       },
       codebase: {
         total_directories: dirs.length,
@@ -346,6 +360,8 @@ export async function statsCommand(options: { path?: string; json?: boolean }): 
     console.log(`    decisions:        ${dirsWithDecisions}/${tracked} dirs`);
     console.log(`    constraints:      ${dirsWithConstraints}/${tracked} dirs`);
     console.log(`    dependencies:     ${dirsWithDependencies}/${tracked} dirs`);
+    console.log(`    imports:          ${dirsWithImports}/${tracked} dirs`);
+    console.log(`    internals:        ${dirsWithInternals}/${tracked} dirs`);
   }
 
   // Breakdown table

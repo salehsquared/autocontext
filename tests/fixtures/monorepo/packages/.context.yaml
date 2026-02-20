@@ -1,37 +1,25 @@
 version: 1
-last_updated: 2026-02-13T17:38:35.036Z
+last_updated: 2026-02-20T16:42:18.992Z
 fingerprint: e3b0c442
 scope: tests/fixtures/monorepo/packages
-summary: >
-  This directory contains the packages of a monorepo, including the API package and shared type definitions. It serves
-  to encapsulate the API functionality and provide consistent typing across various components of the monorepo.
+summary: Source directory.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the summary, and any decisions or constraints that changed.
+  your changes. Update the files list, interfaces, and current_state sections.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-decisions:
-  - what: The API package is structured to handle incoming requests and manage server startup.
-    why: This design centralizes API-related functionality, allowing for easier maintenance and clearer separation of
-      concerns.
-    tradeoff: This may lead to additional complexity in managing server configurations across different environments.
-constraints:
-  - The shared types must be used consistently across all packages to avoid type mismatches.
+files: []
 subdirectories:
   - name: api/
-    summary: >
-      This directory contains the API package of the monorepo, providing the source code necessary for the API server
-      implementation. It handles incoming requests and manages server startup on a designated port.
+    summary: API layer.
   - name: shared/
-    summary: >
-      This directory hosts shared type definitions for a monorepo, ensuring consistent structure and typing across
-      multiple packages. It standardizes configuration interfaces to facilitate better collaboration and
-      maintainability.
+    summary: Source directory.
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
+  - files
   - subdirectories

@@ -317,6 +317,50 @@ describe("validateCommand", () => {
       expect(output).not.toContain("undeclared internal dep found");
     });
 
+    it("flags import binding paths not in dependencies.internal", async () => {
+      await createFile(tmpDir, "index.ts", 'import { foo } from "../lib.js";\nexport const x = 1;');
+      const fp = await computeFingerprint(tmpDir);
+      await writeContext(tmpDir, makeValidContext({
+        fingerprint: fp,
+        files: [{ name: "index.ts", purpose: "Entry point" }],
+        dependencies: {
+          internal: ["../other.js"],
+        },
+        imports: [
+          { path: "../lib.js", symbols: ["foo"] },
+          { path: "../other.js", symbols: ["bar"] },
+        ],
+      }));
+
+      await validateCommand({ path: tmpDir, strict: true });
+
+      const output = logs.join("\n");
+      expect(output).toContain("import binding path not in dependencies.internal: ../lib.js");
+      expect(output).not.toContain("import binding path not in dependencies.internal: ../other.js");
+    });
+
+    it("skips side-effect-only imports in cross-ref check", async () => {
+      await createFile(tmpDir, "index.ts", 'import "./polyfill.js";\nexport const x = 1;');
+      const fp = await computeFingerprint(tmpDir);
+      await writeContext(tmpDir, makeValidContext({
+        fingerprint: fp,
+        files: [{ name: "index.ts", purpose: "Entry point" }],
+        dependencies: {
+          internal: ["../utils.js"],
+        },
+        imports: [
+          { path: "./polyfill.js", symbols: ["(side-effect)"] },
+          { path: "../utils.js", symbols: ["helper"] },
+        ],
+      }));
+
+      await validateCommand({ path: tmpDir, strict: true });
+
+      const output = logs.join("\n");
+      // Side-effect-only path should NOT be flagged
+      expect(output).not.toContain("import binding path not in dependencies.internal: ./polyfill.js");
+    });
+
     it("collapses lean-skip messages into summary line", async () => {
       await createFile(tmpDir, "index.ts", "export const x = 1;");
       const fp = await computeFingerprint(tmpDir);

@@ -1,15 +1,20 @@
 version: 1
-last_updated: 2026-02-19T21:46:38.788Z
+last_updated: 2026-02-20T16:42:19.023Z
 fingerprint: da9c4bbe
 scope: tests/mcp
 summary: MCP server integration.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the summary, and any decisions or constraints that changed.
+  your changes. Update the files list, interfaces, and current_state sections.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
+files:
+  - name: server.test.ts
+    purpose: Test file
+  - name: tools.test.ts
+    purpose: Test file
 dependencies:
   internal:
     - ../../src/core/fingerprint.js
@@ -18,9 +23,55 @@ dependencies:
     - ../../src/mcp/tools.js
     - ../../src/utils/config.js
     - ../helpers.js
+imports:
+  - path: ../../src/core/fingerprint.js
+    symbols:
+      - computeFingerprint
+  - path: ../../src/core/schema.js
+    symbols:
+      - CONTEXT_FILENAME
+  - path: ../../src/core/writer.js
+    symbols:
+      - writeContext
+  - path: ../../src/mcp/tools.js
+    symbols:
+      - handleAggregateEvidence
+      - handleCheckFreshness
+      - handleListContexts
+      - handleQueryContext
+      - registerTools
+  - path: ../../src/utils/config.js
+    symbols:
+      - saveConfig
+  - path: ../helpers.js
+    symbols:
+      - cleanupTmpDir
+      - createFile
+      - createNestedFile
+      - createTmpDir
+      - makeValidContext
+internals:
+  - name: registerTools
+    kind: constant
+    file: server.test.ts
+  - name: connect
+    kind: constant
+    file: server.test.ts
+  - name: mockServer
+    kind: constant
+    file: server.test.ts
+  - name: McpServer
+    kind: constant
+    file: server.test.ts
+  - name: StdioServerTransport
+    kind: constant
+    file: server.test.ts
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
+  - files
   - dependencies.internal
+  - imports
+  - internals

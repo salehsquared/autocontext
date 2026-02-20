@@ -1,15 +1,28 @@
 version: 1
-last_updated: 2026-02-19T21:46:38.729Z
-fingerprint: 715ad82b
+last_updated: 2026-02-20T16:42:18.697Z
+fingerprint: 0cf12d18
 scope: src/core
 summary: Core functionality.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the summary, and any decisions or constraints that changed.
+  your changes. Update the files list, interfaces, and current_state sections.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
+files:
+  - name: fingerprint.ts
+    purpose: "Exports: computeFingerprint, FreshnessState, checkFreshness"
+  - name: health.ts
+    purpose: "Exports: HealthSummary, EvidenceEntry, AggregateEvidenceResult (+1 more)"
+  - name: markdown-writer.ts
+    purpose: "Exports: AGENTS_FILENAME, readAgentsMd, writeAgentsMd (+1 more)"
+  - name: scanner.ts
+    purpose: "Exports: ScanResult, ScanOptions, scanProject (+2 more)"
+  - name: schema.ts
+    purpose: "Exports: SCHEMA_VERSION, contextSchema, configSchema (+15 more)"
+  - name: writer.ts
+    purpose: "Exports: UnsupportedVersionError, writeContext, readContext (+2 more)"
 exports:
   - "async function computeFingerprint(dirPath: string, ignorePatterns: string[] = []): Promise<string>"
   - type FreshnessState
@@ -38,6 +51,37 @@ exports:
   - type InterfaceEntry
   - type DecisionEntry
   - type SubdirectoryEntry
+interfaces:
+  - name: computeFingerprint
+    description: Exported from fingerprint.ts
+  - name: FreshnessState
+    description: Exported from fingerprint.ts
+  - name: checkFreshness
+    description: Exported from fingerprint.ts
+  - name: HealthSummary
+    description: Exported from health.ts
+  - name: EvidenceEntry
+    description: Exported from health.ts
+  - name: AggregateEvidenceResult
+    description: Exported from health.ts
+  - name: aggregateEvidence
+    description: Exported from health.ts
+  - name: AGENTS_FILENAME
+    description: Exported from markdown-writer.ts
+  - name: readAgentsMd
+    description: Exported from markdown-writer.ts
+  - name: writeAgentsMd
+    description: Exported from markdown-writer.ts
+  - name: updateAgentsMd
+    description: Exported from markdown-writer.ts
+  - name: ScanResult
+    description: Exported from scanner.ts
+  - name: ScanOptions
+    description: Exported from scanner.ts
+  - name: scanProject
+    description: Exported from scanner.ts
+  - name: groupByDepth
+    description: Exported from scanner.ts
 dependencies:
   internal:
     - ../generator/markdown.js
@@ -47,10 +91,110 @@ dependencies:
     - ./scanner.js
     - ./schema.js
     - ./writer.js
+imports:
+  - path: ../generator/markdown.js
+    symbols:
+      - AgentsEntry
+      - applyAgentsSection
+      - detectAgentsAction
+      - generateAgentsMd
+      - generateAgentsSection
+  - path: ../utils/config.js
+    symbols:
+      - loadConfig
+  - path: ../utils/scan-options.js
+    symbols:
+      - loadScanOptions
+  - path: ../utils/tokens.js
+    symbols:
+      - filterByMinTokens
+  - path: ./scanner.js
+    symbols:
+      - flattenBottomUp
+      - scanProject
+  - path: ./schema.js
+    symbols:
+      - CONFIG_FILENAME
+      - CONTEXT_FILENAME
+      - ConfigFile
+      - ContextFile
+      - Evidence
+      - SCHEMA_VERSION
+      - configSchema
+      - contextSchema
+  - path: ./writer.js
+    symbols:
+      - UnsupportedVersionError
+      - readContext
+internals:
+  - name: shouldIgnore
+    kind: function
+    file: fingerprint.ts
+  - name: emptyHealth
+    kind: function
+    file: health.ts
+  - name: contextFileExists
+    kind: function
+    file: health.ts
+  - name: ALWAYS_IGNORE
+    kind: constant
+    file: scanner.ts
+  - name: SOURCE_EXTENSIONS
+    kind: constant
+    file: scanner.ts
+  - name: MEANINGFUL_FILES
+    kind: constant
+    file: scanner.ts
+  - name: scanDir
+    kind: function
+    file: scanner.ts
+  - name: isSourceFile
+    kind: function
+    file: scanner.ts
+  - name: isIgnored
+    kind: function
+    file: scanner.ts
+  - name: normalizePath
+    kind: function
+    file: scanner.ts
+  - name: normalizePattern
+    kind: function
+    file: scanner.ts
+  - name: matchPattern
+    kind: function
+    file: scanner.ts
+  - name: globSegmentRegex
+    kind: function
+    file: scanner.ts
+  - name: globPathRegex
+    kind: function
+    file: scanner.ts
+  - name: globToRegexBody
+    kind: function
+    file: scanner.ts
+  - name: loadGitignore
+    kind: function
+    file: scanner.ts
+  - name: loadContextIgnore
+    kind: function
+    file: scanner.ts
+  - name: parseIgnoreFile
+    kind: function
+    file: scanner.ts
+  - name: fileEntrySchema
+    kind: constant
+    file: schema.ts
+  - name: interfaceEntrySchema
+    kind: constant
+    file: schema.ts
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
+  - files
+  - interfaces
   - exports
   - dependencies.internal
+  - imports
+  - internals

@@ -3,7 +3,7 @@
 Every coding agent gets the same repo-native context via `.context.yaml` — portable across tools, git-visible, local-first.
 
 ```
-$ context init
+$ npx context init
 Scanning project...
   ✓ .                    (12 files)
   ✓ src/                 (8 files)
@@ -13,7 +13,7 @@ Scanning project...
   ✓ tests/               (4 files)
 Done. 6 .context.yaml files created.
 
-$ context show src/core
+$ npx context show src/core
 scope: src/core
 summary: |
   Core scanning, fingerprinting, and schema validation.
@@ -25,7 +25,7 @@ subdirectories:
   - name: scanner/
     summary: Recursive directory walker with gitignore support
 
-$ context status
+$ npx context status
   ✓ .                  fresh
   ✓ src/               fresh
   ⚠ src/core/          stale (3 files changed)
@@ -128,16 +128,17 @@ Use these questions when comparing autocontext with alternatives (tool-native in
 ## Quick Start
 
 ```bash
-npm install -g autocontext
+npm install -D autocontext
 
-context init                # Generate lean .context.yaml files and AGENTS.md
-context status              # Check which files are fresh/stale
-context regen --all --stale # Regenerate only what changed
-context doctor              # Diagnose setup issues
-context show src/core       # Pretty-print a context file
+npx context init                # Generate lean .context.yaml files and AGENTS.md
+npx context status              # Check which files are fresh/stale
+npx context regen --all --stale # Regenerate only what changed
+npx context doctor              # Diagnose setup issues
+npx context show src/core       # Pretty-print a context file
 ```
 
 Requires Node.js >= 18. No accounts, no cloud services, works fully offline. See [docs/quickstart.md](docs/quickstart.md) for the full 5-minute guide.
+Want a global binary instead? Use `npm install -g autocontext` and run `context ...` directly.
 
 ## Commands
 
@@ -170,37 +171,39 @@ Requires Node.js >= 18. No accounts, no cloud services, works fully offline. See
 | `context bench --repo <url>` | Clone and benchmark another repository |
 | `context serve` | Start MCP server for LLM tool integration |
 
+When installed locally (`npm install -D autocontext`), run commands as `npx context ...`.
+
 Most commands accept `-p, --path <path>` to target a specific project root. `context show <target>` is the exception and resolves from the current working directory. `init` and `regen` accept `--no-agents` to skip `AGENTS.md` generation, `--evidence` to collect test/typecheck signals, and `--parallel <n>` for concurrent processing. `bench --tasks <path>` is currently reserved for future task-file support and has no effect yet.
 
 ## Everyday Workflow
 
 ```bash
 # First run — generate everything (lean by default)
-context init
+npx context init
 
 # After editing code — regenerate only what changed
-context regen --all --stale
+npx context regen --all --stale
 
 # Preview before regenerating
-context regen --all --stale --dry-run
+npx context regen --all --stale --dry-run
 
 # Speed up with concurrency (especially useful with --llm)
-context regen --all --stale --parallel 4
+npx context regen --all --stale --parallel 4
 
 # Generate verbose context with file listings and interfaces
-context init --full
-context regen --all --full
+npx context init --full
+npx context regen --all --full
 
 # Set full mode as the project default
-context config --mode full
+npx context config --mode full
 
 # Check project health in one command
-context doctor
+npx context doctor
 
 # CI: machine-readable output
-context status --json
-context doctor --json
-context health --json
+npx context status --json
+npx context doctor --json
+npx context health --json
 ```
 
 ## Lean vs Full Mode
@@ -250,10 +253,10 @@ Three tools via [Model Context Protocol](https://modelcontextprotocol.io) (stdio
 
 ```bash
 # Claude Code
-claude mcp add autocontext -- context serve --path /path/to/project
+claude mcp add autocontext -- npx --no-install context serve --path /path/to/project
 
 # Cursor (.cursor/mcp.json)
-{ "mcpServers": { "autocontext": { "command": "context", "args": ["serve", "--path", "."] } } }
+{ "mcpServers": { "autocontext": { "command": "npx", "args": ["--no-install", "context", "serve", "--path", "."] } } }
 ```
 
 See [docs/integrations.md](docs/integrations.md) for Windsurf, Continue, generic MCP clients, non-MCP usage, and CI/CD setup.
@@ -289,10 +292,10 @@ min_tokens: 4096  # skip tiny directories unless they are needed for routing
 
 ```bash
 # Set config from CLI
-context config --provider anthropic --model claude-3-5-haiku-latest
-context config --mode full
-context config --ignore tmp scratch
-context config              # View current settings
+npx context config --provider anthropic --model claude-3-5-haiku-latest
+npx context config --mode full
+npx context config --ignore tmp scratch
+npx context config              # View current settings
 ```
 
 ## How It Works
