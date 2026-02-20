@@ -216,6 +216,65 @@
         "type": "string"
       }
     },
+    "imports": {
+      "description": "Symbol-level import bindings from relative imports",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Relative import path (matches dependencies.internal entry)"
+          },
+          "symbols": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Imported symbol names, sorted alphabetically"
+          }
+        },
+        "required": [
+          "path",
+          "symbols"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "internals": {
+      "description": "Non-exported top-level declarations (full mode only)",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Symbol name"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "function",
+              "class",
+              "interface",
+              "type",
+              "constant",
+              "enum"
+            ]
+          },
+          "file": {
+            "type": "string",
+            "description": "Source filename within this directory"
+          }
+        },
+        "required": [
+          "name",
+          "kind",
+          "file"
+        ],
+        "additionalProperties": false
+      }
+    },
     "project": {
       "type": "object",
       "properties": {
