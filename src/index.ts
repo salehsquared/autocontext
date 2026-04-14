@@ -25,6 +25,7 @@ import { timelineCommand } from "./commands/timeline.js";
 import { hotspotsCommand } from "./commands/hotspots.js";
 import { packCommand } from "./commands/pack.js";
 import { verifyCommand } from "./commands/verify.js";
+import { viewCommand } from "./commands/view.js";
 import { startMcpServer } from "./mcp/server.js";
 import { loadEnvForCli } from "./utils/env.js";
 import { errorMsg } from "./utils/display.js";
@@ -52,6 +53,7 @@ export interface CommandHandlers {
   hotspotsCommand: typeof hotspotsCommand;
   packCommand: typeof packCommand;
   verifyCommand: typeof verifyCommand;
+  viewCommand: typeof viewCommand;
   startMcpServer: typeof startMcpServer;
 }
 
@@ -78,6 +80,7 @@ const defaultHandlers: CommandHandlers = {
   hotspotsCommand,
   packCommand,
   verifyCommand,
+  viewCommand,
   startMcpServer,
 };
 
@@ -433,6 +436,24 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
         dryRun: opts.dryRun,
         yes: opts.yes,
         json: opts.json,
+      });
+    });
+
+  program
+    .command("view")
+    .description("Generate a self-contained HTML report of this project's .context.yaml + index + policy state")
+    .option("--out <path>", "Output file (default: context-report.html)")
+    .option("--open", "Open the generated file in the default browser")
+    .option("--no-graph", "Omit the dependency graph view")
+    .option("--no-source", "Omit source excerpts, signatures, and raw YAML (smaller file)")
+    .option("-p, --path <path>", "Project root path")
+    .action(async (opts) => {
+      await handlers.viewCommand({
+        path: opts.path,
+        out: opts.out,
+        open: opts.open,
+        noGraph: opts.graph === false,
+        noSource: opts.source === false,
       });
     });
 

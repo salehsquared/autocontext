@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T14:40:27.102Z
-fingerprint: 26d90caf
+last_updated: 2026-04-14T14:53:50.627Z
+fingerprint: 7fd364e6
 scope: src
 summary: Source code.
 maintenance: |-
@@ -59,10 +59,12 @@ subdirectories:
     summary: Utility functions.
   - name: verify/
     summary: Source directory.
+  - name: view/
+    summary: Source directory.
 data_models:
   - "interface CommandHandlers { initCommand: typeof initCommand, statusCommand: typeof statusCommand, regenCommand:
     typeof regenCommand, rehashCommand: typeof rehashCommand, validateCommand: typeof validateCommand, showCommand:
-    typeof showCommand, configCommand: typeof configCommand, ignoreCommand: typeof ignoreCommand, …+15 more }"
+    typeof showCommand, configCommand: typeof configCommand, ignoreCommand: typeof ignoreCommand, …+16 more }"
 exports:
   - interface CommandHandlers
   - "function createProgram(handlers: CommandHandlers = defaultHandlers): Command"
@@ -161,4 +163,4 @@ derived_fields:
   - imports
   - subdirectories
   - data_models
-semantic_fingerprint: 9e58bdeae430
+semantic_fingerprint: 53e410c93500

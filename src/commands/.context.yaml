@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T14:40:26.882Z
-fingerprint: 79ff894d
+last_updated: 2026-04-14T14:53:50.460Z
+fingerprint: 047c33ee
 scope: src/commands
 summary: CLI command implementations.
 maintenance: |-
@@ -32,6 +32,9 @@ dependencies:
     - ../generator/dependencies.js
     - ../generator/llm.js
     - ../generator/markdown.js
+environment:
+  - CI
+  - FROZEN_TIME
 data_models:
   - "interface CacheCommandOptions { path: string, json: boolean }"
   - "interface DiffCommandOptions { path: string, scope: string, json: boolean }"
@@ -58,6 +61,7 @@ data_models:
   - 'interface StrictFinding { severity: "warning" | "info", message: string }'
   - "interface VerifyCommandOptions { path: string, scope: string, only: string, timeout: string, merge: boolean,
     strict: boolean, dryRun: boolean, yes: boolean, …+1 more }"
+  - "interface ViewCommandOptions { path: string, out: string, open: boolean, noGraph: boolean, noSource: boolean }"
   - "interface DirState { dir: ScanResult, state: FreshnessState }"
 events:
   - on("SIGINT") via process
@@ -190,6 +194,7 @@ derived_fields:
   - exports
   - dependencies.internal
   - imports
+  - environment
   - data_models
   - events
-semantic_fingerprint: 7fd57314a021
+semantic_fingerprint: e6f5452dcd08
