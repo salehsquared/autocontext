@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T05:57:17.678Z
-fingerprint: 91c047e8
+last_updated: 2026-04-14T06:00:07.606Z
+fingerprint: 815c33e5
 scope: src/core
 summary: Core functionality.
 maintenance: |-
@@ -10,6 +10,19 @@ maintenance: |-
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
+dependencies:
+  internal:
+    - ../generator/markdown.js
+    - ../index/paths.js
+    - ../index/store.js
+    - ../index/types.js
+    - ../utils/config.js
+    - ../utils/scan-options.js
+    - ../utils/tokens.js
+    - ./scanner.js
+    - ./schema.js
+    - ./semantic-fingerprint.js
+    - ./writer.js
 exports:
   - "async function computeFingerprint(dirPath: string, ignorePatterns: string[] = []): Promise<string>"
   - type FreshnessState
@@ -38,18 +51,6 @@ exports:
   - "function flattenBottomUp(result: ScanResult): ScanResult[]"
   - SCHEMA_VERSION
   - contextSchema
-dependencies:
-  internal:
-    - ../generator/markdown.js
-    - ../index/paths.js
-    - ../index/store.js
-    - ../index/types.js
-    - ../utils/config.js
-    - ../utils/scan-options.js
-    - ../utils/tokens.js
-    - ./scanner.js
-    - ./schema.js
-    - ./writer.js
 imports:
   - path: ../generator/markdown.js
     symbols:
@@ -61,10 +62,12 @@ imports:
   - path: ../index/paths.js
     symbols:
       - AUTOCONTEXT_DIR
+      - manifestPath
       - toFileId
   - path: ../index/store.js
     symbols:
       - IndexStore
+      - openIndex
   - path: ../index/types.js
     symbols:
       - FileId
@@ -81,6 +84,7 @@ imports:
       - filterByMinTokens
   - path: ./scanner.js
     symbols:
+      - ScanResult
       - flattenBottomUp
       - scanProject
   - path: ./schema.js
@@ -93,10 +97,15 @@ imports:
       - SCHEMA_VERSION
       - configSchema
       - contextSchema
+  - path: ./semantic-fingerprint.js
+    symbols:
+      - computeSemanticFingerprint
+      - extractPolicyFacts
   - path: ./writer.js
     symbols:
       - UnsupportedVersionError
       - readContext
+      - writeContext
 derived_fields:
   - version
   - last_updated
@@ -105,3 +114,4 @@ derived_fields:
   - exports
   - dependencies.internal
   - imports
+semantic_fingerprint: a91166610195

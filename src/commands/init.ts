@@ -294,5 +294,21 @@ export async function initCommand(options: { noLlm?: boolean; path?: string; evi
     console.log(warnMsg(`code index: ${msg}`));
   }
 
+  // Stamp semantic fingerprints into the yamls we just wrote.
+  try {
+    const { stampSemanticFingerprintsForDirs } = await import(
+      "../core/semantic-fingerprint-writer.js"
+    );
+    const result = await stampSemanticFingerprintsForDirs(rootPath, dirs);
+    if (result.updated > 0) {
+      console.log(
+        dim(`  semantic fingerprints: ${result.updated} directory${result.updated === 1 ? "" : "ies"} stamped`),
+      );
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.log(warnMsg(`semantic fingerprints: ${msg}`));
+  }
+
   console.log('\nRun `context status` to check freshness.\n');
 }

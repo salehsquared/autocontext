@@ -15,6 +15,11 @@
       "type": "string",
       "description": "Short hash of directory contents"
     },
+    "semantic_fingerprint": {
+      "description": "Semantic fingerprint (12-hex sha256) over exported API, imports, and policy facts",
+      "type": "string",
+      "pattern": "^[0-9a-f]{12}$"
+    },
     "scope": {
       "type": "string",
       "description": "Relative path from project root"

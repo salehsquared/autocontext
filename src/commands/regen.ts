@@ -310,6 +310,22 @@ export async function regenCommand(
       const msg = err instanceof Error ? err.message : String(err);
       console.log(warnMsg(`code index: ${msg}`));
     }
+
+    // Stamp semantic fingerprints into the regenerated yamls.
+    try {
+      const { stampSemanticFingerprintsForDirs } = await import(
+        "../core/semantic-fingerprint-writer.js"
+      );
+      const stamped = await stampSemanticFingerprintsForDirs(rootPath, dirs);
+      if (stamped.updated > 0) {
+        console.log(
+          dim(`  semantic fingerprints: ${stamped.updated} directory${stamped.updated === 1 ? "" : "ies"} stamped`),
+        );
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.log(warnMsg(`semantic fingerprints: ${msg}`));
+    }
   }
 
   console.log("");

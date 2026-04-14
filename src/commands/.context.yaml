@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T05:57:17.551Z
-fingerprint: bdb3ab4c
+last_updated: 2026-04-14T06:00:07.491Z
+fingerprint: 84fb3b90
 scope: src/commands
 summary: CLI command implementations.
 maintenance: |-
@@ -10,6 +10,28 @@ maintenance: |-
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
+dependencies:
+  internal:
+    - ../bench/git.js
+    - ../bench/ground-truth.js
+    - ../bench/repos.js
+    - ../bench/runner.js
+    - ../bench/scorer.js
+    - ../bench/tasks.js
+    - ../bench/types.js
+    - ../core/fingerprint.js
+    - ../core/gitignore.js
+    - ../core/health.js
+    - ../core/markdown-writer.js
+    - ../core/scanner.js
+    - ../core/schema.js
+    - ../core/semantic-fingerprint-writer.js
+    - ../core/writer.js
+    - ../generator/dependencies.js
+    - ../generator/llm.js
+    - ../generator/markdown.js
+    - ../generator/static.js
+    - ../index/analyzer.js
 exports:
   - "async function benchCommand(options: BenchOptions): Promise<void>"
   - "async function configCommand( options:"
@@ -29,28 +51,6 @@ exports:
   - "function findTrackedDirForFile( filePath: string, rootPath: string, trackedDirPaths: Iterable<string>, ): string |
     undefined"
   - "async function watchCommand( options:"
-dependencies:
-  internal:
-    - ../bench/git.js
-    - ../bench/ground-truth.js
-    - ../bench/repos.js
-    - ../bench/runner.js
-    - ../bench/scorer.js
-    - ../bench/tasks.js
-    - ../bench/types.js
-    - ../core/fingerprint.js
-    - ../core/gitignore.js
-    - ../core/health.js
-    - ../core/markdown-writer.js
-    - ../core/scanner.js
-    - ../core/schema.js
-    - ../core/writer.js
-    - ../generator/dependencies.js
-    - ../generator/llm.js
-    - ../generator/markdown.js
-    - ../generator/static.js
-    - ../index/analyzer.js
-    - ../index/builder.js
 imports:
   - path: ../bench/git.js
     symbols:
@@ -111,6 +111,10 @@ imports:
       - ConfigFile
       - ContextFile
       - contextSchema
+  - path: ../core/semantic-fingerprint-writer.js
+    symbols:
+      - hasIndex
+      - stampSemanticFingerprintsForDirs
   - path: ../core/writer.js
     symbols:
       - UnsupportedVersionError
@@ -133,10 +137,6 @@ imports:
   - path: ../index/analyzer.js
     symbols:
       - analyzerSupports
-  - path: ../index/builder.js
-    symbols:
-      - buildIndex
-      - commitBuild
 derived_fields:
   - version
   - last_updated
@@ -145,3 +145,4 @@ derived_fields:
   - exports
   - dependencies.internal
   - imports
+semantic_fingerprint: c748e4d441f2

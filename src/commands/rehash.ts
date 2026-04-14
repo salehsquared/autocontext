@@ -5,6 +5,11 @@ import { computeFingerprint } from "../core/fingerprint.js";
 import { loadScanOptions } from "../utils/scan-options.js";
 import { loadConfig } from "../utils/config.js";
 import { filterByMinTokens } from "../utils/tokens.js";
+import {
+  hasIndex,
+  stampSemanticFingerprintsForDirs,
+} from "../core/semantic-fingerprint-writer.js";
+import { dim } from "../utils/display.js";
 
 export async function rehashCommand(options: { path?: string }): Promise<void> {
   const rootPath = resolve(options.path ?? ".");
@@ -46,5 +51,18 @@ export async function rehashCommand(options: { path?: string }): Promise<void> {
   if (stale > 0) {
     console.log(`${stale} directories were stale (fingerprints updated, content unchanged).`);
   }
+
+  // Also refresh semantic fingerprints when the index is available. A missing
+  // index is fine — `rehash` has always been a cheap operation and we don't
+  // want to force a build here.
+  if (hasIndex(rootPath)) {
+    const stamped = await stampSemanticFingerprintsForDirs(rootPath, dirs);
+    if (stamped.updated > 0) {
+      console.log(
+        dim(`  semantic fingerprints: ${stamped.updated} directory${stamped.updated === 1 ? "" : "ies"} refreshed (${stamped.changed} changed)`),
+      );
+    }
+  }
+
   console.log("");
 }

@@ -1,0 +1,5 @@
+{
+  "description": "Valid .context.yaml without semantic_fingerprint — backward-compat for files written before T2",
+  "expected": "valid",
+  "category": "semantic-fingerprint"
+}
