@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T03:06:01.169Z
-fingerprint: 894b37da
+last_updated: 2026-04-14T03:07:08.941Z
+fingerprint: 440db67c
 scope: src/commands
 summary: CLI command implementations.
 maintenance: |-

@@ -1,6 +1,7 @@
 import { resolve, relative, extname } from "node:path";
 import { readFile, rm } from "node:fs/promises";
 import { scanProject, flattenBottomUp } from "../core/scanner.js";
+import { ensureAutocontextGitignored } from "../core/gitignore.js";
 import { loadScanOptions } from "../utils/scan-options.js";
 import { successMsg, errorMsg, dim } from "../utils/display.js";
 import { fingerprintsPath, indexRoot, toFileId } from "../index/paths.js";
@@ -28,6 +29,12 @@ export interface IndexCommandOptions {
 export async function indexCommand(options: IndexCommandOptions = {}): Promise<void> {
   const rootPath = resolve(options.path ?? ".");
   const startedAt = Date.now();
+
+  // Idempotent — fixes repos that were init'd before T1 landed.
+  const giResult = await ensureAutocontextGitignored(rootPath);
+  if (giResult.action === "appended") {
+    console.log(successMsg(".autocontext/ added to .gitignore"));
+  }
 
   if (options.rebuild) {
     await rm(indexRoot(rootPath), { recursive: true, force: true });
