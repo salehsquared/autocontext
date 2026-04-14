@@ -1,19 +1,8 @@
 version: 1
-last_updated: 2026-04-14T13:47:09.923Z
-fingerprint: 30e34cc5
+last_updated: 2026-04-14T17:38:35.635Z
+fingerprint: e15f27bb
 scope: src/policy
-summary: Rule evaluators for `rules:` blocks. Queried by `validate --policy` (CLI) and `check_policies` (MCP). Seven rule kinds in a Zod discriminated union.
-decisions:
-  - what: "Typed discriminated-union objects, not a DSL"
-    why: "DSL-style policy languages (Rego, jsonnet, etc.) ship with a parser, sandbox, and learning curve. Seven typed kinds cover the violations that actually show up in practice; adding an eighth is a Zod line + an evaluator file."
-  - what: "Subtree scope semantics — rules apply to the declaring directory and all descendants"
-    why: "Most rules are project-wide. Inheritance from the root keeps boilerplate down; users tighten via the rule's `from` glob or by moving the rule deeper."
-  - what: "symbol_kind on require_export, not kind"
-    why: "Avoids collision with the Zod discriminator field. Naming this anything else would break the discriminated-union parse."
-constraints:
-  - "Rule shapes must match the existing evidence enum values exactly. evidence_requires.typecheck = \"clean\" (not \"passing\"); the conformance fixture bad-evidence-requires-typecheck.yaml locks this."
-  - "Evaluators stream from IndexStore.scanImports() — never load the full graph into memory."
-  - "MCP check_policies caps violations at 500; bigger results truncate with `truncated: true` (no silent loss)."
+summary: Source directory.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
   your changes. Update the summary, and any decisions or constraints that changed.
@@ -21,11 +10,26 @@ maintenance: |-
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
+decisions:
+  - what: Typed discriminated-union objects, not a DSL
+    why: DSL-style policy languages (Rego, jsonnet, etc.) ship with a parser, sandbox, and learning curve. Seven typed kinds
+      cover the violations that actually show up in practice; adding an eighth is a Zod line + an evaluator file.
+  - what: Subtree scope semantics — rules apply to the declaring directory and all descendants
+    why: Most rules are project-wide. Inheritance from the root keeps boilerplate down; users tighten via the rule's `from`
+      glob or by moving the rule deeper.
+  - what: symbol_kind on require_export, not kind
+    why: Avoids collision with the Zod discriminator field. Naming this anything else would break the discriminated-union
+      parse.
+constraints:
+  - Rule shapes must match the existing evidence enum values exactly. evidence_requires.typecheck = "clean" (not
+    "passing"); the conformance fixture bad-evidence-requires-typecheck.yaml locks this.
+  - Evaluators stream from IndexStore.scanImports() — never load the full graph into memory.
+  - "MCP check_policies caps violations at 500; bigger results truncate with `truncated: true` (no silent loss)."
 dependencies:
   internal:
     - ../core/scanner.js
     - ../core/schema.js
-    - ../index/paths.js
+    - ../index/access.js
     - ../index/store.js
     - ../utils/config.js
     - ../utils/scan-options.js
@@ -85,13 +89,12 @@ imports:
       - CONTEXT_FILENAME
       - ContextFile
       - contextSchema
-  - path: ../index/paths.js
+  - path: ../index/access.js
     symbols:
-      - manifestPath
+      - openReadOnlyIndex
   - path: ../index/store.js
     symbols:
       - IndexStore
-      - openIndex
   - path: ../utils/config.js
     symbols:
       - loadConfig
@@ -125,4 +128,4 @@ derived_fields:
   - imports
   - subdirectories
   - data_models
-semantic_fingerprint: 40f85be0acf2
+semantic_fingerprint: d684a45d5e28

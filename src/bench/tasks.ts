@@ -232,13 +232,13 @@ export async function generateTasks(input: GenerateTasksInput): Promise<BenchTas
 
   // Apply maxTasks with proportional sampling across categories
   if (maxTasks && allTasks.length > maxTasks) {
-    return proportionalSample(allTasks, maxTasks, seed);
+    return limitTasks(allTasks, maxTasks, seed);
   }
 
   return allTasks;
 }
 
-function proportionalSample(
+export function limitTasks(
   tasks: BenchTask[],
   maxTasks: number,
   seed: number,

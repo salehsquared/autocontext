@@ -1,8 +1,8 @@
 import { existsSync } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
 import { computeImpact, type ImpactReport, type ImpactSeed } from "../impact/impact.js";
-import { openIndex } from "../index/store.js";
 import { manifestPath, toFileId } from "../index/paths.js";
+import { openReadOnlyIndex } from "../index/access.js";
 import { dim, errorMsg, heading, successMsg, warnMsg } from "../utils/display.js";
 
 export interface ImpactCommandOptions {
@@ -53,7 +53,16 @@ export async function impactCommand(
     return;
   }
 
-  const store = await openIndex(rootPath, { readOnly: true, autoRebuild: false });
+  const access = await openReadOnlyIndex(rootPath);
+  if (access.state !== "ready") {
+    const msg = access.state === "stale"
+      ? "Code index is stale. Run `context index --rebuild` (or `context index` if only sources changed)."
+      : "No code index found. Run `context index` first (or `context init`).";
+    console.error(errorMsg(msg));
+    process.exitCode = 3;
+    return;
+  }
+  const store = access.store;
   let report: ImpactReport;
   try {
     const seed: ImpactSeed = parsed;

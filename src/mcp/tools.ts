@@ -12,6 +12,7 @@ import { loadScanOptions } from "../utils/scan-options.js";
 import { loadConfig } from "../utils/config.js";
 import { filterByMinTokens } from "../utils/tokens.js";
 import { aggregateEvidence, type AggregateEvidenceResult } from "../core/health.js";
+import { openReadOnlyIndex } from "../index/access.js";
 
 // Fields an LLM can request via the filter parameter
 const FILTERABLE_FIELDS = [
@@ -312,8 +313,6 @@ export async function handleExplainStaleness(
   input: ExplainStalenessInput,
   defaultRoot: string,
 ): Promise<ExplainStalenessResult> {
-  const { existsSync } = await import("node:fs");
-  const { manifestPath } = await import("../index/paths.js");
   const rootPath = resolve(input.path ?? defaultRoot);
   const targetDir = resolveAndValidate(rootPath, input.scope);
   const baseCaveat =
@@ -356,7 +355,8 @@ export async function handleExplainStaleness(
     };
   }
 
-  if (!existsSync(manifestPath(rootPath))) {
+  const access = await openReadOnlyIndex(rootPath);
+  if (access.state !== "ready") {
     // No index — fall back to directory-fingerprint-only classification.
     const { state, computed } = await checkFreshness(targetDir, context.fingerprint);
     return {
@@ -372,9 +372,8 @@ export async function handleExplainStaleness(
     };
   }
 
-  const { openIndex } = await import("../index/store.js");
   const { extractPolicyFacts } = await import("../core/semantic-fingerprint.js");
-  const store = await openIndex(rootPath, { readOnly: true, autoRebuild: false });
+  const store = access.store;
   try {
     const { state, computed, computedSemantic } = await checkFreshness(
       targetDir,

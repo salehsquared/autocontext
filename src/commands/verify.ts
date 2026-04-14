@@ -87,15 +87,17 @@ export async function verifyCommand(options: VerifyCommandOptions): Promise<void
       else console.log(errorMsg(msg));
       process.exit(2);
     }
-    printPlan(config, scopes, onlyKinds);
-    console.log("");
-    const answer = await promptYesNo("verify runs commands configured in .context.config.yaml. Proceed? [y/N]: ");
-    if (!answer) {
-      console.log(dim("verify: declined."));
-      process.exit(3);
+    if (!jsonMode) {
+      printPlan(config, scopes, onlyKinds);
+      console.log("");
+      const answer = await promptYesNo("verify runs commands configured in .context.config.yaml. Proceed? [y/N]: ");
+      if (!answer) {
+        console.log(dim("verify: declined."));
+        process.exit(3);
+      }
+      await mkdir(dirname(markerPath), { recursive: true });
+      await writeFile(markerPath, `${new Date().toISOString()}\n`);
     }
-    await mkdir(dirname(markerPath), { recursive: true });
-    await writeFile(markerPath, `${new Date().toISOString()}\n`);
   }
 
   const timeoutSecondsOverride = options.timeout ? parseInt(options.timeout, 10) : undefined;

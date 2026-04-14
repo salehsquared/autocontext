@@ -23,7 +23,13 @@ export type ScoringMethod =
  * code that splits on `condition === "baseline"` etc.
  */
 export const ARMS = ["baseline", "context", "pack", "pack+impact", "pack+policy"] as const;
+export const DEFAULT_ARM_SET = ["baseline", "context"] as const;
 export type ConditionName = (typeof ARMS)[number];
+
+export interface BenchTaskSeed {
+  kind: "query" | "file" | "symbol";
+  value: string;
+}
 
 export interface GroundTruthProvenance {
   source:
@@ -48,6 +54,8 @@ export interface BenchTask {
   scoring: ScoringMethod;
   expected: string[];
   source_scope: string;
+  /** Preferred deterministic seed for pack/impact arms. */
+  task_seed?: BenchTaskSeed;
   /** Provenance of the ground-truth set. Added in T12. */
   ground_truth_provenance?: GroundTruthProvenance;
   /** Only populated on budget-answer tasks. */

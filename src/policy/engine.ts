@@ -6,9 +6,8 @@ import { loadScanOptions } from "../utils/scan-options.js";
 import { loadConfig } from "../utils/config.js";
 import { filterByMinTokens } from "../utils/tokens.js";
 import { contextSchema, CONTEXT_FILENAME, type ContextFile } from "../core/schema.js";
-import { openIndex, type IndexStore } from "../index/store.js";
-import { manifestPath } from "../index/paths.js";
-import { existsSync } from "node:fs";
+import type { IndexStore } from "../index/store.js";
+import { openReadOnlyIndex } from "../index/access.js";
 import { evaluators } from "./evaluators/index.js";
 import type { Rule, RuleKind } from "./rules.js";
 import type { EvalContext, Violation } from "./types.js";
@@ -47,19 +46,6 @@ export async function runPolicies(
   const ruleKindFilter = options.ruleKinds ? new Set(options.ruleKinds) : null;
   const cap = options.maxViolations ?? MAX_VIOLATIONS;
 
-  if (!existsSync(manifestPath(projectRoot))) {
-    return {
-      ok: false,
-      scope: resolvedScope,
-      rules_evaluated: 0,
-      rules_passed: 0,
-      violations: [],
-      index_state: "missing",
-      truncated: false,
-      contexts_scanned: 0,
-    };
-  }
-
   // Load contexts (every valid .context.yaml in the scanned tree).
   const { contexts, sourceFiles } = await loadContextsAndFiles(projectRoot);
 
@@ -74,24 +60,21 @@ export async function runPolicies(
     if (inScope(dir)) scopedContexts.set(dir, ctx);
   }
 
-  let store: IndexStore | null = null;
-  let indexState: IndexState = "ready";
-  try {
-    store = await openIndex(projectRoot, { readOnly: true, autoRebuild: false });
-  } catch (err) {
-    const code = (err as { code?: string }).code;
-    indexState = code === "INDEX_VERSION_MISMATCH" ? "stale" : "missing";
+  const access = await openReadOnlyIndex(projectRoot);
+  if (access.state !== "ready") {
     return {
       ok: false,
       scope: resolvedScope,
       rules_evaluated: 0,
       rules_passed: 0,
       violations: [],
-      index_state: indexState,
+      index_state: access.state,
       truncated: false,
       contexts_scanned: scopedContexts.size,
     };
   }
+  const store: IndexStore = access.store;
+  const indexState: IndexState = "ready";
 
   try {
     const lineCache = new Map<string, number>();

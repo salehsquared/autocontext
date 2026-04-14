@@ -88,6 +88,28 @@ describe("generateStaticContext", () => {
     expect(result.rules).toEqual(existing.rules);
   });
 
+  it("preserves explicit empty decisions / constraints / rules arrays", async () => {
+    await createFile(tmpDir, "index.ts", "export const x = 1;");
+    const scan = makeScanResult(tmpDir, { relativePath: ".", files: ["index.ts"] });
+    const existing = {
+      version: SCHEMA_VERSION,
+      last_updated: "2026-04-14T00:00:00Z",
+      fingerprint: "aabbccdd",
+      scope: ".",
+      summary: "preserved",
+      maintenance: "Keep updated",
+      decisions: [],
+      constraints: [],
+      rules: [],
+    };
+    const childContexts = new Map([[tmpDir, existing]]);
+    const { context: result } = await generateStaticContext(scan, childContexts);
+
+    expect(result.decisions).toEqual([]);
+    expect(result.constraints).toEqual([]);
+    expect(result.rules).toEqual([]);
+  });
+
   it("lean mode omits files, interfaces, dependencies.external", async () => {
     const exports = Array.from({ length: 5 }, (_, i) => `export function fn${i}() {}`).join("\n");
     await createFile(tmpDir, "mod.ts", exports);

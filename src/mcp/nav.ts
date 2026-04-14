@@ -6,11 +6,9 @@
  */
 
 import { resolve, relative, isAbsolute } from "node:path";
-import { existsSync } from "node:fs";
-import { manifestPath } from "../index/paths.js";
-import { openIndex } from "../index/store.js";
 import type { IndexStore } from "../index/store.js";
 import type { IndexSymbol, Reference } from "../index/types.js";
+import { openReadOnlyIndex } from "../index/access.js";
 import { loadCorpus } from "../pack/corpus.js";
 import { buildBM25 } from "../pack/bm25.js";
 import { tokenize, type Zone } from "../pack/tokenize.js";
@@ -83,10 +81,11 @@ async function withIndex<T>(
   rootPath: string,
   fn: (store: IndexStore) => Promise<T>,
 ): Promise<T | { ok: false; error: ErrorEnvelope }> {
-  if (!existsSync(manifestPath(rootPath))) {
+  const access = await openReadOnlyIndex(rootPath);
+  if (access.state !== "ready") {
     return { ok: false, error: indexMissingError() };
   }
-  const store = await openIndex(rootPath, { readOnly: true, autoRebuild: false });
+  const store = access.store;
   try {
     return await fn(store);
   } finally {
@@ -703,11 +702,12 @@ export async function handleImpact(
     stopped: [],
     caveat: "",
   };
-  if (!existsSync(manifestPath(rootPath))) {
+  const access = await openReadOnlyIndex(rootPath);
+  if (access.state !== "ready") {
     return { ...base, ok: false, error: indexMissingError() };
   }
   const { computeImpact, IMPACT_CAVEAT } = await import("../impact/impact.js");
-  const store = await openIndex(rootPath, { readOnly: true, autoRebuild: false });
+  const store = access.store;
   try {
     const kind = input.kind ?? "file";
     let seeds: Parameters<typeof computeImpact>[1];

@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T14:53:50.460Z
-fingerprint: 047c33ee
+last_updated: 2026-04-14T17:38:35.365Z
+fingerprint: 47a6003c
 scope: src/commands
 summary: CLI command implementations.
 maintenance: |-
@@ -13,7 +13,10 @@ maintenance: |-
 dependencies:
   internal:
     - ../bench/git.js
+    - ../bench/ground-truth-impact.js
+    - ../bench/ground-truth-symbols.js
     - ../bench/ground-truth.js
+    - ../bench/provenance.js
     - ../bench/repos.js
     - ../bench/runner.js
     - ../bench/scorer.js
@@ -29,9 +32,6 @@ dependencies:
     - ../core/schema.js
     - ../core/semantic-fingerprint-writer.js
     - ../core/writer.js
-    - ../generator/dependencies.js
-    - ../generator/llm.js
-    - ../generator/markdown.js
 environment:
   - CI
   - FROZEN_TIME
@@ -101,11 +101,22 @@ imports:
       - getFeatureCommits
       - getFixCommits
       - isGitRepo
+  - path: ../bench/ground-truth-impact.js
+    symbols:
+      - generateImpactTasks
+  - path: ../bench/ground-truth-symbols.js
+    symbols:
+      - generateSymbolTasks
   - path: ../bench/ground-truth.js
     symbols:
       - buildDepSets
       - buildDirFacts
       - buildReverseDeps
+  - path: ../bench/provenance.js
+    symbols:
+      - IMPACT_VERSION
+      - PACK_BUDGET_DEFAULT
+      - buildProvenance
   - path: ../bench/repos.js
     symbols:
       - DEFAULT_REPOS
@@ -120,11 +131,16 @@ imports:
   - path: ../bench/tasks.js
     symbols:
       - generateTasks
+      - limitTasks
   - path: ../bench/types.js
     symbols:
+      - ARMS
       - BenchOptions
       - BenchReport
+      - ConditionName
+      - DEFAULT_ARM_SET
       - MultiRepoReport
+      - TaskCategory
   - path: ../cache/cache-store.js
     symbols:
       - cacheClear
@@ -177,15 +193,6 @@ imports:
       - UnsupportedVersionError
       - readContext
       - writeContext
-  - path: ../generator/dependencies.js
-    symbols:
-      - detectInternalDeps
-  - path: ../generator/llm.js
-    symbols:
-      - generateLLMContext
-  - path: ../generator/markdown.js
-    symbols:
-      - AGENTS_SECTION_START
 derived_fields:
   - version
   - last_updated
@@ -197,4 +204,4 @@ derived_fields:
   - environment
   - data_models
   - events
-semantic_fingerprint: e6f5452dcd08
+semantic_fingerprint: 736addcee52d

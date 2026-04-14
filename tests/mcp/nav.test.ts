@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdir } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
   createTmpDir,
@@ -83,6 +83,21 @@ describe("nav handlers — INDEX_MISSING path", () => {
   it("impact returns INDEX_MISSING when no index", async () => {
     await seedCorpus();
     const res = await handleImpact({ seed: "src/core/math.ts" }, tmpDir);
+    expect(res.ok).toBe(false);
+    expect(res.error?.code).toBe("INDEX_MISSING");
+  });
+
+  it("treats a stale index manifest as INDEX_MISSING", async () => {
+    await seedCorpus();
+    await mkdir(join(tmpDir, ".autocontext/index"), { recursive: true });
+    await writeFile(
+      join(tmpDir, ".autocontext/index/manifest.json"),
+      JSON.stringify({ index_version: 999, project_root: tmpDir, grammar_hashes: {} }),
+      "utf-8",
+    );
+
+    const res = await handleFindDefinition({ symbol: "computeFingerprint" }, tmpDir);
+
     expect(res.ok).toBe(false);
     expect(res.error?.code).toBe("INDEX_MISSING");
   });

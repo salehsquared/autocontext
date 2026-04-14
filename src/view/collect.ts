@@ -9,7 +9,8 @@ import { filterByMinTokens } from "../utils/tokens.js";
 import { readContext } from "../core/writer.js";
 import { checkFreshness, legacyState } from "../core/fingerprint.js";
 import { CONTEXT_FILENAME } from "../core/schema.js";
-import { manifestPath } from "../index/paths.js";
+import { openReadOnlyIndex } from "../index/access.js";
+import type { IndexStore } from "../index/store.js";
 import type { ViewData, ViewFreshness, ViewScope, ViewViolation } from "./types.js";
 
 const POLICY_RESULTS_PATH = ".autocontext/policy-results.json";
@@ -18,7 +19,7 @@ export interface CollectOptions {
   projectRoot: string;
   autocontextVersion: string;
   generatedAt?: string;
-  /** Test seam — inject `has_index` detection. */
+  /** Test seam — force graph availability on/off. */
   indexPresent?: boolean;
 }
 
@@ -30,8 +31,7 @@ export async function collectViewData(opts: CollectOptions): Promise<ViewData> {
   const allDirs = flattenBottomUp(scanResult);
   const { dirs } = await filterByMinTokens(allDirs, config?.min_tokens);
 
-  const indexPresent =
-    opts.indexPresent ?? existsSync(manifestPath(rootPath));
+  const forceIndexPresent = opts.indexPresent;
   let hasSemanticStaleness = false;
   let dirEdges: ViewData["dir_edges"] = [];
 
@@ -54,11 +54,13 @@ export async function collectViewData(opts: CollectOptions): Promise<ViewData> {
   }
 
   // Optionally open the index for semantic-staleness + dir edges.
-  let indexStore: Awaited<ReturnType<typeof import("../index/store.js").openIndex>> | null = null;
-  if (indexPresent) {
-    try {
-      const { openIndex } = await import("../index/store.js");
-      indexStore = await openIndex(rootPath, { readOnly: true, autoRebuild: false });
+  let indexStore: IndexStore | null = null;
+  let hasUsableIndex = false;
+  if (forceIndexPresent !== false) {
+    const access = await openReadOnlyIndex(rootPath);
+    if (access.state === "ready") {
+      indexStore = access.store;
+      hasUsableIndex = true;
       const edges = await indexStore.getDirEdges();
       dirEdges = edges
         .map((e) => ({ source: e.from_dir, target: e.to_dir, weight: e.weight }))
@@ -67,8 +69,6 @@ export async function collectViewData(opts: CollectOptions): Promise<ViewData> {
           return a.target < b.target ? -1 : a.target > b.target ? 1 : 0;
         });
       hasSemanticStaleness = true;
-    } catch {
-      indexStore = null;
     }
   }
 
@@ -194,7 +194,7 @@ export async function collectViewData(opts: CollectOptions): Promise<ViewData> {
       },
       scopes: scopes.sort((a, b) => a.scope.localeCompare(b.scope)),
       dir_edges: dirEdges,
-      has_index: indexPresent,
+      has_index: hasUsableIndex,
       has_policy: hasPolicy,
       has_semantic_staleness: hasSemanticStaleness,
       totals,

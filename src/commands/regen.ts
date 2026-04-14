@@ -146,12 +146,9 @@ export async function regenCommand(
     const indexAvailable = hasIndex(rootPath);
     let indexStore: import("../index/store.js").IndexStore | null = null;
     if (options.semanticStale && indexAvailable) {
-      const { openIndex } = await import("../index/store.js");
-      try {
-        indexStore = await openIndex(rootPath, { readOnly: true, autoRebuild: false });
-      } catch {
-        indexStore = null;
-      }
+      const { openReadOnlyIndex } = await import("../index/access.js");
+      const access = await openReadOnlyIndex(rootPath);
+      indexStore = access.state === "ready" ? access.store : null;
     }
     const { extractPolicyFacts } = await import("../core/semantic-fingerprint.js");
 

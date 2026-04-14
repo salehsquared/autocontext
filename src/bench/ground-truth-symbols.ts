@@ -75,6 +75,7 @@ export async function generateSymbolTasks(
     scoring: "target_hit",
     expected: [s.file],
     source_scope: posix.dirname(s.file) === "." ? "." : posix.dirname(s.file),
+    task_seed: { kind: "symbol", value: s.name },
     ground_truth_provenance: {
       source: "t1_symbols",
       precision_class: "authoritative",
@@ -101,6 +102,7 @@ export async function generateSymbolTasks(
     scoring: "file_set_f1",
     expected: refFiles,
     source_scope: posix.dirname(sym.file) === "." ? "." : posix.dirname(sym.file),
+    task_seed: { kind: "symbol", value: sym.name },
     ground_truth_provenance: {
       source: "t1_references",
       precision_class: "import_bound",

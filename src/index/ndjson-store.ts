@@ -27,6 +27,7 @@ import { INDEX_VERSION, grammarHashesEqual } from "./version.js";
 import { acquireLock, type LockHandle } from "./lock.js";
 import { computeFileFingerprint, fileIsStable } from "./fingerprint.js";
 import type { IndexStore, OpenIndexOptions } from "./store.js";
+import { AUTOCONTEXT_VERSION } from "../version.js";
 
 type ShardCollection = "symbols" | "imports" | "references";
 const SHARD_COLLECTIONS: ShardCollection[] = ["symbols", "imports", "references"];
@@ -64,7 +65,7 @@ export async function openNdjsonIndex(
   const manifest = await loadOrInitManifest(projectRoot, {
     autoRebuild,
     readOnly,
-    autocontextVersion: options.autocontextVersion ?? "0.0.0-dev",
+    autocontextVersion: options.autocontextVersion ?? AUTOCONTEXT_VERSION,
     grammarHashes: options.grammarHashes ?? {},
   });
 

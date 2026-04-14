@@ -7,7 +7,7 @@ import {
   extractPolicyFacts,
 } from "./semantic-fingerprint.js";
 import { manifestPath } from "../index/paths.js";
-import { openIndex } from "../index/store.js";
+import { openReadOnlyIndex } from "../index/access.js";
 
 export interface StampResult {
   /** How many yamls gained a semantic_fingerprint (or had one refreshed). */
@@ -37,7 +37,11 @@ export async function stampSemanticFingerprintsForDirs(
     return { updated: 0, skipped: dirs.length, changed: 0 };
   }
 
-  const store = await openIndex(root, { readOnly: true, autoRebuild: false });
+  const access = await openReadOnlyIndex(root);
+  if (access.state !== "ready") {
+    return { updated: 0, skipped: dirs.length, changed: 0 };
+  }
+  const store = access.store;
   try {
     let updated = 0;
     let skipped = 0;

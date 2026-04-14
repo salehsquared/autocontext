@@ -104,4 +104,24 @@ describe("collectViewData", () => {
     const sum = data.totals.fresh + data.totals.stale + data.totals.missing + data.totals.semantic_stale + data.totals.cosmetic_stale;
     expect(sum).toBe(data.scopes.length);
   });
+
+  it("treats a stale index manifest as unusable", async () => {
+    await enableAllScopes(tmpDir);
+    await mkdir(join(tmpDir, ".autocontext/index"), { recursive: true });
+    await writeContext(tmpDir, makeValidContext({ scope: ".", summary: "root" }));
+    await writeFile(
+      join(tmpDir, ".autocontext/index/manifest.json"),
+      JSON.stringify({ index_version: 999, project_root: tmpDir, grammar_hashes: {} }),
+      "utf-8",
+    );
+
+    const data = await collectViewData({
+      projectRoot: tmpDir,
+      autocontextVersion: "test",
+    });
+
+    expect(data.has_index).toBe(false);
+    expect(data.has_semantic_staleness).toBe(false);
+    expect(data.dir_edges).toEqual([]);
+  });
 });

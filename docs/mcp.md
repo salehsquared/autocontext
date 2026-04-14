@@ -28,7 +28,7 @@ Grouped by intent. Recommended call sequences:
 
 ### Index / BM25 requirements
 
-- **Requires the code index** (`.autocontext/index/`): `find_definition`, `find_references`, `find_related`, `impact`, `check_policies`, `explain_staleness`. Returns `{ok:false, error:{code:"INDEX_MISSING", remediation:"Run `context index`…"}}` if the index is absent. **No MCP handler rebuilds the index** (a long rebuild looks indistinguishable from a hang).
+- **Requires the code index** (`.autocontext/index/`): `find_definition`, `find_references`, `find_related`, `impact`, `check_policies`, `explain_staleness`. Returns `{ok:false, error:{code:"INDEX_MISSING", remediation:"Run `context index`…"}}` if the index is absent or stale. **No MCP handler rebuilds the index** (a long rebuild looks indistinguishable from a hang).
 - **Requires the context corpus** (`.context.yaml` files): `search_context`, `build_context_pack`. BM25 is built in-memory on each call (the persistent BM25 cache is deferred; see `docs/pack.md`).
 - **No prerequisites:** `query_context`, `check_freshness`, `list_contexts`, `aggregate_evidence`.
 
@@ -70,7 +70,7 @@ Retrieve `.context.yaml` content for a directory scope.
 | `filter` | `string[]` | no | Fields to include. Metadata fields (`version`, `scope`, `fingerprint`, `last_updated`) are always included. |
 | `path` | `string` | no | Project root path override. Defaults to the server's configured root. |
 
-**Filterable fields:** `summary`, `files`, `interfaces`, `decisions`, `constraints`, `dependencies`, `current_state`, `subdirectories`, `environment`, `testing`, `todos`, `data_models`, `events`, `config`, `project`, `structure`, `maintenance`, `exports`
+**Filterable fields:** `summary`, `files`, `interfaces`, `decisions`, `constraints`, `dependencies`, `current_state`, `subdirectories`, `environment`, `testing`, `todos`, `data_models`, `events`, `config`, `project`, `structure`, `maintenance`, `exports`, `imports`, `internals`
 
 ### Success response
 

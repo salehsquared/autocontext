@@ -5,6 +5,7 @@ import { spawn } from "node:child_process";
 import { collectViewData } from "../view/collect.js";
 import { renderHtml } from "../view/render.js";
 import { successMsg, warnMsg, errorMsg, dim } from "../utils/display.js";
+import { AUTOCONTEXT_VERSION } from "../version.js";
 
 const DEFAULT_OUT = "context-report.html";
 const HARD_CAP_BYTES = 2 * 1024 * 1024;
@@ -48,10 +49,9 @@ export async function viewCommand(options: ViewCommandOptions): Promise<void> {
     process.exit(2);
   }
 
-  const autocontextVersion = await readOwnVersion();
   const data = await collectViewData({
     projectRoot: rootPath,
-    autocontextVersion,
+    autocontextVersion: AUTOCONTEXT_VERSION,
     generatedAt: process.env.FROZEN_TIME ?? undefined,
   });
   const html = renderHtml(data, {
@@ -74,7 +74,7 @@ export async function viewCommand(options: ViewCommandOptions): Promise<void> {
 
   const sizeKb = Math.round(html.length / 1024);
   console.log(successMsg(`wrote ${outPath} (${sizeKb} KB · ${data.scopes.length} scope${data.scopes.length === 1 ? "" : "s"})`));
-  if (!data.has_index) console.log(dim("  graph disabled (no .autocontext/index/)."));
+  if (!data.has_index) console.log(dim("  graph disabled (index missing or stale)."));
   if (!data.has_policy) console.log(dim("  policy chips neutral (no .autocontext/policy-results.json)."));
 
   if (options.open) {
@@ -86,28 +86,6 @@ export async function viewCommand(options: ViewCommandOptions): Promise<void> {
   }
 
   process.exit(0);
-}
-
-async function readOwnVersion(): Promise<string> {
-  try {
-    const { readFile } = await import("node:fs/promises");
-    // Resolve our package.json — navigate up from dist/commands/view.js to the package root.
-    const { fileURLToPath } = await import("node:url");
-    const thisDir = dirname(fileURLToPath(import.meta.url));
-    for (const candidate of [
-      join(thisDir, "../../package.json"),
-      join(thisDir, "../package.json"),
-      join(thisDir, "package.json"),
-    ]) {
-      if (existsSync(candidate)) {
-        const pkg = JSON.parse(await readFile(candidate, "utf-8"));
-        if (typeof pkg.version === "string") return pkg.version;
-      }
-    }
-  } catch {
-    // fall through
-  }
-  return "unknown";
 }
 
 async function openInBrowser(path: string): Promise<void> {

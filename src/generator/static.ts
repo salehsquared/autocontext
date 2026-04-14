@@ -180,13 +180,13 @@ export async function generateStaticContext(
 
   // Preserve user-authored narrative + policy fields from the existing
   // .context.yaml. Extractors never synthesize these; regen must not wipe them.
-  if (existing?.decisions && existing.decisions.length > 0) {
+  if (existing && "decisions" in existing) {
     context.decisions = existing.decisions;
   }
-  if (existing?.constraints && existing.constraints.length > 0) {
+  if (existing && "constraints" in existing) {
     context.constraints = existing.constraints;
   }
-  if (existing?.rules && existing.rules.length > 0) {
+  if (existing && "rules" in existing) {
     context.rules = existing.rules;
   }
   if (existing?.current_state && !context.current_state) {

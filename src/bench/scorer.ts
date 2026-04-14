@@ -5,6 +5,7 @@ import type {
   ConditionSummary,
   ConditionName,
   BenchReport,
+  BenchProvenance,
   MultiRepoReport,
 } from "./types.js";
 import { buildJudgePrompt } from "./prompts.js";
@@ -225,7 +226,10 @@ export function aggregateResults(
   tasks: BenchTask[],
   results: TaskResult[],
   repo?: string,
-  opts?: { armSet?: readonly import("./types.js").ConditionName[] },
+  opts?: {
+    armSet?: readonly import("./types.js").ConditionName[];
+    provenance?: BenchProvenance;
+  },
 ): BenchReport {
   const baseline = summarizeCondition("baseline", results, tasks);
   const context = summarizeCondition("context", results, tasks);
@@ -332,6 +336,7 @@ export function aggregateResults(
     arms,
     matrix,
     arm_deltas: armDeltas,
+    provenance: opts?.provenance,
   };
 }
 

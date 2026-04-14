@@ -190,12 +190,13 @@ A `.autocontext/` directory is created on first run for the index, LLM cache, an
 | `context view` | Generate a self-contained HTML report (tree + detail + dep graph) |
 | `context cache stats` / `context cache clear` | Inspect or clear the LLM cache |
 | `context bench` | Benchmark baseline / context / pack / pack+impact / pack+policy arms |
+| `context bench --arm pack,pack+policy --pack-budget 5000` | Run selected comparator arms with an explicit pack budget |
 | `context bench --repo <url>` | Clone and benchmark another repository |
 | `context serve` | Start MCP server for LLM tool integration |
 
 When installed locally (`npm install -D autocontext`), run commands as `npx context ...`.
 
-Most commands accept `-p, --path <path>` to target a specific project root. `context show <target>` is the exception and resolves from the current working directory. `init` and `regen` accept `--no-agents` to skip `AGENTS.md` generation, `--evidence` to collect test/typecheck signals, and `--parallel <n>` for concurrent processing. `bench --tasks <path>` is currently reserved for future task-file support and has no effect yet.
+Most commands accept `-p, --path <path>` to target a specific project root. `context show <target>` is the exception and resolves from the current working directory. `init` and `regen` accept `--no-agents` to skip `AGENTS.md` generation, `--evidence` to collect test/typecheck signals, and `--parallel <n>` for concurrent processing. `bench --tasks <path>` is currently reserved for future task-file support and has no effect yet. `bench --arm <csv>` accepts `baseline,context,pack,pack+impact,pack+policy`; `pack+impact` and `pack+policy` require a usable code index and fail fast with rebuild guidance when the index is missing or stale.
 
 ## Everyday Workflow
 

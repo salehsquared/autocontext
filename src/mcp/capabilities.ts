@@ -1,3 +1,5 @@
+import { AUTOCONTEXT_VERSION } from "../version.js";
+
 /**
  * T6 capability metadata. Single source of truth for tool versioning.
  *
@@ -6,7 +8,7 @@
  * silent.
  */
 
-export const SERVER_VERSION = "0.2.0";
+export const SERVER_VERSION = AUTOCONTEXT_VERSION;
 export const TOOLS_VERSION = 2;
 
 export const TOOL_SINCE_VERSION: Record<string, number> = {

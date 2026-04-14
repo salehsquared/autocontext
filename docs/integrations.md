@@ -5,7 +5,7 @@ Examples below assume a local install (`npm install -D autocontext`) and use `np
 
 ## MCP Server
 
-The MCP server exposes three tools via stdio transport (JSON-RPC over stdin/stdout).
+The MCP server exposes twelve tools via stdio transport (JSON-RPC over stdin/stdout): three legacy corpus tools, one evidence rollup, three navigation tools, three analysis tools, and two retrieval/assembly tools.
 
 ### Starting the Server
 
@@ -40,7 +40,7 @@ The server runs until terminated. Protocol traffic uses stdin/stdout; startup lo
 }
 ```
 
-Metadata fields (`version`, `scope`, `fingerprint`, `last_updated`) are always included regardless of filter. Filterable fields: `summary`, `files`, `interfaces`, `decisions`, `constraints`, `dependencies`, `current_state`, `subdirectories`, `environment`, `testing`, `todos`, `data_models`, `events`, `config`, `project`, `structure`, `maintenance`, `exports`.
+Metadata fields (`version`, `scope`, `fingerprint`, `last_updated`) are always included regardless of filter. Filterable fields: `summary`, `files`, `interfaces`, `decisions`, `constraints`, `dependencies`, `current_state`, `subdirectories`, `environment`, `testing`, `todos`, `data_models`, `events`, `config`, `project`, `structure`, `maintenance`, `exports`, `imports`, `internals`.
 
 **`check_freshness`** — Check if context is current.
 
@@ -75,6 +75,15 @@ States: `fresh`, `stale`, `missing`.
   ]
 }
 ```
+
+Additional MCP tools in `0.2.0`:
+
+- `aggregate_evidence` — roll up test/typecheck/lint/coverage signals.
+- `find_definition`, `find_references`, `find_related` — local code-index navigation.
+- `search_context`, `build_context_pack` — BM25 search and token-budgeted assembly over the `.context.yaml` corpus.
+- `impact`, `check_policies`, `explain_staleness` — index-backed analysis. These return `INDEX_MISSING` when the index is absent or stale; handlers never rebuild it.
+
+Clients can also read `autocontext://capabilities` for `server_version`, `tools_version`, and per-tool `since` metadata. See [mcp.md](mcp.md) for the full request/response contract.
 
 ### Security
 

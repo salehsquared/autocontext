@@ -28,6 +28,7 @@ import { verifyCommand } from "./commands/verify.js";
 import { viewCommand } from "./commands/view.js";
 import { startMcpServer } from "./mcp/server.js";
 import { loadEnvForCli } from "./utils/env.js";
+import { AUTOCONTEXT_VERSION } from "./version.js";
 import { errorMsg } from "./utils/display.js";
 
 export interface CommandHandlers {
@@ -110,7 +111,7 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
   program
     .name("context")
     .description("Folder-level documentation for LLMs — .context.yaml files for every directory")
-    .version("0.1.0");
+    .version(AUTOCONTEXT_VERSION);
 
   program
     .command("init")
@@ -282,6 +283,8 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
     .command("bench")
     .description("Benchmark whether .context.yaml files improve LLM accuracy")
     .option("--json", "Output machine-readable JSON")
+    .option("--arm <csv>", "Comma-separated arms: baseline,context,pack,pack+impact,pack+policy")
+    .option("--pack-budget <n>", "Token budget for pack arms", parseInt)
     .option("--iterations <n>", "Repeat each task N times", parseInt)
     .option("--tasks <path>", "Path to manual tasks YAML file")
     .option("--max-tasks <n>", "Maximum tasks to generate", parseInt)
@@ -296,6 +299,8 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
       await handlers.benchCommand({
         path: opts.path,
         json: opts.json,
+        arm: opts.arm,
+        packBudget: opts.packBudget,
         iterations: opts.iterations,
         tasks: opts.tasks,
         maxTasks: opts.maxTasks,

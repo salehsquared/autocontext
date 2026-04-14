@@ -9,7 +9,7 @@ Run the project's own test / typecheck / lint / coverage commands, normalize the
 `context verify` runs **arbitrary shell commands** from your `.context.config.yaml`. Anyone who can edit that file can run anything as your shell user: `npm install` malware, `git pull` of an untrusted PR, etc.
 
 Mitigations:
-- **First-run prompt.** The first invocation prints the resolved commands and waits for `y`. A marker file at `.autocontext/verify.first-run` suppresses the prompt on later runs. `--yes` skips it from the start; `--dry-run` shows commands without prompting and without running.
+- **First-run prompt.** The first invocation prints the resolved commands and waits for `y`. A marker file at `.autocontext/verify.first-run` suppresses the prompt on later runs. `--yes` skips it from the start; `--dry-run` shows commands without prompting and without running; `--json` suppresses prompt text on interactive terminals so stdout stays machine-readable.
 - **Never auto-run.** See above — no other autocontext command triggers verify.
 - **Review before running**, especially in untrusted repos. Commands are intentionally a string so they're easy to eyeball.
 
@@ -89,6 +89,8 @@ context verify --merge
 # CI-ready.
 context verify --json --yes > verify.json
 ```
+
+On an interactive terminal, `context verify --json` runs without the first-run prompt so stdout remains valid JSON. On a non-TTY first run, JSON mode still exits `2` unless you also pass `--yes`.
 
 ### Exit codes
 

@@ -4,7 +4,7 @@
 
 Every `.context.yaml` file has a required `version` field. Currently: `version: 1`.
 
-The schema version tracks the **structure** of `.context.yaml` files — which fields exist, their types, and validation rules. It is independent of the autocontext CLI version (currently v0.1.0).
+The schema version tracks the **structure** of `.context.yaml` files — which fields exist, their types, and validation rules. It is independent of the autocontext CLI version (currently v0.2.0).
 
 ## Compatibility Guarantees
 
@@ -73,6 +73,6 @@ The local code index at `.autocontext/index/` carries its own integer version: `
 - Bumping `INDEX_VERSION` is free-form — format changes, new record fields, sharding changes — and triggers a rebuild on the next `context index` call.
 - Bumping `SCHEMA_VERSION` is a major event, signaled throughout `.context.yaml` files and all downstream tooling.
 
-The separation lets index-format evolution move at its own pace without affecting the `.context.yaml` contract users commit to git. Consumer tools that read the index should open it with `{ readOnly: true, autoRebuild: false }` and error cleanly on `INDEX_VERSION_MISMATCH` — **never** auto-rebuild inside a handler.
+The separation lets index-format evolution move at its own pace without affecting the `.context.yaml` contract users commit to git. Consumer tools that read the index should open it with `{ readOnly: true, autoRebuild: false }` and surface rebuild-needed states cleanly (`EAUTOCONTEXTREBUILD` / stale index) — **never** auto-rebuild inside a handler.
 
 See [docs/index.md](index.md) for the index layout, versioning decisions, and per-language coverage.

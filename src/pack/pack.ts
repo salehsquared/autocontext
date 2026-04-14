@@ -3,9 +3,10 @@ import { posix } from "node:path";
 import { loadCorpus, type ScopeDoc } from "./corpus.js";
 import { buildBM25, ZONE_WEIGHTS } from "./bm25.js";
 import { computeGraphProximity } from "./graph-proximity.js";
-import { openIndex } from "../index/store.js";
 import { manifestPath, toFileId } from "../index/paths.js";
 import { tokenize } from "./tokenize.js";
+import { openReadOnlyIndex } from "../index/access.js";
+import { AUTOCONTEXT_VERSION } from "../version.js";
 
 /** ~4 chars per token heuristic — same scale used across the bench harness. */
 function estimateTokens(s: string): number {
@@ -131,7 +132,7 @@ export async function buildPack(opts: PackOptions): Promise<Pack> {
     scopes: admitted,
     warnings,
     metadata: {
-      autocontext_version: "0.2.0-dev",
+      autocontext_version: AUTOCONTEXT_VERSION,
       n_scopes_considered: corpus.length,
       truncated,
     },
@@ -221,7 +222,9 @@ async function computeProximityIfAvailable(
 ): Promise<Map<string, number>> {
   if (seedDirs.length === 0) return new Map();
   if (!existsSync(manifestPath(projectRoot))) return new Map();
-  const store = await openIndex(projectRoot, { readOnly: true, autoRebuild: false });
+  const access = await openReadOnlyIndex(projectRoot);
+  if (access.state !== "ready") return new Map();
+  const store = access.store;
   try {
     return await computeGraphProximity(store, seedDirs);
   } finally {

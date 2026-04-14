@@ -1,19 +1,13 @@
-import { mkdir, open, readFile, rm } from "node:fs/promises";
-import { dirname } from "node:path";
+import { mkdir, open, readFile, readdir, rm } from "node:fs/promises";
+import { dirname, join } from "node:path";
 
 /**
- * Minimal advisory file lock for `.autocontext/index/.lock`.
+ * Advisory lock layout for `.autocontext/index/.lock`:
  *
- * Plan (T1-A §9) names `proper-lockfile`, but in v1 we use a hand-rolled
- * O_EXCL+PID approach to keep us on zero runtime deps. Contract:
+ *   - `.lock` is an exclusive sentinel acquired with O_EXCL
+ *   - `.lock.readers/` contains one lease file per shared holder
  *
- *   - exclusive lock blocks all other exclusive *and* shared lock attempts;
- *   - shared locks coexist with other shared locks;
- *   - stale locks (owning PID no longer alive) are reclaimed;
- *   - blocked acquirers retry with jittered backoff up to `timeoutMs`.
- *
- * Cross-platform note: NFS / network FS may see weaker semantics. Documented
- * in src/index/README.md.
+ * This avoids the read-modify-write race in the old shared-reader counter.
  */
 
 export type LockMode = "exclusive" | "shared";
@@ -23,15 +17,38 @@ export interface LockHandle {
   release(): Promise<void>;
 }
 
-interface LockContents {
+interface LockOwner {
   mode: LockMode;
   pid: number;
-  readers: number; // >= 1 when mode === "shared"
   acquired_at: number;
 }
 
+interface SharedLease extends LockOwner {
+  mode: "shared";
+}
+
+interface ExclusiveSentinel extends LockOwner {
+  mode: "exclusive";
+}
+
+interface LegacySharedLock extends LockOwner {
+  mode: "shared";
+  readers?: number;
+}
+
+type SignalName = "SIGINT" | "SIGTERM";
+type CleanupFn = () => Promise<void>;
+
 const EXCL_RETRY_MS = 40;
 const SHARED_RETRY_MS = 20;
+const SIGNAL_EXIT_CODES: Record<SignalName, number> = {
+  SIGINT: 130,
+  SIGTERM: 143,
+};
+
+const processCleanups = new Set<CleanupFn>();
+let cleanupHandlersInstalled = false;
+let signalCleanupInFlight = false;
 
 export async function acquireLock(
   lockFilePath: string,
@@ -39,108 +56,275 @@ export async function acquireLock(
   timeoutMs = 10_000,
 ): Promise<LockHandle> {
   await mkdir(dirname(lockFilePath), { recursive: true });
+  await mkdir(readersDir(lockFilePath), { recursive: true });
+  ensureProcessCleanupHandlers();
+
+  return mode === "exclusive"
+    ? acquireExclusiveLock(lockFilePath, timeoutMs)
+    : acquireSharedLock(lockFilePath, timeoutMs);
+}
+
+async function acquireExclusiveLock(
+  lockFilePath: string,
+  timeoutMs: number,
+): Promise<LockHandle> {
   const start = Date.now();
 
   while (true) {
-    const attempt = await tryAcquire(lockFilePath, mode);
+    const attempt = await tryAcquireExclusiveSentinel(lockFilePath);
     if (attempt.ok) {
-      return makeHandle(lockFilePath, mode);
+      try {
+        await waitForReadersToDrain(lockFilePath, start, timeoutMs);
+        return makeExclusiveHandle(lockFilePath);
+      } catch (err) {
+        await removeSentinel(lockFilePath);
+        throw err;
+      }
     }
+
     if (Date.now() - start > timeoutMs) {
-      const err = new Error(
-        `autocontext index is locked (mode=${attempt.heldMode ?? "?"}, pid=${attempt.heldPid ?? "?"})`,
-      ) as Error & { code?: string };
-      err.code = "EAUTOCONTEXTLOCKED";
-      throw err;
+      throw lockedError(attempt.heldMode, attempt.heldPid);
     }
-    const base = mode === "exclusive" ? EXCL_RETRY_MS : SHARED_RETRY_MS;
-    await sleep(base + Math.random() * base);
+
+    await sleep(EXCL_RETRY_MS + Math.random() * EXCL_RETRY_MS);
   }
 }
 
-async function tryAcquire(
+async function acquireSharedLock(
   lockFilePath: string,
-  mode: LockMode,
-): Promise<{ ok: boolean; heldMode?: LockMode; heldPid?: number }> {
-  // First: try O_EXCL create. If successful, nobody else holds the lock.
+  timeoutMs: number,
+): Promise<LockHandle> {
+  const start = Date.now();
+
+  while (true) {
+    const attempt = await tryAcquireSharedLease(lockFilePath);
+    if (attempt.ok) {
+      return makeSharedHandle(attempt.leasePath);
+    }
+
+    if (Date.now() - start > timeoutMs) {
+      throw lockedError(attempt.heldMode, attempt.heldPid);
+    }
+
+    await sleep(SHARED_RETRY_MS + Math.random() * SHARED_RETRY_MS);
+  }
+}
+
+async function tryAcquireExclusiveSentinel(
+  lockFilePath: string,
+): Promise<{ ok: true } | { ok: false; heldMode?: LockMode; heldPid?: number }> {
   try {
     const fh = await open(lockFilePath, "wx");
-    const contents: LockContents = {
-      mode,
+    const payload: ExclusiveSentinel = {
+      mode: "exclusive",
       pid: process.pid,
-      readers: mode === "shared" ? 1 : 0,
       acquired_at: Date.now(),
     };
-    await fh.writeFile(JSON.stringify(contents));
+    await fh.writeFile(JSON.stringify(payload));
     await fh.close();
     return { ok: true };
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;
   }
 
-  // Lock file already exists. Inspect it.
-  let held: LockContents;
-  try {
-    const raw = await readFile(lockFilePath, "utf8");
-    held = JSON.parse(raw) as LockContents;
-  } catch {
-    // Corrupt lock file — treat as stale and try to clear it.
-    await rm(lockFilePath, { force: true });
-    return { ok: false };
-  }
-
-  if (!pidAlive(held.pid)) {
-    await rm(lockFilePath, { force: true });
-    return { ok: false };
-  }
-
-  // Exclusive holders block every new acquirer.
-  if (held.mode === "exclusive") {
-    return { ok: false, heldMode: held.mode, heldPid: held.pid };
-  }
-
-  // Shared holders: additional shared acquirers OK, exclusive blocks.
-  if (mode === "shared") {
-    const next: LockContents = { ...held, readers: held.readers + 1 };
-    try {
-      await atomicRewrite(lockFilePath, JSON.stringify(next));
-      return { ok: true };
-    } catch {
-      return { ok: false };
-    }
-  }
-
+  const held = await readLiveSentinel(lockFilePath);
+  if (!held) return { ok: false };
   return { ok: false, heldMode: held.mode, heldPid: held.pid };
 }
 
-function makeHandle(lockFilePath: string, mode: LockMode): LockHandle {
+async function tryAcquireSharedLease(
+  lockFilePath: string,
+): Promise<
+  | { ok: true; leasePath: string }
+  | { ok: false; heldMode?: LockMode; heldPid?: number }
+> {
+  const before = await readLiveSentinel(lockFilePath);
+  if (before) {
+    return { ok: false, heldMode: before.mode, heldPid: before.pid };
+  }
+
+  const leasePath = join(
+    readersDir(lockFilePath),
+    `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}.json`,
+  );
+
+  try {
+    const fh = await open(leasePath, "wx");
+    const payload: SharedLease = {
+      mode: "shared",
+      pid: process.pid,
+      acquired_at: Date.now(),
+    };
+    await fh.writeFile(JSON.stringify(payload));
+    await fh.close();
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "EEXIST") {
+      return { ok: false };
+    }
+    throw err;
+  }
+
+  const after = await readLiveSentinel(lockFilePath);
+  if (!after) {
+    return { ok: true, leasePath };
+  }
+
+  await rm(leasePath, { force: true });
+  return { ok: false, heldMode: after.mode, heldPid: after.pid };
+}
+
+async function waitForReadersToDrain(
+  lockFilePath: string,
+  start: number,
+  timeoutMs: number,
+): Promise<void> {
+  while (true) {
+    const leases = await listLiveReaderLeases(lockFilePath);
+    if (leases.length === 0) return;
+
+    if (Date.now() - start > timeoutMs) {
+      throw lockedError("shared", leases[0]?.pid);
+    }
+
+    await sleep(EXCL_RETRY_MS + Math.random() * EXCL_RETRY_MS);
+  }
+}
+
+async function listLiveReaderLeases(lockFilePath: string): Promise<SharedLease[]> {
+  const dir = readersDir(lockFilePath);
+  let entries: string[];
+  try {
+    entries = await readdir(dir);
+  } catch {
+    return [];
+  }
+
+  const live: SharedLease[] = [];
+  for (const entry of entries) {
+    const leasePath = join(dir, entry);
+    let parsed: SharedLease | null = null;
+    try {
+      const raw = await readFile(leasePath, "utf8");
+      const candidate = JSON.parse(raw) as SharedLease;
+      if (candidate.mode === "shared" && pidAlive(candidate.pid)) {
+        parsed = candidate;
+      }
+    } catch {
+      // Treat corrupt lease files as stale.
+    }
+
+    if (parsed) {
+      live.push(parsed);
+      continue;
+    }
+
+    await rm(leasePath, { force: true });
+  }
+
+  live.sort((a, b) => a.acquired_at - b.acquired_at || a.pid - b.pid);
+  return live;
+}
+
+async function readLiveSentinel(lockFilePath: string): Promise<LockOwner | null> {
+  let raw: string;
+  try {
+    raw = await readFile(lockFilePath, "utf8");
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw err;
+  }
+
+  let parsed: ExclusiveSentinel | LegacySharedLock;
+  try {
+    parsed = JSON.parse(raw) as ExclusiveSentinel | LegacySharedLock;
+  } catch {
+    await removeSentinel(lockFilePath);
+    return null;
+  }
+
+  if ((parsed.mode !== "exclusive" && parsed.mode !== "shared") || !pidAlive(parsed.pid)) {
+    await removeSentinel(lockFilePath);
+    return null;
+  }
+
+  return parsed;
+}
+
+function makeExclusiveHandle(lockFilePath: string): LockHandle {
   let released = false;
-  return {
-    mode,
-    async release(): Promise<void> {
-      if (released) return;
-      released = true;
-      if (mode === "exclusive") {
-        await rm(lockFilePath, { force: true });
-        return;
-      }
-      // shared: decrement readers; remove file when last reader drops.
-      try {
-        const raw = await readFile(lockFilePath, "utf8");
-        const held = JSON.parse(raw) as LockContents;
-        if (held.readers <= 1) {
-          await rm(lockFilePath, { force: true });
-        } else {
-          await atomicRewrite(
-            lockFilePath,
-            JSON.stringify({ ...held, readers: held.readers - 1 }),
-          );
-        }
-      } catch {
-        // Lock file already gone — best-effort release.
-      }
-    },
+  const cleanup = async () => {
+    if (released) return;
+    released = true;
+    unregister();
+    await removeSentinel(lockFilePath);
   };
+  const unregister = registerCleanup(cleanup);
+
+  return {
+    mode: "exclusive",
+    release: cleanup,
+  };
+}
+
+function makeSharedHandle(leasePath: string): LockHandle {
+  let released = false;
+  const cleanup = async () => {
+    if (released) return;
+    released = true;
+    unregister();
+    await rm(leasePath, { force: true });
+  };
+  const unregister = registerCleanup(cleanup);
+
+  return {
+    mode: "shared",
+    release: cleanup,
+  };
+}
+
+function ensureProcessCleanupHandlers(): void {
+  if (cleanupHandlersInstalled) return;
+  cleanupHandlersInstalled = true;
+
+  for (const signal of Object.keys(SIGNAL_EXIT_CODES) as SignalName[]) {
+    process.on(signal, () => {
+      if (signalCleanupInFlight) return;
+      signalCleanupInFlight = true;
+      const cleanups = [...processCleanups].map(async (fn) => {
+        try {
+          await fn();
+        } catch {
+          // Best-effort only during process teardown.
+        }
+      });
+      void Promise.all(cleanups).finally(() => {
+        process.exit(SIGNAL_EXIT_CODES[signal]);
+      });
+    });
+  }
+}
+
+function registerCleanup(fn: CleanupFn): () => void {
+  processCleanups.add(fn);
+  return () => {
+    processCleanups.delete(fn);
+  };
+}
+
+function readersDir(lockFilePath: string): string {
+  return `${lockFilePath}.readers`;
+}
+
+async function removeSentinel(lockFilePath: string): Promise<void> {
+  await rm(lockFilePath, { force: true });
+}
+
+function lockedError(heldMode?: LockMode, heldPid?: number): Error & { code?: string } {
+  const err = new Error(
+    `autocontext index is locked (mode=${heldMode ?? "?"}, pid=${heldPid ?? "?"})`,
+  ) as Error & { code?: string };
+  err.code = "EAUTOCONTEXTLOCKED";
+  return err;
 }
 
 function pidAlive(pid: number): boolean {
@@ -151,13 +335,6 @@ function pidAlive(pid: number): boolean {
   } catch (err) {
     return (err as NodeJS.ErrnoException).code === "EPERM";
   }
-}
-
-async function atomicRewrite(path: string, contents: string): Promise<void> {
-  const tmp = `${path}.${process.pid}.${Math.random().toString(36).slice(2, 8)}`;
-  const { writeFile, rename } = await import("node:fs/promises");
-  await writeFile(tmp, contents);
-  await rename(tmp, path);
 }
 
 function sleep(ms: number): Promise<void> {

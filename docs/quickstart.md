@@ -115,7 +115,7 @@ Add to `.cursor/mcp.json`:
 npx context serve --path /path/to/project
 ```
 
-The MCP server exposes three tools: `query_context`, `check_freshness`, and `list_contexts`. See [integrations.md](integrations.md) for detailed recipes.
+The MCP server exposes twelve tools. The original `query_context`, `check_freshness`, and `list_contexts` remain stable, and `0.2.0` adds evidence, navigation, search, policy, impact, pack, and semantic-freshness tools. See [integrations.md](integrations.md) and [mcp.md](mcp.md) for detailed recipes.
 
 ## Next Steps
 

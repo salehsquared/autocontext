@@ -1,18 +1,8 @@
 version: 1
-last_updated: 2026-04-14T14:53:50.611Z
-fingerprint: 4646b444
+last_updated: 2026-04-14T17:38:35.650Z
+fingerprint: 82bf8e93
 scope: src/view
-summary: Static HTML report generator for `context view` — single self-contained file with directory tree, scope detail, optional dep graph. Works offline over file://.
-decisions:
-  - what: "No external CDN, no frameworks, no runtime fetches"
-    why: "The artifact must work in air-gapped environments and email attachments. CSS, JS, SVG icons, and the JSON data blob are inlined. CSP enforces no network."
-  - what: "Server-side shell + client-side hydration against an inlined JSON blob"
-    why: "Pure SSR multiplies the per-scope detail markup by N (200 scopes × 8 sections each). Pure CSR loses the directory tree to view-source/screen-readers. The hybrid keeps the tree static and the detail dynamic."
-  - what: "Force-directed graph runs once on load with seeded RNG"
-    why: "Stochastic layouts confuse users on rerun. Hash-seeding by scope id makes layouts deterministic per repo."
-constraints:
-  - "Soft cap 500 KB on a medium repo; hard cap 2 MB enforced in the CLI. Larger payloads must surface --no-source / --no-graph levers."
-  - "No `<script src>`, no `<link href>` to external URLs, no `<img src=https://...>`. Tested via render.test.ts."
+summary: Source directory.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
   your changes. Update the summary, and any decisions or constraints that changed.
@@ -20,13 +10,27 @@ maintenance: |-
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
+decisions:
+  - what: No external CDN, no frameworks, no runtime fetches
+    why: The artifact must work in air-gapped environments and email attachments. CSS, JS, SVG icons, and the JSON data blob
+      are inlined. CSP enforces no network.
+  - what: Server-side shell + client-side hydration against an inlined JSON blob
+    why: Pure SSR multiplies the per-scope detail markup by N (200 scopes × 8 sections each). Pure CSR loses the directory
+      tree to view-source/screen-readers. The hybrid keeps the tree static and the detail dynamic.
+  - what: Force-directed graph runs once on load with seeded RNG
+    why: Stochastic layouts confuse users on rerun. Hash-seeding by scope id makes layouts deterministic per repo.
+constraints:
+  - Soft cap 500 KB on a medium repo; hard cap 2 MB enforced in the CLI. Larger payloads must surface --no-source /
+    --no-graph levers.
+  - No `<script src>`, no `<link href>` to external URLs, no `<img src=https://...>`. Tested via render.test.ts.
 dependencies:
   internal:
     - ../core/fingerprint.js
     - ../core/scanner.js
     - ../core/schema.js
     - ../core/writer.js
-    - ../index/paths.js
+    - ../index/access.js
+    - ../index/store.js
     - ../utils/config.js
     - ../utils/scan-options.js
     - ../utils/tokens.js
@@ -76,9 +80,12 @@ imports:
   - path: ../core/writer.js
     symbols:
       - readContext
-  - path: ../index/paths.js
+  - path: ../index/access.js
     symbols:
-      - manifestPath
+      - openReadOnlyIndex
+  - path: ../index/store.js
+    symbols:
+      - IndexStore
   - path: ../utils/config.js
     symbols:
       - loadConfig
@@ -114,4 +121,4 @@ derived_fields:
   - imports
   - data_models
   - events
-semantic_fingerprint: 9afbea86831a
+semantic_fingerprint: 288b7f35c8a6

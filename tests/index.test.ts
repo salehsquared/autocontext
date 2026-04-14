@@ -274,6 +274,15 @@ describe("CLI wiring", () => {
     }));
   });
 
+  it("bench --arm and --pack-budget pass through", async () => {
+    const handlers = makeHandlers();
+    await parse(["node", "context", "bench", "--arm", "pack,pack+policy", "--pack-budget", "5000"], handlers);
+    expect(handlers.benchCommand).toHaveBeenCalledWith(expect.objectContaining({
+      arm: "pack,pack+policy",
+      packBudget: 5000,
+    }));
+  });
+
   it("health command calls healthCommand with path", async () => {
     const handlers = makeHandlers();
     await parse(["node", "context", "health", "-p", "/tmp/project"], handlers);

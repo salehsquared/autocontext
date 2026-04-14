@@ -11,8 +11,11 @@ export async function startMcpServer(rootPath: string): Promise<void> {
 
   registerTools(server, rootPath);
 
-  try {
-    server.registerResource(
+  const withResources = server as McpServer & {
+    registerResource?: McpServer["registerResource"];
+  };
+  if (typeof withResources.registerResource === "function") {
+    withResources.registerResource(
       "capabilities",
       "autocontext://capabilities",
       {
@@ -30,9 +33,6 @@ export async function startMcpServer(rootPath: string): Promise<void> {
         ],
       }),
     );
-  } catch {
-    // Older SDKs without registerResource — tool-level descriptions still
-    // carry the "since v0.2" marker, so degrade gracefully.
   }
 
   const transport = new StdioServerTransport();

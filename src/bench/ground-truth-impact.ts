@@ -64,6 +64,7 @@ export async function generateImpactTasks(
     scoring: "file_set_f1",
     expected: scopes,
     source_scope: posix.dirname(file) === "." ? "." : posix.dirname(file),
+    task_seed: { kind: "file", value: file },
     ground_truth_provenance: {
       source: "t2_impact",
       precision_class: "import_bound",

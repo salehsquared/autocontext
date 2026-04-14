@@ -45,6 +45,7 @@
     "test:watch": "vitest",
     "test:conformance": "node conformance/runner.mjs",
     "test:e2e": "bash tests/e2e/smoke.sh",
+    "test:help": "node scripts/help-smoke.mjs",
     "lint": "tsc --noEmit",
     "prepublishOnly": "npm run build && npm test"
   },

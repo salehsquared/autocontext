@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T13:47:09.943Z
-fingerprint: af7bd510
+last_updated: 2026-04-14T17:38:35.683Z
+fingerprint: e145231f
 scope: tests/policy
 summary: Test suite.
 maintenance: |-
@@ -13,7 +13,9 @@ maintenance: |-
 dependencies:
   internal:
     - ../../src/core/schema.js
+    - ../../src/core/writer.js
     - ../../src/index/types.js
+    - ../../src/policy/engine.js
     - ../../src/policy/evaluators/dependency-boundary.js
     - ../../src/policy/evaluators/evidence-requires.js
     - ../../src/policy/evaluators/forbid-import.js
@@ -24,6 +26,7 @@ dependencies:
     - ../../src/policy/glob.js
     - ../../src/policy/rules.js
     - ../../src/policy/types.js
+    - ../helpers.js
     - ../helpers/memory-index-store.js
 testing:
   - "Conventions: *.test / *.spec colocated"
@@ -31,9 +34,16 @@ imports:
   - path: ../../src/core/schema.js
     symbols:
       - ContextFile
+  - path: ../../src/core/writer.js
+    symbols:
+      - writeConfig
+      - writeContext
   - path: ../../src/index/types.js
     symbols:
       - IndexSymbol
+  - path: ../../src/policy/engine.js
+    symbols:
+      - runPolicies
   - path: ../../src/policy/evaluators/dependency-boundary.js
     symbols:
       - evaluateDependencyBoundary
@@ -65,6 +75,12 @@ imports:
   - path: ../../src/policy/types.js
     symbols:
       - EvalContext
+  - path: ../helpers.js
+    symbols:
+      - cleanupTmpDir
+      - createNestedFile
+      - createTmpDir
+      - makeValidContext
   - path: ../helpers/memory-index-store.js
     symbols:
       - createMemoryIndexStore
@@ -76,4 +92,4 @@ derived_fields:
   - dependencies.internal
   - imports
   - testing
-semantic_fingerprint: 004dba365290
+semantic_fingerprint: 1dc0aed9fa5e

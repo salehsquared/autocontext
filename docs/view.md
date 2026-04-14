@@ -15,7 +15,7 @@ The default output path is `./context-report.html` in the project root — disco
 
 - **Directory tree** in the left nav, one `<details>` per scope. Each node carries a freshness icon and a policy-violation badge when applicable.
 - **Detail pane** for the selected scope: summary, decisions, constraints, subdirectory links, exports, evidence block, policy violations, and the raw `.context.yaml`.
-- **Dependency graph** — force-directed SVG over directory-level import edges. Hidden when `.autocontext/index/` is absent. Click a node to jump to that scope.
+- **Dependency graph** — force-directed SVG over directory-level import edges. Hidden when the code index is unusable (missing or stale). Click a node to jump to that scope.
 - **Legend + totals** (`N fresh · N stale · N missing · N violations`) in the header.
 
 ## Flags
@@ -42,7 +42,7 @@ The default output path is `./context-report.html` in the project root — disco
 
 | Missing | What the viewer does |
 |---|---|
-| `.autocontext/index/` (T1) | Hides the Dependency graph tab. Freshness collapses to the 3-state enum. |
+| `.autocontext/index/` missing or stale | Hides the Dependency graph tab. Freshness collapses to the 3-state enum. |
 | `.autocontext/policy-results.json` | Policy chips render as "not evaluated". Neutral — never invents red/green signals. |
 | `semantic_fingerprint` in yaml | Falls back to 3-state freshness. |
 | `evidence:` block | Detail pane omits the Evidence section for that scope. |

@@ -18,6 +18,8 @@ context bench [options]
 | `--max-tasks <n>` | Maximum number of generated tasks |
 | `--seed <n>` | Seed for deterministic sampling |
 | `--category <cat>` | Run only one task category |
+| `--arm <csv>` | Comma-separated arm set: `baseline,context,pack,pack+impact,pack+policy` |
+| `--pack-budget <n>` | Token budget used by the pack-backed arms |
 | `--out <file>` | Write JSON report to file |
 | `--allow-stale` | Include stale context files instead of failing |
 | `--repo <url>` | Clone and benchmark a remote repository |
@@ -60,6 +62,7 @@ context config --provider openai --model gpt-4o-mini
 
 - Required provider API key env var must be set.
 - Context files must be fresh unless `--allow-stale` is passed.
+- `pack+impact` and `pack+policy` require a usable code index. If the index is missing or stale, bench exits `2` with rebuild guidance instead of silently skipping those arms.
 
 ## Output Summary
 
@@ -74,6 +77,12 @@ Human-readable mode reports:
 JSON mode includes full run metadata and per-task/per-iteration results for analysis pipelines.
 
 ## Comparator arms (T12)
+
+By default bench still runs the historical `baseline,context` pair. Use `--arm` to opt into the additive pack-backed arms:
+
+```bash
+context bench --arm pack,pack+policy --pack-budget 5000 --allow-stale
+```
 
 Beyond the historical `baseline` and `context` arms, the bench harness can now run three additional arms that exercise the upstream capability tracks:
 
@@ -96,6 +105,8 @@ Three new categories, each grounded in the T1 index or T2 impact algorithm — n
 | `impact-of-change` | "If file `F` changes, which directories are affected?" | `computeImpact({seed: {kind:"file", path: F}, maxDepth: 3})` with test-dir filtering. |
 
 Every task carries `ground_truth_provenance: { source, precision_class, recall_class, ... }` so downstream analyzers can filter or weight by confidence tier. Precision is never claimed beyond what T1 can verify.
+
+When the index is available, local-repo runs may generate these T12 categories in the same invocation as the historical categories. If you explicitly request an index-backed category and the index is missing or stale, bench fails fast with exit `2`.
 
 ## Reproducibility (`BenchReport.provenance`)
 
