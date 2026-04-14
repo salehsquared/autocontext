@@ -291,6 +291,120 @@ export async function handleAggregateEvidence(
 
 // --- MCP tool registration ---
 
+export interface ExplainStalenessInput {
+  scope: string;
+  path?: string;
+}
+
+export interface ExplainStalenessResult {
+  scope: string;
+  state: FreshnessState;
+  legacy_state: LegacyFreshnessState;
+  fingerprints: {
+    directory: { stored: string; computed: string } | null;
+    semantic: { stored: string | null; computed: string | null };
+  };
+  caveat: string;
+  error?: string;
+}
+
+export async function handleExplainStaleness(
+  input: ExplainStalenessInput,
+  defaultRoot: string,
+): Promise<ExplainStalenessResult> {
+  const { existsSync } = await import("node:fs");
+  const { manifestPath } = await import("../index/paths.js");
+  const rootPath = resolve(input.path ?? defaultRoot);
+  const targetDir = resolveAndValidate(rootPath, input.scope);
+  const baseCaveat =
+    "Staleness classification uses import-bound references only (precision \u2265 0.95, recall \u2265 0.70 for TS/JS; lower elsewhere).";
+
+  if (!targetDir) {
+    return {
+      scope: input.scope,
+      state: "missing",
+      legacy_state: "missing",
+      fingerprints: { directory: null, semantic: { stored: null, computed: null } },
+      caveat: baseCaveat,
+      error: "Invalid scope: path traversal detected",
+    };
+  }
+
+  let context;
+  try {
+    context = await readContext(targetDir);
+  } catch (err) {
+    if (err instanceof UnsupportedVersionError) {
+      return {
+        scope: input.scope,
+        state: "missing",
+        legacy_state: "missing",
+        fingerprints: { directory: null, semantic: { stored: null, computed: null } },
+        caveat: baseCaveat,
+        error: err.message,
+      };
+    }
+    throw err;
+  }
+  if (!context) {
+    return {
+      scope: input.scope,
+      state: "missing",
+      legacy_state: "missing",
+      fingerprints: { directory: null, semantic: { stored: null, computed: null } },
+      caveat: baseCaveat,
+    };
+  }
+
+  if (!existsSync(manifestPath(rootPath))) {
+    // No index — fall back to directory-fingerprint-only classification.
+    const { state, computed } = await checkFreshness(targetDir, context.fingerprint);
+    return {
+      scope: input.scope,
+      state,
+      legacy_state: legacyState(state),
+      fingerprints: {
+        directory: { stored: context.fingerprint, computed },
+        semantic: { stored: context.semantic_fingerprint ?? null, computed: null },
+      },
+      caveat: baseCaveat,
+      error: "INDEX_MISSING",
+    };
+  }
+
+  const { openIndex } = await import("../index/store.js");
+  const { extractPolicyFacts } = await import("../core/semantic-fingerprint.js");
+  const store = await openIndex(rootPath, { readOnly: true, autoRebuild: false });
+  try {
+    const { state, computed, computedSemantic } = await checkFreshness(
+      targetDir,
+      context.fingerprint,
+      [],
+      {
+        storedSemanticFingerprint: context.semantic_fingerprint,
+        index: store,
+        contextFacts: extractPolicyFacts(context),
+        projectRoot: rootPath,
+      },
+    );
+    return {
+      scope: input.scope,
+      state,
+      legacy_state: legacyState(state),
+      fingerprints: {
+        directory: { stored: context.fingerprint, computed },
+        semantic: {
+          stored: context.semantic_fingerprint ?? null,
+          computed: computedSemantic ?? null,
+        },
+      },
+      caveat: baseCaveat,
+    };
+  } finally {
+    await store.close();
+  }
+}
+
 export function registerTools(server: McpServer, defaultRoot: string): void {
   server.registerTool(
     "query_context",
@@ -367,6 +481,34 @@ export function registerTools(server: McpServer, defaultRoot: string): void {
     },
     async (input) => {
       const result = await handleListContexts(input, defaultRoot);
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+        isError: !!result.error,
+      };
+    },
+  );
+
+  server.registerTool(
+    "explain_staleness",
+    {
+      title: "Explain Staleness",
+      description:
+        "Classify a scope's freshness using the 4-state enum " +
+        "(fresh | cosmetic_stale | semantic_stale | missing). Returns both " +
+        "fingerprints and a minimal change delta so agents can tell whether " +
+        "the API surface actually moved. Requires the local code index; " +
+        "returns error INDEX_MISSING otherwise.",
+      inputSchema: {
+        scope: z.string().describe(
+          'Relative path from project root, e.g. "src/core" or "." for root',
+        ),
+        path: z.string().optional().describe(
+          "Project root path override. Defaults to the server's configured root.",
+        ),
+      },
+    },
+    async (input) => {
+      const result = await handleExplainStaleness(input, defaultRoot);
       return {
         content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
         isError: !!result.error,

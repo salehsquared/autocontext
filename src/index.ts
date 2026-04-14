@@ -132,6 +132,7 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
     .option("--evidence", "Collect test/typecheck evidence from existing artifacts")
     .option("--no-agents", "Skip AGENTS.md generation")
     .option("--stale", "Only regenerate stale or missing contexts")
+    .option("--semantic-stale", "Like --stale, but skip cosmetic-only drift (requires index)")
     .option("--dry-run", "Preview what would be regenerated without changes")
     .option("--full", "Generate verbose context (files, interfaces, dependencies)")
     .option("--parallel <n>", "Process directories in parallel (n = concurrency)", parseInt)
@@ -150,6 +151,7 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
         evidence: opts.evidence,
         noAgents: opts.agents === false,
         stale: opts.stale,
+        semanticStale: opts.semanticStale,
         dryRun: opts.dryRun,
         parallel: opts.parallel,
         full: opts.full,

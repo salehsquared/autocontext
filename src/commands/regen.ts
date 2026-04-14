@@ -70,6 +70,10 @@ export async function regenCommand(
     evidence?: boolean;
     noAgents?: boolean;
     stale?: boolean;
+    /** Subset of --stale: regenerate only directories whose semantic
+     *  fingerprint differs. Skips cosmetic_stale (formatter churn). Used by
+     *  the pre-commit hook post-T2. */
+    semanticStale?: boolean;
     dryRun?: boolean;
     parallel?: number;
     full?: boolean;
@@ -136,22 +140,50 @@ export async function regenCommand(
     if (existing) childContexts.set(dir.path, existing);
   }
 
-  // --stale: filter to only stale or missing directories
-  if (options.stale) {
-    const staleOrMissing: ScanResult[] = [];
-    for (const dir of dirs) {
-      const existing = childContexts.get(dir.path);
-      if (!existing) {
-        staleOrMissing.push(dir);
-      } else {
-        const { state } = await checkFreshness(dir.path, existing.fingerprint);
-        if (state !== "fresh") staleOrMissing.push(dir);
+  // --stale / --semantic-stale: filter to the set of directories that need regen.
+  if (options.stale || options.semanticStale) {
+    const { hasIndex } = await import("../core/semantic-fingerprint-writer.js");
+    const indexAvailable = hasIndex(rootPath);
+    let indexStore: import("../index/store.js").IndexStore | null = null;
+    if (options.semanticStale && indexAvailable) {
+      const { openIndex } = await import("../index/store.js");
+      try {
+        indexStore = await openIndex(rootPath, { readOnly: true, autoRebuild: false });
+      } catch {
+        indexStore = null;
       }
     }
-    dirs = staleOrMissing;
+    const { extractPolicyFacts } = await import("../core/semantic-fingerprint.js");
+
+    try {
+      const picked: ScanResult[] = [];
+      for (const dir of dirs) {
+        const existing = childContexts.get(dir.path);
+        if (!existing) {
+          picked.push(dir);
+          continue;
+        }
+        const { state } = await checkFreshness(dir.path, existing.fingerprint, [], {
+          storedSemanticFingerprint: existing.semantic_fingerprint,
+          index: indexStore ?? undefined,
+          contextFacts: extractPolicyFacts(existing),
+          projectRoot: rootPath,
+        });
+        if (options.semanticStale) {
+          // Skip cosmetic_stale; only semantic_stale and missing qualify.
+          if (state === "semantic_stale" || state === "missing") picked.push(dir);
+        } else {
+          if (state !== "fresh") picked.push(dir);
+        }
+      }
+      dirs = picked;
+    } finally {
+      if (indexStore) await indexStore.close();
+    }
 
     if (dirs.length === 0) {
-      console.log(successMsg("All contexts are fresh. Nothing to regenerate."));
+      const label = options.semanticStale ? "semantically fresh" : "fresh";
+      console.log(successMsg(`All contexts are ${label}. Nothing to regenerate.`));
       return;
     }
   }
