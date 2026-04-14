@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T01:58:41.434Z
-fingerprint: c70c3df6
+last_updated: 2026-04-14T02:54:00.365Z
+fingerprint: 176da665
 scope: src/index
 summary: Source directory.
 maintenance: |-
@@ -11,6 +11,16 @@ maintenance: |-
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
 exports:
+  - "async function analyzeFile( content: string, fileId: FileId, ): Promise<AnalysisOutput>"
+  - "function analyzerSupports(ext: string): boolean"
+  - AnalysisOutput
+  - TentativeReference
+  - interface BuildFileRecord
+  - interface BuildResult
+  - "async function buildIndex( projectRoot: string, candidateFiles: FileId[], ): Promise<BuildResult>"
+  - "async function commitBuild( store: IndexStore, result: BuildResult, priorIndexedFiles: FileId[] = [], ):
+    Promise<void>"
+  - "function fileIdOf(projectRoot: string, abs: string): FileId"
   - "async function computeFileFingerprint( absPath: string, fileId: FileId, ): Promise<FileFingerprint>"
   - "async function fileIsStable( absPath: string, stored: FileFingerprint, ): Promise<boolean>"
   - type LockMode
@@ -28,25 +38,36 @@ exports:
   - "function tmpDir(projectRoot: string): string"
   - 'function shardPath( projectRoot: string, collection: "symbols" | "imports" | "references", shardKey: string, ):
     string'
-  - 'function collectionDir( projectRoot: string, collection: "symbols" | "imports" | "references", ): string'
-  - "function toFileId(relativePath: string): string"
-  - "function shardKeyForFile(fileId: FileId): string"
-  - "function shardKeyForDir(dirPath: string): string"
-  - interface IndexStore
-  - interface OpenIndexOptions
-  - "async function openIndex( projectRoot: string, options?: OpenIndexOptions, ): Promise<IndexStore>"
-  - type FileId
-  - type SymbolKind
 dependencies:
   internal:
+    - ../generator/ast.js
+    - ./analyzer.js
+    - ./builder.js
     - ./fingerprint.js
     - ./lock.js
     - ./paths.js
+    - ./resolve.js
     - ./shard.js
     - ./store.js
+    - ./ts-analyzer.js
     - ./types.js
     - ./version.js
 imports:
+  - path: ../generator/ast.js
+    symbols:
+      - ALL_DECL_CONFIGS
+      - getGrammarsDir
+      - getLanguage
+      - getParser
+      - getQuery
+      - loadTreeSitter
+  - path: ./analyzer.js
+    symbols:
+      - AnalysisOutput
+      - analyzeFile
+  - path: ./builder.js
+    symbols:
+      - buildIndex
   - path: ./fingerprint.js
     symbols:
       - computeFileFingerprint
@@ -65,6 +86,11 @@ imports:
       - manifestPath
       - shardPath
       - tmpDir
+      - toFileId
+  - path: ./resolve.js
+    symbols:
+      - createResolverContext
+      - resolveImport
   - path: ./shard.js
     symbols:
       - shardKeyForFile
@@ -72,6 +98,11 @@ imports:
     symbols:
       - IndexStore
       - OpenIndexOptions
+  - path: ./ts-analyzer.js
+    symbols:
+      - AnalysisOutput
+      - analyzeTsLike
+      - isTsLike
   - path: ./types.js
     symbols:
       - DirEdge
@@ -81,6 +112,8 @@ imports:
       - IndexManifest
       - IndexSymbol
       - Reference
+      - Span
+      - SymbolKind
   - path: ./version.js
     symbols:
       - INDEX_VERSION

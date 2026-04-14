@@ -95,7 +95,8 @@ interface AllDeclsConfig {
   query: string;
 }
 
-const ALL_DECL_CONFIGS: Record<string, AllDeclsConfig> = {
+/** @internal — exposed for the index analyzer. */
+export const ALL_DECL_CONFIGS: Record<string, AllDeclsConfig> = {
   ".ts": {
     wasmFile: "tree-sitter-typescript.wasm",
     query: `
@@ -185,14 +186,21 @@ let parserInstance: InstanceType<typeof import("web-tree-sitter").Parser> | null
 const languageCache = new Map<string, InstanceType<typeof import("web-tree-sitter").Language>>();
 const queryCache = new Map<string, InstanceType<typeof import("web-tree-sitter").Query>>();
 
-function getGrammarsDir(): string {
+/** @internal — see loadTreeSitter doc. */
+export function getGrammarsDir(): string {
   const thisDir = typeof import.meta.dirname === "string"
     ? import.meta.dirname
     : fileURLToPath(new URL(".", import.meta.url));
   return join(thisDir, "../../grammars");
 }
 
-async function loadTreeSitter(): Promise<boolean> {
+/**
+ * Internal — exposed so the local code index (src/index/) can reuse the same
+ * parser/language/query caches. Do NOT add new callers outside of the index
+ * unless you really need the primitives; prefer the higher-level helpers in
+ * this module.
+ */
+export async function loadTreeSitter(): Promise<boolean> {
   if (Parser) return true;
   try {
     const mod = await import("web-tree-sitter");
@@ -206,14 +214,16 @@ async function loadTreeSitter(): Promise<boolean> {
   }
 }
 
-async function getParser(): Promise<InstanceType<typeof import("web-tree-sitter").Parser>> {
+/** @internal — see loadTreeSitter doc. */
+export async function getParser(): Promise<InstanceType<typeof import("web-tree-sitter").Parser>> {
   if (parserInstance) return parserInstance;
   if (!Parser) throw new Error("tree-sitter not loaded");
   parserInstance = new Parser();
   return parserInstance;
 }
 
-async function getLanguage(wasmFile: string): Promise<InstanceType<typeof import("web-tree-sitter").Language>> {
+/** @internal — see loadTreeSitter doc. */
+export async function getLanguage(wasmFile: string): Promise<InstanceType<typeof import("web-tree-sitter").Language>> {
   if (languageCache.has(wasmFile)) return languageCache.get(wasmFile)!;
   if (!Language) throw new Error("tree-sitter not loaded");
   const wasmPath = join(getGrammarsDir(), wasmFile);
@@ -222,7 +232,8 @@ async function getLanguage(wasmFile: string): Promise<InstanceType<typeof import
   return lang;
 }
 
-function getQuery(lang: InstanceType<typeof import("web-tree-sitter").Language>, queryStr: string): InstanceType<typeof import("web-tree-sitter").Query> {
+/** @internal — see loadTreeSitter doc. */
+export function getQuery(lang: InstanceType<typeof import("web-tree-sitter").Language>, queryStr: string): InstanceType<typeof import("web-tree-sitter").Query> {
   if (queryCache.has(queryStr)) return queryCache.get(queryStr)!;
   if (!QueryClass) throw new Error("tree-sitter not loaded");
   const q = new QueryClass(lang, queryStr);
