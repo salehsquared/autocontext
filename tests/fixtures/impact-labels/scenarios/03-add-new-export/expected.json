@@ -1,0 +1,5 @@
+{
+  "seed_files": ["src/core/math.ts"],
+  "expected_impact_directories": [],
+  "expected_not_in_impact": ["src/commands", "src/mcp"]
+}

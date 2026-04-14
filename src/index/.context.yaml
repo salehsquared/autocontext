@@ -1,0 +1,95 @@
+version: 1
+last_updated: 2026-04-14T01:58:41.434Z
+fingerprint: c70c3df6
+scope: src/index
+summary: Source directory.
+maintenance: |-
+  If you modify files in this directory, update this .context.yaml to reflect
+  your changes. Update the summary, and any decisions or constraints that changed.
+  Do NOT update the fingerprint manually — run `context rehash` or it will be
+  updated automatically on the next `context status` check.
+  If you only read files in this directory, do not modify this file.
+  Do not include secrets, API keys, passwords, or PII in this file.
+exports:
+  - "async function computeFileFingerprint( absPath: string, fileId: FileId, ): Promise<FileFingerprint>"
+  - "async function fileIsStable( absPath: string, stored: FileFingerprint, ): Promise<boolean>"
+  - type LockMode
+  - interface LockHandle
+  - "async function acquireLock( lockFilePath: string, mode: LockMode, timeoutMs = 10_000, ): Promise<LockHandle>"
+  - "async function openNdjsonIndex( projectRoot: string, options: OpenIndexOptions ="
+  - _internals
+  - AUTOCONTEXT_DIR
+  - INDEX_DIR_NAME
+  - "function indexRoot(projectRoot: string): string"
+  - "function manifestPath(projectRoot: string): string"
+  - "function fingerprintsPath(projectRoot: string): string"
+  - "function dirEdgesPath(projectRoot: string): string"
+  - "function lockPath(projectRoot: string): string"
+  - "function tmpDir(projectRoot: string): string"
+  - 'function shardPath( projectRoot: string, collection: "symbols" | "imports" | "references", shardKey: string, ):
+    string'
+  - 'function collectionDir( projectRoot: string, collection: "symbols" | "imports" | "references", ): string'
+  - "function toFileId(relativePath: string): string"
+  - "function shardKeyForFile(fileId: FileId): string"
+  - "function shardKeyForDir(dirPath: string): string"
+  - interface IndexStore
+  - interface OpenIndexOptions
+  - "async function openIndex( projectRoot: string, options?: OpenIndexOptions, ): Promise<IndexStore>"
+  - type FileId
+  - type SymbolKind
+dependencies:
+  internal:
+    - ./fingerprint.js
+    - ./lock.js
+    - ./paths.js
+    - ./shard.js
+    - ./store.js
+    - ./types.js
+    - ./version.js
+imports:
+  - path: ./fingerprint.js
+    symbols:
+      - computeFileFingerprint
+      - fileIsStable
+  - path: ./lock.js
+    symbols:
+      - LockHandle
+      - acquireLock
+  - path: ./paths.js
+    symbols:
+      - collectionDir
+      - dirEdgesPath
+      - fingerprintsPath
+      - indexRoot
+      - lockPath
+      - manifestPath
+      - shardPath
+      - tmpDir
+  - path: ./shard.js
+    symbols:
+      - shardKeyForFile
+  - path: ./store.js
+    symbols:
+      - IndexStore
+      - OpenIndexOptions
+  - path: ./types.js
+    symbols:
+      - DirEdge
+      - FileFingerprint
+      - FileId
+      - ImportEdge
+      - IndexManifest
+      - IndexSymbol
+      - Reference
+  - path: ./version.js
+    symbols:
+      - INDEX_VERSION
+      - grammarHashesEqual
+derived_fields:
+  - version
+  - last_updated
+  - fingerprint
+  - scope
+  - exports
+  - dependencies.internal
+  - imports

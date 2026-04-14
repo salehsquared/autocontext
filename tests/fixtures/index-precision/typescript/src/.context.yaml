@@ -1,0 +1,50 @@
+version: 1
+last_updated: 2026-04-14T01:58:41.486Z
+fingerprint: 9643a8a0
+scope: tests/fixtures/index-precision/typescript/src
+summary: Source code.
+maintenance: |-
+  If you modify files in this directory, update this .context.yaml to reflect
+  your changes. Update the summary, and any decisions or constraints that changed.
+  Do NOT update the fingerprint manually — run `context rehash` or it will be
+  updated automatically on the next `context status` check.
+  If you only read files in this directory, do not modify this file.
+  Do not include secrets, API keys, passwords, or PII in this file.
+exports:
+  - "function run(): number"
+  - "function run(): string"
+  - "function outer(): number"
+  - "function shadowed(): number"
+  - add
+  - "function run(): void"
+  - "function origin(): Point"
+  - "function add(a: number, b: number): number"
+  - "function multiply(a: number, b: number): number"
+  - type Point
+  - "function capitalize(s: string): string"
+  - "function greet(name: string): string"
+dependencies:
+  internal:
+    - ./math
+    - ./strings
+imports:
+  - path: ./math
+    symbols:
+      - (side-effect)
+      - "* as m"
+      - Point
+      - add
+      - add as plus
+      - multiply
+      - multiply as times
+  - path: ./strings
+    symbols:
+      - default as greet
+derived_fields:
+  - version
+  - last_updated
+  - fingerprint
+  - scope
+  - exports
+  - dependencies.internal
+  - imports

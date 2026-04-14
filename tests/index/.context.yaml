@@ -1,8 +1,8 @@
 version: 1
-last_updated: 2026-04-14T01:58:41.447Z
-fingerprint: 953c3a88
-scope: tests/core
-summary: Core functionality.
+last_updated: 2026-04-14T01:58:41.497Z
+fingerprint: e63d24d4
+scope: tests/index
+summary: Test suite.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
   your changes. Update the summary, and any decisions or constraints that changed.
@@ -12,25 +12,33 @@ maintenance: |-
   Do not include secrets, API keys, passwords, or PII in this file.
 dependencies:
   internal:
-    - ../../src/core/gitignore.js
-    - ../../src/core/markdown-writer.js
-    - ../../src/generator/markdown.js
+    - ../../src/index/fingerprint.js
+    - ../../src/index/paths.js
+    - ../../src/index/store.js
+    - ../../src/index/types.js
+    - ../../src/index/version.js
     - ../helpers.js
 imports:
-  - path: ../../src/core/gitignore.js
+  - path: ../../src/index/fingerprint.js
     symbols:
-      - ensureAutocontextGitignored
-      - hasAutocontextEntry
-  - path: ../../src/core/markdown-writer.js
+      - computeFileFingerprint
+      - fileIsStable
+  - path: ../../src/index/paths.js
     symbols:
-      - AGENTS_FILENAME
-      - readAgentsMd
-      - updateAgentsMd
-      - writeAgentsMd
-  - path: ../../src/generator/markdown.js
+      - fingerprintsPath
+      - manifestPath
+      - shardPath
+  - path: ../../src/index/store.js
     symbols:
-      - AGENTS_SECTION_END
-      - AGENTS_SECTION_START
+      - openIndex
+  - path: ../../src/index/types.js
+    symbols:
+      - ImportEdge
+      - IndexSymbol
+      - Reference
+  - path: ../../src/index/version.js
+    symbols:
+      - INDEX_VERSION
   - path: ../helpers.js
     symbols:
       - cleanupTmpDir
