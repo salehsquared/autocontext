@@ -1,6 +1,6 @@
 version: 1
 last_updated: 2026-04-14T02:58:11.672Z
-fingerprint: 2c66b6a8
+fingerprint: "916e0264"
 scope: tests/index
 summary: Test suite.
 maintenance: |-
@@ -59,3 +59,4 @@ derived_fields:
   - scope
   - dependencies.internal
   - imports
+semantic_fingerprint: fdcc725a10cd

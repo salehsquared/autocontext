@@ -1,19 +1,11 @@
 version: 1
 last_updated: 2026-04-14T14:40:27.090Z
 fingerprint: ab960510
+semantic_fingerprint: 8b3903633c16
 scope: src/verify
-summary: Active-verification orchestrator + nine output normalizers (vitest/jest/junit/go-test/tsc/eslint/istanbul/pytest-cov/exit-code). Spawns the user's configured commands and writes evidence atomically.
-decisions:
-  - what: "context verify is strictly opt-in and never auto-runs"
-    why: "Running arbitrary user commands from a tool that agents invoke would be a security footgun. Only the explicit `context verify` invocation calls runVerifyCommand; a no-auto-run lint test guards this."
-  - what: "Atomic write via temp + rename on the same filesystem"
-    why: "Ctrl-C mid-run must not leave a partial .context.yaml. POSIX rename is atomic when source and target share a filesystem (always true here since both live in the scope's directory)."
-  - what: "5 MiB stream cap with truncation footer"
-    why: "Misconfigured runners can print every test name. Capping bounds memory; the footer makes truncation visible to the parser."
-constraints:
-  - "context verify must never be called transitively from init, regen, watch, doctor, MCP handlers, or pre-commit hooks. The no-auto-run lint at tests/verify/no-auto-run.test.ts asserts this for each callsite."
-  - "Spawn always uses { stdio: [\"ignore\", \"pipe\", \"pipe\"] } so commands cannot block waiting for stdin prompts."
-  - "Timeout escalation: SIGTERM, then SIGKILL after 5 s. Never block forever."
+summary: Active-verification orchestrator + nine output normalizers
+  (vitest/jest/junit/go-test/tsc/eslint/istanbul/pytest-cov/exit-code). Spawns the user's configured commands and writes
+  evidence atomically.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
   your changes. Update the summary, and any decisions or constraints that changed.
@@ -21,6 +13,21 @@ maintenance: |-
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
+decisions:
+  - what: context verify is strictly opt-in and never auto-runs
+    why: Running arbitrary user commands from a tool that agents invoke would be a security footgun. Only the explicit
+      `context verify` invocation calls runVerifyCommand; a no-auto-run lint test guards this.
+  - what: Atomic write via temp + rename on the same filesystem
+    why: Ctrl-C mid-run must not leave a partial .context.yaml. POSIX rename is atomic when source and target share a
+      filesystem (always true here since both live in the scope's directory).
+  - what: 5 MiB stream cap with truncation footer
+    why: Misconfigured runners can print every test name. Capping bounds memory; the footer makes truncation visible to the
+      parser.
+constraints:
+  - context verify must never be called transitively from init, regen, watch, doctor, MCP handlers, or pre-commit hooks.
+    The no-auto-run lint at tests/verify/no-auto-run.test.ts asserts this for each callsite.
+  - 'Spawn always uses { stdio: ["ignore", "pipe", "pipe"] } so commands cannot block waiting for stdin prompts.'
+  - "Timeout escalation: SIGTERM, then SIGKILL after 5 s. Never block forever."
 dependencies:
   internal:
     - ../core/schema.js
@@ -111,4 +118,3 @@ derived_fields:
   - subdirectories
   - data_models
   - events
-semantic_fingerprint: dc9da1edcaf4

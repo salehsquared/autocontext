@@ -1,6 +1,7 @@
 version: 1
 last_updated: 2026-04-14T17:38:35.650Z
 fingerprint: 82bf8e93
+semantic_fingerprint: 288b7f35c8a6
 scope: src/view
 summary: Source directory.
 maintenance: |-
@@ -121,4 +122,3 @@ derived_fields:
   - imports
   - data_models
   - events
-semantic_fingerprint: 288b7f35c8a6

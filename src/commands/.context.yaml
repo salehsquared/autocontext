@@ -1,6 +1,7 @@
 version: 1
 last_updated: 2026-04-14T17:38:35.365Z
 fingerprint: 47a6003c
+semantic_fingerprint: 736addcee52d
 scope: src/commands
 summary: CLI command implementations.
 maintenance: |-
@@ -204,4 +205,3 @@ derived_fields:
   - environment
   - data_models
   - events
-semantic_fingerprint: 736addcee52d

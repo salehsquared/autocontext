@@ -1,6 +1,6 @@
 version: 1
 last_updated: 2026-04-14T01:58:41.447Z
-fingerprint: 953c3a88
+fingerprint: 968804ee
 scope: tests/core
 summary: Core functionality.
 maintenance: |-
@@ -42,3 +42,4 @@ derived_fields:
   - scope
   - dependencies.internal
   - imports
+semantic_fingerprint: 83d9d27aad0b

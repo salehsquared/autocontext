@@ -3,6 +3,9 @@ last_updated: 2026-02-20T16:42:18.996Z
 fingerprint: 710c74e3
 scope: tests/fixtures/with-contextignore/src
 summary: Source code.
+files:
+  - name: index.ts
+    purpose: "Exports: x"
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
   your changes. Update the files list, interfaces, and current_state sections.
@@ -10,14 +13,11 @@ maintenance: |-
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-files:
-  - name: index.ts
-    purpose: "Exports: x"
-exports:
-  - x
 interfaces:
   - name: x
     description: Exported from index.ts
+exports:
+  - x
 derived_fields:
   - version
   - last_updated
@@ -26,3 +26,4 @@ derived_fields:
   - files
   - interfaces
   - exports
+semantic_fingerprint: 31d5b8e4a259

@@ -10,13 +10,13 @@ maintenance: |-
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-exports:
-  - "function runCompute(a: number, b: number): number"
-  - "function runFormat(s: string): string"
 dependencies:
   internal:
     - ../core/math
     - ../core/strings
+exports:
+  - "function runCompute(a: number, b: number): number"
+  - "function runFormat(s: string): string"
 imports:
   - path: ../core/math
     symbols:
@@ -32,3 +32,4 @@ derived_fields:
   - exports
   - dependencies.internal
   - imports
+semantic_fingerprint: 8ce82290ad28

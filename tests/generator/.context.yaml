@@ -1,8 +1,13 @@
 version: 1
 last_updated: 2026-02-20T16:42:19.002Z
-fingerprint: fa8df9b1
+fingerprint: ef37d317
 scope: tests/generator
 summary: Code generation.
+files:
+  - name: evidence.test.ts
+    purpose: Test file
+  - name: markdown.test.ts
+    purpose: Test file
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
   your changes. Update the files list, interfaces, and current_state sections.
@@ -10,11 +15,6 @@ maintenance: |-
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-files:
-  - name: evidence.test.ts
-    purpose: Test file
-  - name: markdown.test.ts
-    purpose: Test file
 dependencies:
   internal:
     - ../../src/generator/evidence.js
@@ -56,3 +56,4 @@ derived_fields:
   - dependencies.internal
   - imports
   - internals
+semantic_fingerprint: dcba327d9a4f

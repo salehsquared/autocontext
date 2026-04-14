@@ -1,6 +1,6 @@
 version: 1
 last_updated: 2026-04-14T05:57:17.774Z
-fingerprint: 11de4ac0
+fingerprint: 80a85f63
 scope: tests
 summary: Test suite.
 maintenance: |-
@@ -10,6 +10,28 @@ maintenance: |-
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
+dependencies:
+  internal:
+    - ../core/scanner.js
+    - ../mod${i}/index.js
+    - ../shared/utils.js
+    - ../src/core/fingerprint.js
+    - ../src/core/scanner.js
+    - ../src/core/schema.js
+    - ../src/core/semantic-fingerprint.js
+    - ../src/core/writer.js
+    - ../src/generator/ast.js
+    - ../src/generator/dependencies.js
+    - ../src/generator/imports.js
+    - ../src/generator/internals.js
+    - ../src/generator/llm.js
+    - ../src/generator/prompts.js
+    - ../src/generator/static.js
+    - ../src/index.js
+    - ../src/index/builder.js
+    - ../src/index/store.js
+    - ../src/providers/index.js
+    - ../src/utils/config.js
 subdirectories:
   - name: bench/
     summary: Test suite.
@@ -37,28 +59,6 @@ exports:
   - "function makeValidContext(overrides?: Partial<ContextFile>): ContextFile"
   - "function makeLeanContext(overrides?: Partial<ContextFile>): ContextFile"
   - "function makeScanResult(path: string, overrides?: Partial<ScanResult>): ScanResult"
-dependencies:
-  internal:
-    - ../core/scanner.js
-    - ../mod${i}/index.js
-    - ../shared/utils.js
-    - ../src/core/fingerprint.js
-    - ../src/core/scanner.js
-    - ../src/core/schema.js
-    - ../src/core/semantic-fingerprint.js
-    - ../src/core/writer.js
-    - ../src/generator/ast.js
-    - ../src/generator/dependencies.js
-    - ../src/generator/imports.js
-    - ../src/generator/internals.js
-    - ../src/generator/llm.js
-    - ../src/generator/prompts.js
-    - ../src/generator/static.js
-    - ../src/index.js
-    - ../src/index/builder.js
-    - ../src/index/store.js
-    - ../src/providers/index.js
-    - ../src/utils/config.js
 imports:
   - path: ../core/scanner.js
     symbols:
@@ -163,3 +163,4 @@ derived_fields:
   - dependencies.internal
   - imports
   - subdirectories
+semantic_fingerprint: fa404eda9d02

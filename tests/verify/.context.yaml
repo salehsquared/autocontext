@@ -1,6 +1,7 @@
 version: 1
 last_updated: 2026-04-14T14:40:27.116Z
 fingerprint: 0307150d
+semantic_fingerprint: 81873ba24613
 scope: tests/verify
 summary: Test suite.
 maintenance: |-
@@ -80,4 +81,3 @@ derived_fields:
   - dependencies.internal
   - imports
   - testing
-semantic_fingerprint: 81873ba24613

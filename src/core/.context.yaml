@@ -1,6 +1,7 @@
 version: 1
 last_updated: 2026-04-14T17:38:35.538Z
 fingerprint: 41f5a7ca
+semantic_fingerprint: 4b47733fad17
 scope: src/core
 summary: Core functionality.
 maintenance: |-
@@ -159,4 +160,3 @@ derived_fields:
   - dependencies.internal
   - imports
   - data_models
-semantic_fingerprint: 4b47733fad17

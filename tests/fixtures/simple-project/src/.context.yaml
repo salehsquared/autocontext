@@ -3,6 +3,11 @@ last_updated: 2026-02-20T16:42:18.994Z
 fingerprint: c3d9dc8c
 scope: tests/fixtures/simple-project/src
 summary: Source code.
+files:
+  - name: index.ts
+    purpose: "Exports: main"
+  - name: utils.ts
+    purpose: "Exports: add"
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
   your changes. Update the files list, interfaces, and current_state sections.
@@ -10,19 +15,14 @@ maintenance: |-
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-files:
-  - name: index.ts
-    purpose: "Exports: main"
-  - name: utils.ts
-    purpose: "Exports: add"
-exports:
-  - "function main(): string"
-  - "function add(a: number, b: number): number"
 interfaces:
   - name: main
     description: Exported from index.ts
   - name: add
     description: Exported from utils.ts
+exports:
+  - "function main(): string"
+  - "function add(a: number, b: number): number"
 derived_fields:
   - version
   - last_updated
@@ -31,3 +31,4 @@ derived_fields:
   - files
   - interfaces
   - exports
+semantic_fingerprint: 58c42a68c0a1

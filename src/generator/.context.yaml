@@ -1,6 +1,6 @@
 version: 1
 last_updated: 2026-04-14T02:54:00.266Z
-fingerprint: 203146a6
+fingerprint: b01ff9a6
 scope: src/generator
 summary: Code generation.
 maintenance: |-
@@ -10,6 +10,19 @@ maintenance: |-
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
+dependencies:
+  internal:
+    - ../core/fingerprint.js
+    - ../core/scanner.js
+    - ../core/schema.js
+    - ../providers/index.js
+    - ./ast.js
+    - ./dependencies.js
+    - ./evidence.js
+    - ./imports.js
+    - ./internals.js
+    - ./prompts.js
+    - ./static.js
 exports:
   - "ALL_DECL_CONFIGS: Record<string, AllDeclsConfig>"
   - "function getGrammarsDir(): string"
@@ -38,19 +51,6 @@ exports:
   - "function escapeSummary(text: string): string"
   - "function generateAgentsSection(entries: AgentsEntry[]): string"
   - "function generateAgentsMd( projectName: string, entries: AgentsEntry[], ): string"
-dependencies:
-  internal:
-    - ../core/fingerprint.js
-    - ../core/scanner.js
-    - ../core/schema.js
-    - ../providers/index.js
-    - ./ast.js
-    - ./dependencies.js
-    - ./evidence.js
-    - ./imports.js
-    - ./internals.js
-    - ./prompts.js
-    - ./static.js
 imports:
   - path: ../core/fingerprint.js
     symbols:
@@ -108,3 +108,4 @@ derived_fields:
   - exports
   - dependencies.internal
   - imports
+semantic_fingerprint: 6abc3720709b

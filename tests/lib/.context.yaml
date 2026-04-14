@@ -1,6 +1,7 @@
 version: 1
 last_updated: 2026-04-14T15:05:11.037Z
-fingerprint: 9f772d1a
+fingerprint: 8a9ca912
+semantic_fingerprint: e038e03ff1be
 scope: tests/lib
 summary: Library modules.
 maintenance: |-
@@ -27,4 +28,3 @@ derived_fields:
   - dependencies.internal
   - imports
   - testing
-semantic_fingerprint: e038e03ff1be

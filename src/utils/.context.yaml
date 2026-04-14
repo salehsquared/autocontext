@@ -1,6 +1,6 @@
 version: 1
 last_updated: 2026-04-14T05:57:17.729Z
-fingerprint: f5fdac24
+fingerprint: 112035fb
 scope: src/utils
 summary: Utility functions.
 maintenance: |-
@@ -10,6 +10,13 @@ maintenance: |-
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
+dependencies:
+  internal:
+    - ../core/fingerprint.js
+    - ../core/scanner.js
+    - ../core/schema.js
+    - ../core/writer.js
+    - ./config.js
 exports:
   - "async function loadConfig(rootPath: string): Promise<ConfigFile | null>"
   - "async function saveConfig(rootPath: string, config: ConfigFile): Promise<void>"
@@ -35,13 +42,6 @@ exports:
   - "async function estimateContextFileTokens(dirPath: string): Promise<number>"
   - "function collectExtensions(dirs: ScanResult[]): Record<string, number>"
   - "async function filterByMinTokens( dirs: ScanResult[], minTokens?: number, ): Promise<"
-dependencies:
-  internal:
-    - ../core/fingerprint.js
-    - ../core/scanner.js
-    - ../core/schema.js
-    - ../core/writer.js
-    - ./config.js
 imports:
   - path: ../core/fingerprint.js
     symbols:
@@ -70,3 +70,4 @@ derived_fields:
   - exports
   - dependencies.internal
   - imports
+semantic_fingerprint: ff643d0f2d83

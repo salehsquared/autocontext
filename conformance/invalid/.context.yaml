@@ -1,6 +1,7 @@
 version: 1
 last_updated: 2026-04-14T06:00:07.482Z
-fingerprint: ddb5ef83
+fingerprint: d69ec7d4
+semantic_fingerprint: b457d1b996af
 scope: conformance/invalid
 summary: Source directory.
 maintenance: |-
@@ -15,4 +16,3 @@ derived_fields:
   - last_updated
   - fingerprint
   - scope
-semantic_fingerprint: b457d1b996af

@@ -1,6 +1,7 @@
 version: 1
 last_updated: 2026-04-14T13:47:09.906Z
 fingerprint: cf4930a4
+semantic_fingerprint: 32ffc733bdad
 scope: src/policy/evaluators
 summary: Source directory.
 maintenance: |-
@@ -87,4 +88,3 @@ derived_fields:
   - exports
   - dependencies.internal
   - imports
-semantic_fingerprint: 32ffc733bdad

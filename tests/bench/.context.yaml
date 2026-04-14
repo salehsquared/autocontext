@@ -134,3 +134,4 @@ derived_fields:
   - dependencies.internal
   - imports
   - internals
+semantic_fingerprint: 8ca39dc77c51

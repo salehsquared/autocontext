@@ -10,11 +10,11 @@ maintenance: |-
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-exports:
-  - "function handle(a: number, b: number): number"
 dependencies:
   internal:
     - ../commands/compute
+exports:
+  - "function handle(a: number, b: number): number"
 imports:
   - path: ../commands/compute
     symbols:
@@ -27,3 +27,4 @@ derived_fields:
   - exports
   - dependencies.internal
   - imports
+semantic_fingerprint: 20ac7106c81e

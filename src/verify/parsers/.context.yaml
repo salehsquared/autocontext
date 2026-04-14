@@ -1,6 +1,7 @@
 version: 1
 last_updated: 2026-04-14T14:40:27.073Z
 fingerprint: 91182e5a
+semantic_fingerprint: 1b7daf811a0f
 scope: src/verify/parsers
 summary: Source directory.
 maintenance: |-
@@ -87,4 +88,3 @@ derived_fields:
   - dependencies.internal
   - imports
   - data_models
-semantic_fingerprint: 1b7daf811a0f

@@ -1,6 +1,7 @@
 version: 1
 last_updated: 2026-04-14T13:47:09.937Z
 fingerprint: 0f52c08d
+semantic_fingerprint: d38821091dd6
 scope: tests/helpers
 summary: Helper functions.
 maintenance: |-
@@ -42,4 +43,3 @@ derived_fields:
   - dependencies.internal
   - imports
   - data_models
-semantic_fingerprint: d38821091dd6

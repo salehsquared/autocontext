@@ -3,6 +3,11 @@ last_updated: 2026-02-20T16:42:18.500Z
 fingerprint: 9920ea28
 scope: conformance
 summary: Documentation.
+files:
+  - name: README.md
+    purpose: Project documentation
+  - name: runner.mjs
+    purpose: Source file
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
   your changes. Update the files list, interfaces, and current_state sections.
@@ -10,11 +15,6 @@ maintenance: |-
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-files:
-  - name: README.md
-    purpose: Project documentation
-  - name: runner.mjs
-    purpose: Source file
 subdirectories:
   - name: invalid/
     summary: Source directory.
@@ -27,3 +27,4 @@ derived_fields:
   - scope
   - files
   - subdirectories
+semantic_fingerprint: fcffc2ac770f

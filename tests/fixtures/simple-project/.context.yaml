@@ -3,6 +3,11 @@ last_updated: 2026-02-20T16:42:18.995Z
 fingerprint: 4135b1a1
 scope: tests/fixtures/simple-project
 summary: Source directory.
+files:
+  - name: package.json
+    purpose: Node.js project configuration and dependencies
+  - name: tsconfig.json
+    purpose: TypeScript compiler configuration
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
   your changes. Update the files list, interfaces, and current_state sections.
@@ -10,11 +15,6 @@ maintenance: |-
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-files:
-  - name: package.json
-    purpose: Node.js project configuration and dependencies
-  - name: tsconfig.json
-    purpose: TypeScript compiler configuration
 subdirectories:
   - name: src/
     summary: Source code.
@@ -25,3 +25,4 @@ derived_fields:
   - scope
   - files
   - subdirectories
+semantic_fingerprint: b457d1b996af

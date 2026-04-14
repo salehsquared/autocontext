@@ -1,6 +1,7 @@
 version: 1
 last_updated: 2026-04-14T06:04:38.099Z
 fingerprint: 2ba17226
+semantic_fingerprint: dac071184a55
 scope: tests/impact
 summary: Test suite.
 maintenance: |-
@@ -49,4 +50,3 @@ derived_fields:
   - scope
   - dependencies.internal
   - imports
-semantic_fingerprint: dac071184a55

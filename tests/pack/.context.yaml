@@ -1,6 +1,7 @@
 version: 1
 last_updated: 2026-04-14T12:10:00.507Z
 fingerprint: 3993a3d5
+semantic_fingerprint: ddd2424176f3
 scope: tests/pack
 summary: Test suite.
 maintenance: |-
@@ -51,4 +52,3 @@ derived_fields:
   - dependencies.internal
   - imports
   - testing
-semantic_fingerprint: ddd2424176f3

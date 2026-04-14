@@ -1,6 +1,7 @@
 version: 1
 last_updated: 2026-04-14T17:38:35.635Z
 fingerprint: e15f27bb
+semantic_fingerprint: d684a45d5e28
 scope: src/policy
 summary: Source directory.
 maintenance: |-
@@ -128,4 +129,3 @@ derived_fields:
   - imports
   - subdirectories
   - data_models
-semantic_fingerprint: d684a45d5e28

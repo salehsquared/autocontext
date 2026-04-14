@@ -1,6 +1,7 @@
 version: 1
 last_updated: 2026-04-14T17:38:35.598Z
 fingerprint: dd8fad1c
+semantic_fingerprint: 233fdb7a121e
 scope: src/pack
 summary: Source directory.
 maintenance: |-
@@ -128,4 +129,3 @@ derived_fields:
   - dependencies.internal
   - imports
   - data_models
-semantic_fingerprint: 233fdb7a121e

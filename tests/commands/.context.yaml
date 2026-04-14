@@ -1,6 +1,6 @@
 version: 1
 last_updated: 2026-04-14T05:57:17.737Z
-fingerprint: adf71ce7
+fingerprint: 89b8338d
 scope: tests/commands
 summary: CLI command implementations.
 maintenance: |-
@@ -112,3 +112,4 @@ derived_fields:
   - scope
   - dependencies.internal
   - imports
+semantic_fingerprint: 9d554763793e

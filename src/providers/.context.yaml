@@ -1,15 +1,8 @@
 version: 1
 last_updated: 2026-02-20T16:42:18.809Z
-fingerprint: b0038652
+fingerprint: ba8d8701
 scope: src/providers
 summary: Abstract LLM provider interface.
-maintenance: |-
-  If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the files list, interfaces, and current_state sections.
-  Do NOT update the fingerprint manually — run `context rehash` or it will be
-  updated automatically on the next `context status` check.
-  If you only read files in this directory, do not modify this file.
-  Do not include secrets, API keys, passwords, or PII in this file.
 files:
   - name: anthropic.ts
     purpose: "Exports: AnthropicProvider"
@@ -21,14 +14,13 @@ files:
     purpose: "Exports: OllamaProvider"
   - name: openai.ts
     purpose: "Exports: OpenAIProvider"
-exports:
-  - class AnthropicProvider
-  - class GoogleProvider
-  - interface LLMProvider
-  - type ProviderName
-  - "async function createProvider( name: ProviderName, credential?: string, model?: string, ): Promise<LLMProvider>"
-  - class OllamaProvider
-  - class OpenAIProvider
+maintenance: |-
+  If you modify files in this directory, update this .context.yaml to reflect
+  your changes. Update the files list, interfaces, and current_state sections.
+  Do NOT update the fingerprint manually — run `context rehash` or it will be
+  updated automatically on the next `context status` check.
+  If you only read files in this directory, do not modify this file.
+  Do not include secrets, API keys, passwords, or PII in this file.
 interfaces:
   - name: AnthropicProvider
     description: Exported from anthropic.ts
@@ -47,6 +39,14 @@ interfaces:
 dependencies:
   internal:
     - ./index.js
+exports:
+  - class AnthropicProvider
+  - class GoogleProvider
+  - interface LLMProvider
+  - type ProviderName
+  - "async function createProvider( name: ProviderName, credential?: string, model?: string, ): Promise<LLMProvider>"
+  - class OllamaProvider
+  - class OpenAIProvider
 imports:
   - path: ./index.js
     symbols:
@@ -61,3 +61,4 @@ derived_fields:
   - exports
   - dependencies.internal
   - imports
+semantic_fingerprint: 9e2387bdb8ba

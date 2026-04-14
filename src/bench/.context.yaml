@@ -1,25 +1,9 @@
 version: 1
 last_updated: 2026-02-20T16:42:18.559Z
-fingerprint: 43b0dffa
+fingerprint: e8cfdf1e
 scope: src/bench
-summary: Benchmark harness — five comparator arms (baseline / context / pack / pack+impact / pack+policy), index-grounded ground-truth, and BenchProvenance pinning.
-decisions:
-  - what: "Bench provenance pinned in every report (seed, index_version, schema_version, autocontext_git_sha, etc.)"
-    why: "Reproducibility. A bench number without provenance is an anecdote. Same provenance tuple → byte-identical JSON modulo timestamp/latency_ms."
-  - what: "Ground truth synthesized from T1 index + T2 impact only — never hand-labelled, never LLM-generated"
-    why: "Hand labels drift; LLM labels can hallucinate. Index ground truth is exactly what the index can verify, which is the ceiling we're benchmarking against."
-  - what: "Five-arm matrix is additive — baseline/context/delta stay byte-compatible with 0.1.x consumers"
-    why: "Existing bench dashboards parse the legacy fields. New arms/matrix/arm_deltas live alongside them; removal would be breaking."
-constraints:
-  - "Pack arms hard-fail on missing index. Silent fallback to context would make regressions invisible."
-  - "compare-bench.mjs refuses to compare reports with diverging schema_version or question_template_version. Bumping either forces a baseline refresh."
-maintenance: |-
-  If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the files list, interfaces, and current_state sections.
-  Do NOT update the fingerprint manually — run `context rehash` or it will be
-  updated automatically on the next `context status` check.
-  If you only read files in this directory, do not modify this file.
-  Do not include secrets, API keys, passwords, or PII in this file.
+summary: Benchmark harness — five comparator arms (baseline / context / pack / pack+impact / pack+policy),
+  index-grounded ground-truth, and BenchProvenance pinning.
 files:
   - name: git.ts
     purpose: "Exports: isGitRepo, getFixCommits, getFeatureCommits (+1 more)"
@@ -39,34 +23,13 @@ files:
     purpose: "Exports: resolveTokenProfile, estimateInputTokens"
   - name: types.ts
     purpose: "Exports: TaskCategory, ScoringMethod, ConditionName (+8 more)"
-exports:
-  - "function isGitRepo(dirPath: string): boolean"
-  - "function getFixCommits(repoPath: string, count: number): Commit[]"
-  - "function getFeatureCommits(repoPath: string, count: number): Commit[]"
-  - "async function cloneRepo( url: string, destDir: string, depth = 100, ): Promise<string>"
-  - "async function buildDepSets( scanResult: ScanResult, ): Promise<"
-  - "async function buildReverseDeps( scanResult: ScanResult, ): Promise<Map<string, string[]>>"
-  - "async function buildDirFacts( scanResult: ScanResult, ): Promise<Map<string, DirFacts>>"
-  - 'function buildFileTree(scanResult: ScanResult, indent = ""): string'
-  - interface ScopeWindow
-  - "function computeScopeWindow( sourceScope: string, scanResult: ScanResult, ): ScopeWindow"
-  - "function buildScopedFileTree( sourceScope: string, scanResult: ScanResult, ):"
-  - BENCH_SYSTEM_PROMPT
-  - "function buildReadmeSnippet(readme: string | null, maxChars = DEFAULT_README_SNIPPET_CHARS): string | null"
-  - "function buildBaselinePrompt( fileTree: string, readme: string | null, question: string, sourceScope?: string, ):
-    string"
-  - "function buildContextPrompt( fileTree: string, contextFiles: Map<string, ContextFile>, question: string,
-    sourceScope?: string, ): string"
-  - "function buildJudgePrompt( question: string, response: string, referenceFacts: string[], ): string"
-  - interface DefaultRepo
-  - "DEFAULT_REPOS: DefaultRepo[]"
-  - "async function cloneAndInit( repo: DefaultRepo, initFn: (rootPath: string) => Promise<void>, ): Promise<string>"
-  - "async function cleanupRepos(tempDirs: string[]): Promise<void>"
-  - interface RunBenchOptions
-  - "async function runBench(options: RunBenchOptions): Promise<TaskResult[]>"
-  - JUDGE_SYSTEM_PROMPT
-  - "function detectAbstention(response: string): boolean"
-  - "function scoreListCoverage(response: string, expected: string[]): number"
+maintenance: |-
+  If you modify files in this directory, update this .context.yaml to reflect
+  your changes. Update the files list, interfaces, and current_state sections.
+  Do NOT update the fingerprint manually — run `context rehash` or it will be
+  updated automatically on the next `context status` check.
+  If you only read files in this directory, do not modify this file.
+  Do not include secrets, API keys, passwords, or PII in this file.
 interfaces:
   - name: isGitRepo
     description: Exported from git.ts
@@ -98,6 +61,20 @@ interfaces:
     description: Exported from prompts.ts
   - name: DefaultRepo
     description: Exported from repos.ts
+decisions:
+  - what: Bench provenance pinned in every report (seed, index_version, schema_version, autocontext_git_sha, etc.)
+    why: Reproducibility. A bench number without provenance is an anecdote. Same provenance tuple → byte-identical JSON
+      modulo timestamp/latency_ms.
+  - what: Ground truth synthesized from T1 index + T2 impact only — never hand-labelled, never LLM-generated
+    why: Hand labels drift; LLM labels can hallucinate. Index ground truth is exactly what the index can verify, which is
+      the ceiling we're benchmarking against.
+  - what: Five-arm matrix is additive — baseline/context/delta stay byte-compatible with 0.1.x consumers
+    why: Existing bench dashboards parse the legacy fields. New arms/matrix/arm_deltas live alongside them; removal would be
+      breaking.
+constraints:
+  - Pack arms hard-fail on missing index. Silent fallback to context would make regressions invisible.
+  - compare-bench.mjs refuses to compare reports with diverging schema_version or question_template_version. Bumping
+    either forces a baseline refresh.
 dependencies:
   internal:
     - ../core/scanner.js
@@ -111,6 +88,34 @@ dependencies:
     - ./scorer.js
     - ./token-estimator.js
     - ./types.js
+exports:
+  - "function isGitRepo(dirPath: string): boolean"
+  - "function getFixCommits(repoPath: string, count: number): Commit[]"
+  - "function getFeatureCommits(repoPath: string, count: number): Commit[]"
+  - "async function cloneRepo( url: string, destDir: string, depth = 100, ): Promise<string>"
+  - "async function buildDepSets( scanResult: ScanResult, ): Promise<"
+  - "async function buildReverseDeps( scanResult: ScanResult, ): Promise<Map<string, string[]>>"
+  - "async function buildDirFacts( scanResult: ScanResult, ): Promise<Map<string, DirFacts>>"
+  - 'function buildFileTree(scanResult: ScanResult, indent = ""): string'
+  - interface ScopeWindow
+  - "function computeScopeWindow( sourceScope: string, scanResult: ScanResult, ): ScopeWindow"
+  - "function buildScopedFileTree( sourceScope: string, scanResult: ScanResult, ):"
+  - BENCH_SYSTEM_PROMPT
+  - "function buildReadmeSnippet(readme: string | null, maxChars = DEFAULT_README_SNIPPET_CHARS): string | null"
+  - "function buildBaselinePrompt( fileTree: string, readme: string | null, question: string, sourceScope?: string, ):
+    string"
+  - "function buildContextPrompt( fileTree: string, contextFiles: Map<string, ContextFile>, question: string,
+    sourceScope?: string, ): string"
+  - "function buildJudgePrompt( question: string, response: string, referenceFacts: string[], ): string"
+  - interface DefaultRepo
+  - "DEFAULT_REPOS: DefaultRepo[]"
+  - "async function cloneAndInit( repo: DefaultRepo, initFn: (rootPath: string) => Promise<void>, ): Promise<string>"
+  - "async function cleanupRepos(tempDirs: string[]): Promise<void>"
+  - interface RunBenchOptions
+  - "async function runBench(options: RunBenchOptions): Promise<TaskResult[]>"
+  - JUDGE_SYSTEM_PROMPT
+  - "function detectAbstention(response: string): boolean"
+  - "function scoreListCoverage(response: string, expected: string[]): number"
 imports:
   - path: ../core/scanner.js
     symbols:
@@ -224,3 +229,4 @@ derived_fields:
   - dependencies.internal
   - imports
   - internals
+semantic_fingerprint: c6acb41f1380

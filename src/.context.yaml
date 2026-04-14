@@ -1,6 +1,7 @@
 version: 1
 last_updated: 2026-04-14T17:38:35.667Z
 fingerprint: ce9fbcfc
+semantic_fingerprint: c2058cd7996c
 scope: src
 summary: Source code.
 maintenance: |-
@@ -188,4 +189,3 @@ rules:
     value: 800
     exclude:
       - src/generator/ast.ts
-semantic_fingerprint: c2058cd7996c

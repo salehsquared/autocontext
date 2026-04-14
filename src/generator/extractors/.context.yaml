@@ -1,6 +1,7 @@
 version: 1
 last_updated: 2026-04-14T06:17:01.652Z
 fingerprint: f8ea3f83
+semantic_fingerprint: c32875d13de6
 scope: src/generator/extractors
 summary: Source directory.
 maintenance: |-
@@ -49,4 +50,3 @@ derived_fields:
   - exports
   - dependencies.internal
   - imports
-semantic_fingerprint: c32875d13de6
