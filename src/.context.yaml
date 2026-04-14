@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T06:25:55.742Z
-fingerprint: 76c35ec3
+last_updated: 2026-04-14T12:10:00.491Z
+fingerprint: fa3641aa
 scope: src
 summary: Source code.
 maintenance: |-
@@ -23,6 +23,7 @@ dependencies:
     - ./commands/impact.js
     - ./commands/index-cmd.js
     - ./commands/init.js
+    - ./commands/pack.js
     - ./commands/regen.js
     - ./commands/rehash.js
     - ./commands/show.js
@@ -31,7 +32,6 @@ dependencies:
     - ./commands/timeline.js
     - ./commands/validate.js
     - ./commands/watch.js
-    - ./mcp/server.js
 subdirectories:
   - name: bench/
     summary: Source directory.
@@ -49,6 +49,8 @@ subdirectories:
     summary: Source directory.
   - name: mcp/
     summary: MCP server integration.
+  - name: pack/
+    summary: Source directory.
   - name: providers/
     summary: Abstract LLM provider interface.
   - name: utils/
@@ -56,11 +58,33 @@ subdirectories:
 data_models:
   - "interface CommandHandlers { initCommand: typeof initCommand, statusCommand: typeof statusCommand, regenCommand:
     typeof regenCommand, rehashCommand: typeof rehashCommand, validateCommand: typeof validateCommand, showCommand:
-    typeof showCommand, configCommand: typeof configCommand, ignoreCommand: typeof ignoreCommand, …+13 more }"
+    typeof showCommand, configCommand: typeof configCommand, ignoreCommand: typeof ignoreCommand, …+14 more }"
 exports:
   - interface CommandHandlers
   - "function createProgram(handlers: CommandHandlers = defaultHandlers): Command"
   - "async function runCli( argv: string[] = process.argv, handlers: CommandHandlers = defaultHandlers, ): Promise<void>"
+  - buildPack
+  - Pack
+  - PackOptions
+  - PackScope
+  - formatPackJson
+  - formatPackMarkdown
+  - scanProject
+  - flattenBottomUp
+  - ScanResult
+  - readContext
+  - writeContext
+  - UnsupportedVersionError
+  - checkFreshness
+  - legacyState
+  - FreshnessState
+  - LegacyFreshnessState
+  - loadConfig
+  - ContextFile
+  - ConfigFile
+  - contextSchema
+  - configSchema
+  - SCHEMA_VERSION
 imports:
   - path: ./commands/bench.js
     symbols:
@@ -96,6 +120,9 @@ imports:
   - path: ./commands/init.js
     symbols:
       - initCommand
+  - path: ./commands/pack.js
+    symbols:
+      - packCommand
   - path: ./commands/regen.js
     symbols:
       - regenCommand
@@ -120,9 +147,6 @@ imports:
   - path: ./commands/watch.js
     symbols:
       - watchCommand
-  - path: ./mcp/server.js
-    symbols:
-      - startMcpServer
 derived_fields:
   - version
   - last_updated
@@ -133,4 +157,4 @@ derived_fields:
   - imports
   - subdirectories
   - data_models
-semantic_fingerprint: fbaabf0a14f8
+semantic_fingerprint: 83c6e62dda79

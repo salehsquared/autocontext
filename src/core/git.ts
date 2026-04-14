@@ -12,13 +12,18 @@ import { join } from "node:path";
  * no shell-injection surface.
  */
 
-const EXEC_OPTS = {
-  encoding: "utf-8" as const,
+const EXEC_OPTS: {
+  encoding: "utf-8";
+  timeout: number;
+  maxBuffer: number;
+  stdio: ["pipe", "pipe", "pipe"];
+} = {
+  encoding: "utf-8",
   timeout: 30_000,
   maxBuffer: 64 * 1024 * 1024,
   // Capture stderr so callers can decide what to do with failures — by
   // default execFileSync inherits stderr and pollutes our own.
-  stdio: ["pipe", "pipe", "pipe"] as const,
+  stdio: ["pipe", "pipe", "pipe"],
 };
 
 export class GitError extends Error {

@@ -1,0 +1,54 @@
+version: 1
+last_updated: 2026-04-14T12:10:00.507Z
+fingerprint: 3993a3d5
+scope: tests/pack
+summary: Test suite.
+maintenance: |-
+  If you modify files in this directory, update this .context.yaml to reflect
+  your changes. Update the summary, and any decisions or constraints that changed.
+  Do NOT update the fingerprint manually — run `context rehash` or it will be
+  updated automatically on the next `context status` check.
+  If you only read files in this directory, do not modify this file.
+  Do not include secrets, API keys, passwords, or PII in this file.
+dependencies:
+  internal:
+    - ../../src/core/writer.js
+    - ../../src/pack/bm25.js
+    - ../../src/pack/format.js
+    - ../../src/pack/pack.js
+    - ../../src/pack/tokenize.js
+    - ../helpers.js
+testing:
+  - "Conventions: *.test / *.spec colocated"
+imports:
+  - path: ../../src/core/writer.js
+    symbols:
+      - writeContext
+  - path: ../../src/pack/bm25.js
+    symbols:
+      - buildBM25
+  - path: ../../src/pack/format.js
+    symbols:
+      - formatPackJson
+      - formatPackMarkdown
+  - path: ../../src/pack/pack.js
+    symbols:
+      - buildPack
+  - path: ../../src/pack/tokenize.js
+    symbols:
+      - tokenize
+  - path: ../helpers.js
+    symbols:
+      - cleanupTmpDir
+      - createNestedFile
+      - createTmpDir
+      - makeValidContext
+derived_fields:
+  - version
+  - last_updated
+  - fingerprint
+  - scope
+  - dependencies.internal
+  - imports
+  - testing
+semantic_fingerprint: ddd2424176f3

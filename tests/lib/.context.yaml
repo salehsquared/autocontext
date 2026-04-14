@@ -1,0 +1,30 @@
+version: 1
+last_updated: 2026-04-14T12:10:00.504Z
+fingerprint: 9f63f546
+scope: tests/lib
+summary: Library modules.
+maintenance: |-
+  If you modify files in this directory, update this .context.yaml to reflect
+  your changes. Update the summary, and any decisions or constraints that changed.
+  Do NOT update the fingerprint manually — run `context rehash` or it will be
+  updated automatically on the next `context status` check.
+  If you only read files in this directory, do not modify this file.
+  Do not include secrets, API keys, passwords, or PII in this file.
+dependencies:
+  internal:
+    - ../../src/lib.js
+testing:
+  - "Conventions: *.test / *.spec colocated"
+imports:
+  - path: ../../src/lib.js
+    symbols:
+      - "* as lib"
+derived_fields:
+  - version
+  - last_updated
+  - fingerprint
+  - scope
+  - dependencies.internal
+  - imports
+  - testing
+semantic_fingerprint: 4c562b68523b

@@ -489,6 +489,39 @@ export function registerTools(server: McpServer, defaultRoot: string): void {
   );
 
   server.registerTool(
+    "build_context_pack",
+    {
+      title: "Build Context Pack",
+      description:
+        "Assemble a token-budgeted Markdown or JSON pack for an agent. " +
+        "Seeds: --query (free text), --file (path), --symbol (exported name). " +
+        "Retrieval: BM25F over the .context.yaml corpus plus directory-level " +
+        "graph proximity when the code index is available.",
+      inputSchema: {
+        query: z.string().optional().describe("Free-text query seed"),
+        file: z.string().optional().describe("File path seed (POSIX-relative to project root)"),
+        symbol: z.string().optional().describe("Exported symbol name seed"),
+        budget: z.number().int().positive().optional().describe("Token budget (default 4000)"),
+        format: z.enum(["md", "json"]).optional().describe("Output format (default md)"),
+        path: z.string().optional().describe("Project root path override"),
+      },
+    },
+    async (input) => {
+      const { buildPack } = await import("../pack/pack.js");
+      const { formatPackJson, formatPackMarkdown } = await import("../pack/format.js");
+      const pack = await buildPack({
+        projectRoot: resolve(input.path ?? defaultRoot),
+        query: input.query,
+        file: input.file,
+        symbol: input.symbol,
+        budget: input.budget,
+      });
+      const text = input.format === "json" ? formatPackJson(pack) : formatPackMarkdown(pack);
+      return { content: [{ type: "text" as const, text }] };
+    },
+  );
+
+  server.registerTool(
     "explain_staleness",
     {
       title: "Explain Staleness",

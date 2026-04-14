@@ -23,6 +23,7 @@ import { cacheClearCommand, cacheStatsCommand } from "./commands/cache.js";
 import { diffCommand } from "./commands/diff.js";
 import { timelineCommand } from "./commands/timeline.js";
 import { hotspotsCommand } from "./commands/hotspots.js";
+import { packCommand } from "./commands/pack.js";
 import { startMcpServer } from "./mcp/server.js";
 import { loadEnvForCli } from "./utils/env.js";
 import { errorMsg } from "./utils/display.js";
@@ -48,6 +49,7 @@ export interface CommandHandlers {
   diffCommand: typeof diffCommand;
   timelineCommand: typeof timelineCommand;
   hotspotsCommand: typeof hotspotsCommand;
+  packCommand: typeof packCommand;
   startMcpServer: typeof startMcpServer;
 }
 
@@ -72,6 +74,7 @@ const defaultHandlers: CommandHandlers = {
   diffCommand,
   timelineCommand,
   hotspotsCommand,
+  packCommand,
   startMcpServer,
 };
 
@@ -357,6 +360,28 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
         max: opts.max,
         rawCount: opts.rawCount,
         json: opts.json,
+      });
+    });
+
+  program
+    .command("pack")
+    .description("Build a token-budgeted context pack for an agent prompt")
+    .option("--query <text>", "Free-text query seed")
+    .option("--file <path>", "File path seed — pack the scope that owns this file")
+    .option("--symbol <name>", "Symbol-name seed — pack scopes exporting this name")
+    .option("--budget <n>", "Target token budget (default 4000)", parseInt)
+    .option("--format <fmt>", "md | json (default: md on TTY, json otherwise)")
+    .option("--out <path>", "Write output to file instead of stdout")
+    .option("-p, --path <path>", "Project root path")
+    .action(async (opts) => {
+      await handlers.packCommand({
+        path: opts.path,
+        query: opts.query,
+        file: opts.file,
+        symbol: opts.symbol,
+        budget: opts.budget,
+        format: opts.format,
+        out: opts.out,
       });
     });
 

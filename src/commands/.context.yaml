@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T06:25:55.562Z
-fingerprint: deefcd38
+last_updated: 2026-04-14T12:10:00.334Z
+fingerprint: 1f70634c
 scope: src/commands
 summary: CLI command implementations.
 maintenance: |-
@@ -45,6 +45,8 @@ data_models:
   - "interface GenerationMetrics { total_scanned: number, skipped_min_tokens: number, generated: number,
     exports_extracted: number, exports_total: number, summary_from_docstring: number, summary_from_dirname: number,
     summary_from_pattern: number, …+5 more }"
+  - 'interface PackCommandOptions { path: string, query: string, file: string, symbol: string, budget: number, format:
+    "md" | "json", out: string }'
   - "interface GenerationMetrics { total_scanned: number, skipped_min_tokens: number, generated: number,
     exports_extracted: number, exports_total: number, summary_from_docstring: number, summary_from_dirname: number,
     summary_from_pattern: number, …+5 more }"
@@ -79,12 +81,12 @@ exports:
   - "async function indexCommand(options: IndexCommandOptions ="
   - "async function collectIndexableFiles(rootPath: string): Promise<FileId[]>"
   - "async function initCommand(options:"
+  - interface PackCommandOptions
+  - "async function packCommand(options: PackCommandOptions ="
   - "async function regenCommand( targetPath: string | undefined, options:"
   - "async function rehashCommand(options:"
   - "async function showCommand(targetPath: string): Promise<void>"
   - "async function statsCommand(options:"
-  - "async function statusCommand(options:"
-  - interface TimelineCommandOptions
 imports:
   - path: ../bench/git.js
     symbols:
@@ -186,4 +188,4 @@ derived_fields:
   - imports
   - data_models
   - events
-semantic_fingerprint: 93f0daa2f831
+semantic_fingerprint: 9667c8e6deb6
