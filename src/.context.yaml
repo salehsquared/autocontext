@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T15:05:10.930Z
-fingerprint: a3bb027d
+last_updated: 2026-04-14T15:27:16.407Z
+fingerprint: 51fdb3ee
 scope: src
 summary: Source code.
 maintenance: |-
@@ -92,6 +92,24 @@ exports:
   - configSchema
   - SCHEMA_VERSION
 imports:
+  - path: ./bench/ground-truth-impact.js
+    symbols:
+      - generateImpactTasks
+  - path: ./bench/ground-truth-symbols.js
+    symbols:
+      - generateSymbolTasks
+  - path: ./bench/provenance.js
+    symbols:
+      - buildProvenance
+  - path: ./bench/runner.js
+    symbols:
+      - runBench
+  - path: ./bench/tasks.js
+    symbols:
+      - generateTasks
+  - path: ./bench/types.js
+    symbols:
+      - ARMS
   - path: ./commands/bench.js
     symbols:
       - benchCommand
@@ -135,24 +153,6 @@ imports:
   - path: ./commands/rehash.js
     symbols:
       - rehashCommand
-  - path: ./commands/show.js
-    symbols:
-      - showCommand
-  - path: ./commands/stats.js
-    symbols:
-      - statsCommand
-  - path: ./commands/status.js
-    symbols:
-      - statusCommand
-  - path: ./commands/timeline.js
-    symbols:
-      - timelineCommand
-  - path: ./commands/validate.js
-    symbols:
-      - validateCommand
-  - path: ./commands/verify.js
-    symbols:
-      - verifyCommand
 derived_fields:
   - version
   - last_updated
@@ -163,4 +163,4 @@ derived_fields:
   - imports
   - subdirectories
   - data_models
-semantic_fingerprint: 0a7b14f29dce
+semantic_fingerprint: 9a098ef11f09

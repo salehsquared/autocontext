@@ -225,6 +225,7 @@ export function aggregateResults(
   tasks: BenchTask[],
   results: TaskResult[],
   repo?: string,
+  opts?: { armSet?: readonly import("./types.js").ConditionName[] },
 ): BenchReport {
   const baseline = summarizeCondition("baseline", results, tasks);
   const context = summarizeCondition("context", results, tasks);
@@ -238,6 +239,75 @@ export function aggregateResults(
     baseline.cost_per_correct > 0 && isFinite(baseline.cost_per_correct)
       ? 1 - context.cost_per_correct / baseline.cost_per_correct
       : 0;
+
+  // Per-arm summaries (T12). Build from the full ARMS list; only arms with
+  // results get non-empty summaries.
+  const observedArms = new Set(results.map((r) => r.condition));
+  const armList = opts?.armSet && opts.armSet.length > 0
+    ? opts.armSet
+    : (Array.from(observedArms) as import("./types.js").ConditionName[]);
+  const arms: Partial<Record<import("./types.js").ConditionName, import("./types.js").ConditionSummary>> = {};
+  for (const arm of armList) {
+    arms[arm] = summarizeCondition(arm, results, tasks);
+  }
+
+  // Per-arm × per-category matrix.
+  const taskMap = new Map(tasks.map((t) => [t.id, t]));
+  const matrix: Partial<Record<import("./types.js").ConditionName, Record<string, import("./types.js").ArmCellStats>>> = {};
+  const cellScores = new Map<string, number[]>();
+  const cellLatencies = new Map<string, number[]>();
+  const cellTokens = new Map<string, number[]>();
+  for (const r of results) {
+    const task = taskMap.get(r.task_id);
+    if (!task) continue;
+    const key = `${r.condition}\u0000${task.category}`;
+    const s = cellScores.get(key) ?? [];
+    s.push(r.score);
+    cellScores.set(key, s);
+    const l = cellLatencies.get(key) ?? [];
+    l.push(r.latency_ms);
+    cellLatencies.set(key, l);
+    const t = cellTokens.get(key) ?? [];
+    const tokens = typeof r.total_input_tokens_est === "number"
+      ? r.total_input_tokens_est
+      : (r.answer_input_tokens_est ?? 0) + (r.judge_input_tokens_est ?? 0);
+    t.push(tokens);
+    cellTokens.set(key, t);
+  }
+  for (const [key, scores] of cellScores) {
+    const [arm, category] = key.split("\u0000") as [import("./types.js").ConditionName, string];
+    const lat = cellLatencies.get(key) ?? [];
+    const tok = cellTokens.get(key) ?? [];
+    const perArm = matrix[arm] ?? {};
+    const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
+    perArm[category] = {
+      count: scores.length,
+      mean_score: mean,
+      stddev_score: computeStddev(scores),
+      mean_latency_ms: lat.length > 0 ? lat.reduce((a, b) => a + b, 0) / lat.length : 0,
+      mean_tokens: tok.length > 0 ? tok.reduce((a, b) => a + b, 0) / tok.length : 0,
+    };
+    matrix[arm] = perArm;
+  }
+
+  // Arm deltas vs the `context` arm. (A cross-cut: most consumers care
+  // "did the new arm beat the existing authored-context arm?")
+  const armDeltas: Partial<Record<Exclude<import("./types.js").ConditionName, "context">, import("./types.js").ArmDelta>> = {};
+  for (const [armName, summary] of Object.entries(arms)) {
+    if (armName === "context" || !summary) continue;
+    const tokReduce = summary.total_tokens_est > 0
+      ? 1 - context.total_tokens_est / summary.total_tokens_est
+      : 0;
+    const costReduce = summary.cost_per_correct > 0 && isFinite(summary.cost_per_correct)
+      ? 1 - context.cost_per_correct / summary.cost_per_correct
+      : 0;
+    armDeltas[armName as Exclude<import("./types.js").ConditionName, "context">] = {
+      accuracy_gain: summary.mean_score - context.mean_score,
+      abstention_reduction: context.abstention_rate - summary.abstention_rate,
+      token_reduction: tokReduce,
+      cost_per_correct_reduction: costReduce,
+    };
+  }
 
   return {
     root: rootPath,
@@ -259,6 +329,9 @@ export function aggregateResults(
     },
     tasks,
     results,
+    arms,
+    matrix,
+    arm_deltas: armDeltas,
   };
 }
 

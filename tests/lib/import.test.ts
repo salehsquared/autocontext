@@ -35,6 +35,14 @@ describe("src/lib.ts barrel", () => {
     expect(typeof lib.SEMANTIC_FINGERPRINT_MARKER).toBe("string");
     expect(lib.ruleSchema).toBeDefined();
     expect(Array.isArray(lib.RULE_KINDS)).toBe(true);
+    // T12 bench library surface
+    expect(typeof lib.runBench).toBe("function");
+    expect(typeof lib.generateTasks).toBe("function");
+    expect(typeof lib.generateSymbolTasks).toBe("function");
+    expect(typeof lib.generateImpactTasks).toBe("function");
+    expect(typeof lib.buildProvenance).toBe("function");
+    expect(Array.isArray(lib.ARMS)).toBe(true);
+    expect(lib.ARMS.length).toBe(5);
   });
 });
 

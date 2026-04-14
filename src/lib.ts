@@ -102,3 +102,32 @@ export type {
 } from "./policy/rules.js";
 export type { Violation as PolicyViolation } from "./policy/types.js";
 export { ruleSchema, RULE_KINDS } from "./policy/rules.js";
+
+// =============================================================================
+// Bench — T12 (experimental)
+// =============================================================================
+
+/** @stability experimental */
+export { runBench } from "./bench/runner.js";
+/** @stability experimental */
+export { generateTasks } from "./bench/tasks.js";
+/** @stability experimental */
+export { generateSymbolTasks } from "./bench/ground-truth-symbols.js";
+/** @stability experimental */
+export { generateImpactTasks } from "./bench/ground-truth-impact.js";
+/** @stability experimental */
+export { buildProvenance } from "./bench/provenance.js";
+export type {
+  BenchTask,
+  BenchReport,
+  ConditionName,
+  TaskCategory,
+  ScoringMethod,
+  TaskResult,
+  ConditionSummary,
+  BenchProvenance,
+  ArmCellStats,
+  ArmDelta,
+  GroundTruthProvenance,
+} from "./bench/types.js";
+export { ARMS } from "./bench/types.js";

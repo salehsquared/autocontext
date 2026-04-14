@@ -14,6 +14,31 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) an
 
 ## [Unreleased]
 
+### Added — Bench expansion (T12)
+
+- **Three new comparator arms** — `pack`, `pack+impact`, `pack+policy`. Each
+  exercises an upstream capability track (T3 retrieval, T2 impact, T4 policy)
+  against the legacy `baseline`/`context` arms. The legacy `delta` field stays
+  unchanged; new `arms`, `matrix`, and `arm_deltas` fields are additive.
+- **Three new task categories** — `find-definition`, `find-callers`, and
+  `impact-of-change`. Ground truth is synthesized exclusively from the T1 index
+  (`IndexStore.findSymbolsByName` / `getReferencesTo`) and T2's `computeImpact`.
+  Every task now carries a `ground_truth_provenance` block
+  (`source` / `precision_class` / `recall_class`) so analyzers can filter or
+  weight by confidence tier. Precision never exceeds what T1 can verify —
+  import-bound references only.
+- **`BenchReport.provenance`** — pins seed, versions (schema, index, BM25,
+  impact, policy, question_template, token_estimator), provider/model, and
+  autocontext git SHA. Two runs with the same tuple must produce byte-identical
+  JSON modulo `timestamp` / `latency_ms`.
+- **`scripts/compare-bench.mjs`** — regression canary. Diffs two JSON reports,
+  exits 1 when `delta.accuracy_gain` or any `arm_deltas[arm].accuracy_gain`
+  regressed beyond `--threshold` (default 0.02), and exits 2 when
+  `question_template_version` or `schema_version` diverges.
+- **Library exports** — `runBench`, `generateTasks`, `generateSymbolTasks`,
+  `generateImpactTasks`, `buildProvenance`, `ARMS`, plus bench type aliases.
+  All tagged `@stability experimental`.
+
 ### Added — Library API (T11)
 
 - **`autocontext` is now consumable as a library.** `package.json` declares
