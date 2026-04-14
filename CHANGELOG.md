@@ -12,9 +12,9 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) an
 
 ---
 
-## [Unreleased] — 0.2.0
+## [0.2.0] — 2026-04-14
 
-Major minor: the 0.2.x line ships a local code index, token-budgeted prompt packs, typed policy rules, 4-state freshness, active verification, a self-contained HTML viewer, a library API, and a twelve-tool MCP surface. **Schema stays at v1** — every addition is optional; every legacy `.context.yaml` keeps parsing.
+Major minor: the 0.2.x line ships a local code index, token-budgeted prompt packs, typed policy rules, 4-state freshness, active verification, a self-contained HTML viewer, a library API, a twelve-tool MCP surface, and a rewritten agent instruction template emitted across four agent-file conventions. **Schema stays at v1** — every addition is optional; every legacy `.context.yaml` keeps parsing.
 
 **Upgrade note.** Existing projects only need three one-shot actions after installing 0.2.x:
 
@@ -23,6 +23,14 @@ Major minor: the 0.2.x line ships a local code index, token-budgeted prompt pack
 3. `context doctor` — confirm `.autocontext/` is gitignored (first run of `context init` does this automatically; older checkouts may need `echo '.autocontext/' >> .gitignore`).
 
 Nothing else changes. `context status`, `check_freshness`, `list_contexts`, `query_context`, and `aggregate_evidence` all keep their v1 output shapes byte-for-byte — a compat snapshot at `tests/mcp/compat.test.ts` locks that down.
+
+### Added — Agent instruction overhaul
+
+- **Template rewrite.** `AGENTS.md` dropped from ~50 lines of advisory prose to ~30 lines of playbooks: routing (MCP vs CLI), before-edit, before-commit, do-not, 4-state freshness glossary, top-level-only directory map. Purpose-first opening redirects the agent's default grep reflex at the first sentence.
+- **Multi-format emission** from a single canonical body: `AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, `.cursor/rules/autocontext.mdc` (MDC frontmatter with `alwaysApply: true`). Markdown formats use marker-based merge to preserve user content; Cursor's `.mdc` is owned outright.
+- **`--agents-format <csv>`** CLI flag on `init` and `regen`. Accepts any subset of `agents,claude,copilot,cursor` plus `all` and `none`. Resolution precedence: CLI → `config.agents.formats` → auto-detect existing files → default `["agents"]`. Existing projects see no new files unless they already use that client.
+- **`config.agents.formats`** optional block in `.context.config.yaml` for pinning the emit set.
+- **`DEFAULT_MAINTENANCE` / `FULL_MAINTENANCE` compressed** from 6 lines each to 1 line each — removed ~840 lines of identical boilerplate across 84 `.context.yaml` files without losing keyword coverage.
 
 ### Added — Bench expansion (T12)
 
