@@ -1,5 +1,5 @@
 version: 1
-last_updated: 2026-04-14T19:50:26.321Z
+last_updated: 2026-04-14T20:15:20.918Z
 fingerprint: 89b8338d
 scope: tests/commands
 summary: CLI command implementations.

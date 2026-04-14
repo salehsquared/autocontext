@@ -1,5 +1,5 @@
 version: 1
-last_updated: 2026-04-14T19:50:26.181Z
+last_updated: 2026-04-14T20:15:20.771Z
 fingerprint: ba8d8701
 scope: src/providers
 summary: Abstract LLM provider interface.

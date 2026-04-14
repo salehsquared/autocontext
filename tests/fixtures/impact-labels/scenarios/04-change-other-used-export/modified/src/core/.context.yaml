@@ -1,5 +1,5 @@
 version: 1
-last_updated: 2026-04-14T19:50:26.463Z
+last_updated: 2026-04-14T20:15:21.049Z
 fingerprint: 929fa7a5
 scope: tests/fixtures/impact-labels/scenarios/04-change-other-used-export/modified/src/core
 summary: Core functionality.

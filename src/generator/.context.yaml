@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T19:50:25.987Z
-fingerprint: 7f5a4a73
+last_updated: 2026-04-14T20:15:20.534Z
+fingerprint: c05c3229
 scope: src/generator
 summary: Code generation.
 maintenance: "Read-only visit: don't modify this file. Changed code here? Update `summary`, `decisions`, `constraints`;

@@ -54,7 +54,7 @@ function buildAutocontextBody(entries: AgentsEntry[]): string {
   const map = buildDirectoryTable(topLevelEntries(entries));
   return `## autocontext
 
-Every directory has a \`.context.yaml\` with summary, decisions, constraints, and sometimes a \`rules:\` block that is mechanically enforced. Do not parse these files by hand — use the tools below.
+**autocontext is your map of this codebase.** Before you grep, before you open random files, query here — every directory has a \`.context.yaml\` summarizing its purpose, architectural decisions, and sometimes a \`rules:\` block that is mechanically enforced. Parsing these files by hand is the wrong move; use the tools below.
 
 ### Routing
 - **MCP** (\`context serve\`): \`list_contexts\` / \`search_context\` → find; \`query_context\` → read; \`find_definition\` / \`find_references\` / \`find_related\` / \`impact\` → navigate; \`check_policies\` → enforce; \`build_context_pack\` → token-budgeted brief; \`explain_staleness\` / \`check_freshness\` / \`aggregate_evidence\` → state.
@@ -101,7 +101,8 @@ export function generateAgentsMd(
   const normalized = projectName.trim() || "this project";
   return `# AGENTS.md
 
-> Instructions for AI coding agents working in this repository.
+> How to navigate this codebase. Read this before grepping or opening files —
+> autocontext (below) has the map.
 > Project: ${normalized}
 
 ${generateAgentsSection(entries)}
@@ -116,7 +117,8 @@ export function generateClaudeMd(
   const normalized = projectName.trim() || "this project";
   return `# CLAUDE.md
 
-> Instructions for Claude (and other AI coding agents) in this repository.
+> How to navigate this codebase. Read this before grepping or opening files —
+> autocontext (below) has the map.
 > Project: ${normalized}
 
 ${generateAgentsSection(entries)}
@@ -131,7 +133,8 @@ export function generateCopilotInstructions(
   const normalized = projectName.trim() || "this project";
   return `# Copilot instructions
 
-> These apply to all GitHub Copilot chat sessions in this repository.
+> How to navigate this codebase. Read this before grepping or opening files —
+> autocontext (below) has the map.
 > Project: ${normalized}
 
 ${generateAgentsSection(entries)}
@@ -142,7 +145,7 @@ ${generateAgentsSection(entries)}
  *  We own this file entirely; no user content to merge around. */
 export function generateCursorRule(entries: AgentsEntry[]): string {
   return `---
-description: autocontext — how to navigate this repo via .context.yaml + MCP
+description: autocontext — the map of this codebase (read before grepping)
 globs: ["**/*"]
 alwaysApply: true
 ---

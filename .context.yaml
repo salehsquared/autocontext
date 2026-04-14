@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T19:50:26.856Z
-fingerprint: f4c84d69
+last_updated: 2026-04-14T20:15:21.372Z
+fingerprint: 2e00e130
 scope: .
 summary: Folder-level documentation for LLMs — .context.yaml files for every directory
 maintenance: "Read-only visit: don't modify this file. Changed code here? Update `summary`, `decisions`, `constraints`;

@@ -1,5 +1,5 @@
 version: 1
-last_updated: 2026-04-14T19:50:26.425Z
+last_updated: 2026-04-14T20:15:21.017Z
 fingerprint: ec6212a7
 scope: tests/fixtures/impact-labels/mini-project/src/mcp
 summary: MCP server integration.
