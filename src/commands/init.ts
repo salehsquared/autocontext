@@ -9,6 +9,8 @@ import { loadConfig, saveConfig, resolveApiKey } from "../utils/config.js";
 import { loadScanOptions } from "../utils/scan-options.js";
 import { successMsg, errorMsg, warnMsg, progressBar, heading, dim } from "../utils/display.js";
 import { updateAgentsMd } from "../core/markdown-writer.js";
+import { ensureAutocontextGitignored } from "../core/gitignore.js";
+import { indexCommand } from "./index-cmd.js";
 import { poolMap } from "../utils/pool.js";
 import { filterByMinTokens, estimateDirectoryTokens, estimateContextFileTokens, DEFAULT_MIN_TOKENS } from "../utils/tokens.js";
 import type { ContextFile, ConfigFile } from "../core/schema.js";
@@ -276,5 +278,21 @@ export async function initCommand(options: { noLlm?: boolean; path?: string; evi
 
   console.log(`\n\nDone. ${completed} .context.yaml files created.`);
   printMetrics(metrics);
+
+  // Append .autocontext/ to .gitignore if we have one — keeps the new index
+  // directory from being committed by default.
+  const gitignoreResult = await ensureAutocontextGitignored(rootPath);
+  if (gitignoreResult.action === "appended") {
+    console.log(successMsg(".autocontext/ added to .gitignore"));
+  }
+
+  // Build the local code index.
+  try {
+    await indexCommand({ path: rootPath });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.log(warnMsg(`code index: ${msg}`));
+  }
+
   console.log('\nRun `context status` to check freshness.\n');
 }

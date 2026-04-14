@@ -13,6 +13,7 @@ import { poolMap } from "../utils/pool.js";
 import { filterByMinTokens, estimateDirectoryTokens, estimateContextFileTokens } from "../utils/tokens.js";
 import type { ContextFile } from "../core/schema.js";
 import type { ScanResult } from "../core/scanner.js";
+import { indexCommand } from "./index-cmd.js";
 
 interface GenerationMetrics {
   total_scanned: number;
@@ -299,5 +300,17 @@ export async function regenCommand(
 
   console.log(`\nDone. ${completed} file${completed > 1 ? "s" : ""} regenerated.`);
   printMetrics(metrics);
+
+  // Keep the local code index in sync. Only on full-tree runs (same guard as
+  // AGENTS.md) — targeted regens leave the index alone so we don't thrash.
+  if (isFullTree) {
+    try {
+      await indexCommand({ path: rootPath });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.log(warnMsg(`code index: ${msg}`));
+    }
+  }
+
   console.log("");
 }

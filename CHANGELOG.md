@@ -12,6 +12,38 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) an
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **Local code index** (Track T1) — new on-disk code-intelligence index at
+  `.autocontext/index/` that persists symbols, imports, import-bound
+  references, and directory-level import edges. Populated by a tree-sitter
+  analyzer for TypeScript, JavaScript (TS/JS), and Python in v1. Accessible
+  via a new `IndexStore` interface (default NDJSON backend; pluggable for a
+  future SQLite backend). Reference extraction is **import-bound only**
+  (namespace member access, dynamic imports, and transitive re-export chains
+  are out of scope); measured precision on fixture:
+  - TS/JS: precision 1.00 / recall 1.00 (target: 0.95 / 0.70)
+  - Python: precision 1.00 / recall 1.00 (target: 0.90 / 0.70)
+- **New CLI command** — `context index [--rebuild]` builds or refreshes the
+  local code index. Runs automatically after `context init` and full-tree
+  `context regen` (including the pre-commit hook's path).
+- **`.autocontext/` gitignore handling** — `context init` appends
+  `.autocontext/` to `.gitignore` when the file exists; `context doctor`
+  verifies the entry.
+- **`INDEX_VERSION`** — internal version tag for the on-disk index, bumped
+  independently of the `.context.yaml` schema. A mismatch triggers a
+  rebuild; **the schema stays at v1** for this track.
+
+### Changed
+
+- `context doctor` gains two additional checks: `gitignore` (verifies
+  `.autocontext/` is gitignored) and `index` (verifies manifest is present
+  and at the current `INDEX_VERSION`).
+- Scanner's `ALWAYS_IGNORE` now includes `.autocontext` so the index
+  directory is never traversed during generation.
+
 ## [0.1.0] - 2026-02-13
 
 Initial public release.

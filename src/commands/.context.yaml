@@ -1,48 +1,24 @@
 version: 1
-last_updated: 2026-02-20T16:42:18.626Z
-fingerprint: 232824dc
+last_updated: 2026-04-14T03:06:01.169Z
+fingerprint: 894b37da
 scope: src/commands
 summary: CLI command implementations.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the files list, interfaces, and current_state sections.
+  your changes. Update the summary, and any decisions or constraints that changed.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-files:
-  - name: bench.ts
-    purpose: "Exports: benchCommand"
-  - name: config.ts
-    purpose: "Exports: configCommand"
-  - name: doctor.ts
-    purpose: "Exports: doctorCommand"
-  - name: health.ts
-    purpose: "Exports: healthCommand"
-  - name: ignore.ts
-    purpose: "Exports: ignoreCommand"
-  - name: init.ts
-    purpose: "Exports: initCommand"
-  - name: regen.ts
-    purpose: "Exports: regenCommand"
-  - name: rehash.ts
-    purpose: "Exports: rehashCommand"
-  - name: show.ts
-    purpose: "Exports: showCommand"
-  - name: stats.ts
-    purpose: "Exports: statsCommand"
-  - name: status.ts
-    purpose: "Exports: statusCommand"
-  - name: validate.ts
-    purpose: "Exports: validateCommand"
-  - name: watch.ts
-    purpose: "Exports: findTrackedDirForFile, watchCommand"
 exports:
   - "async function benchCommand(options: BenchOptions): Promise<void>"
   - "async function configCommand( options:"
   - "async function doctorCommand(options:"
   - "async function healthCommand(options:"
   - "async function ignoreCommand(targetPath: string, options:"
+  - interface IndexCommandOptions
+  - "async function indexCommand(options: IndexCommandOptions ="
+  - "async function collectIndexableFiles(rootPath: string): Promise<FileId[]>"
   - "async function initCommand(options:"
   - "async function regenCommand( targetPath: string | undefined, options:"
   - "async function rehashCommand(options:"
@@ -53,35 +29,6 @@ exports:
   - "function findTrackedDirForFile( filePath: string, rootPath: string, trackedDirPaths: Iterable<string>, ): string |
     undefined"
   - "async function watchCommand( options:"
-interfaces:
-  - name: benchCommand
-    description: Exported from bench.ts
-  - name: configCommand
-    description: Exported from config.ts
-  - name: doctorCommand
-    description: Exported from doctor.ts
-  - name: healthCommand
-    description: Exported from health.ts
-  - name: ignoreCommand
-    description: Exported from ignore.ts
-  - name: initCommand
-    description: Exported from init.ts
-  - name: regenCommand
-    description: Exported from regen.ts
-  - name: rehashCommand
-    description: Exported from rehash.ts
-  - name: showCommand
-    description: Exported from show.ts
-  - name: statsCommand
-    description: Exported from stats.ts
-  - name: statusCommand
-    description: Exported from status.ts
-  - name: validateCommand
-    description: Exported from validate.ts
-  - name: findTrackedDirForFile
-    description: Exported from watch.ts
-  - name: watchCommand
-    description: Exported from watch.ts
 dependencies:
   internal:
     - ../bench/git.js
@@ -92,6 +39,7 @@ dependencies:
     - ../bench/tasks.js
     - ../bench/types.js
     - ../core/fingerprint.js
+    - ../core/gitignore.js
     - ../core/health.js
     - ../core/markdown-writer.js
     - ../core/scanner.js
@@ -101,9 +49,8 @@ dependencies:
     - ../generator/llm.js
     - ../generator/markdown.js
     - ../generator/static.js
-    - ../providers/index.js
-    - ../utils/config.js
-    - ../utils/display.js
+    - ../index/analyzer.js
+    - ../index/builder.js
 imports:
   - path: ../bench/git.js
     symbols:
@@ -140,6 +87,10 @@ imports:
       - FreshnessState
       - checkFreshness
       - computeFingerprint
+  - path: ../core/gitignore.js
+    symbols:
+      - ensureAutocontextGitignored
+      - hasAutocontextEntry
   - path: ../core/health.js
     symbols:
       - aggregateEvidence
@@ -178,94 +129,18 @@ imports:
       - SummarySource
       - detectExportsWithFallback
       - generateStaticContext
-  - path: ../providers/index.js
+  - path: ../index/analyzer.js
     symbols:
-      - ProviderName
-      - createProvider
-  - path: ../utils/config.js
+      - analyzerSupports
+  - path: ../index/builder.js
     symbols:
-      - getDefaultApiKeyEnv
-      - loadConfig
-      - resolveApiKey
-      - saveConfig
-  - path: ../utils/display.js
-    symbols:
-      - dim
-      - errorMsg
-      - freshnessIcon
-      - heading
-      - progressBar
-      - successMsg
-      - warnMsg
-internals:
-  - name: runSingleBench
-    kind: function
-    file: bench.ts
-  - name: runMultiRepo
-    kind: function
-    file: bench.ts
-  - name: printReport
-    kind: function
-    file: bench.ts
-  - name: printMultiRepoReport
-    kind: function
-    file: bench.ts
-  - name: CheckResult
-    kind: interface
-    file: doctor.ts
-  - name: readRawContext
-    kind: function
-    file: doctor.ts
-  - name: ask
-    kind: function
-    file: init.ts
-  - name: GenerationMetrics
-    kind: interface
-    file: init.ts
-  - name: trackSummarySource
-    kind: function
-    file: init.ts
-  - name: printMetrics
-    kind: function
-    file: init.ts
-  - name: GenerationMetrics
-    kind: interface
-    file: regen.ts
-  - name: trackSummarySource
-    kind: function
-    file: regen.ts
-  - name: printMetrics
-    kind: function
-    file: regen.ts
-  - name: fmtNum
-    kind: function
-    file: stats.ts
-  - name: percentile
-    kind: function
-    file: stats.ts
-  - name: round1
-    kind: function
-    file: stats.ts
-  - name: DirStats
-    kind: interface
-    file: stats.ts
-  - name: signalScore
-    kind: function
-    file: stats.ts
-  - name: computeContextLag
-    kind: function
-    file: stats.ts
-  - name: dirExtensions
-    kind: function
-    file: stats.ts
+      - buildIndex
+      - commitBuild
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
-  - files
-  - interfaces
   - exports
   - dependencies.internal
   - imports
-  - internals

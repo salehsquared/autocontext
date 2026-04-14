@@ -24,7 +24,10 @@ trap cleanup EXIT
 echo "1. Packing npm artifact..."
 cd "$PROJECT_ROOT"
 mkdir -p "$NPM_CACHE_DIR"
-TARBALL=$(npm pack --cache "$NPM_CACHE_DIR" --pack-destination "$TMPDIR_BASE" 2>&1 | tail -1)
+# npm may append "New version available" notices AFTER the filename, so grep
+# the actual .tgz line rather than trusting `tail -1`.
+TARBALL=$(npm pack --cache "$NPM_CACHE_DIR" --pack-destination "$TMPDIR_BASE" 2>&1 \
+  | grep -E '^[^[:space:]]+\.tgz$' | tail -1)
 TARBALL="$TMPDIR_BASE/$TARBALL"
 
 if [ ! -f "$TARBALL" ]; then
@@ -103,8 +106,21 @@ if ! echo "$SHOW_OUT" | grep -q "version:"; then
 fi
 echo "       Output contains version:"
 
-# 4e. Schema file check
-echo "   4e. Schema file accessibility"
+# 4e. context index
+echo "   4e. context index --rebuild"
+"$CONTEXT_BIN" index --rebuild --path "$FIXTURE_DIR" 2>&1
+if [ ! -f "$FIXTURE_DIR/.autocontext/index/manifest.json" ]; then
+  echo "FAIL: context index did not create .autocontext/index/manifest.json"
+  exit 1
+fi
+if ! node -e "const m = require('$FIXTURE_DIR/.autocontext/index/manifest.json'); if (typeof m.index_version !== 'number') process.exit(1);" 2>/dev/null; then
+  echo "FAIL: manifest.json missing index_version"
+  exit 1
+fi
+echo "       .autocontext/index/ built with manifest"
+
+# 4f. Schema file check
+echo "   4f. Schema file accessibility"
 SCHEMA_FILE="$INSTALL_DIR/node_modules/autocontext/.context.schema.json"
 if [ ! -f "$SCHEMA_FILE" ]; then
   echo "FAIL: Schema file not found at $SCHEMA_FILE"

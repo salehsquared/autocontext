@@ -17,6 +17,7 @@ import { doctorCommand } from "./commands/doctor.js";
 import { statsCommand } from "./commands/stats.js";
 import { healthCommand } from "./commands/health.js";
 import { benchCommand } from "./commands/bench.js";
+import { indexCommand } from "./commands/index-cmd.js";
 import { startMcpServer } from "./mcp/server.js";
 import { loadEnvForCli } from "./utils/env.js";
 import { errorMsg } from "./utils/display.js";
@@ -35,6 +36,7 @@ export interface CommandHandlers {
   statsCommand: typeof statsCommand;
   healthCommand: typeof healthCommand;
   benchCommand: typeof benchCommand;
+  indexCommand: typeof indexCommand;
   startMcpServer: typeof startMcpServer;
 }
 
@@ -52,6 +54,7 @@ const defaultHandlers: CommandHandlers = {
   statsCommand,
   healthCommand,
   benchCommand,
+  indexCommand,
   startMcpServer,
 };
 
@@ -268,6 +271,15 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
         repo: opts.repo,
         defaultRepos: opts.defaultRepos,
       });
+    });
+
+  program
+    .command("index")
+    .description("Build or refresh the local code index under .autocontext/index/")
+    .option("--rebuild", "Wipe .autocontext/index/ and build from scratch")
+    .option("-p, --path <path>", "Project root path")
+    .action(async (opts) => {
+      await handlers.indexCommand({ rebuild: opts.rebuild, path: opts.path });
     });
 
   program

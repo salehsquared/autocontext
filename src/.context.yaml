@@ -1,18 +1,15 @@
 version: 1
-last_updated: 2026-02-20T16:42:18.829Z
-fingerprint: e9b1ef0c
+last_updated: 2026-04-14T03:06:01.288Z
+fingerprint: 24da5d81
 scope: src
 summary: Source code.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the files list, interfaces, and current_state sections.
+  your changes. Update the summary, and any decisions or constraints that changed.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-files:
-  - name: index.ts
-    purpose: "Exports: CommandHandlers, createProgram, runCli"
 subdirectories:
   - name: bench/
     summary: Source directory.
@@ -22,6 +19,8 @@ subdirectories:
     summary: Core functionality.
   - name: generator/
     summary: Code generation.
+  - name: index/
+    summary: Source directory.
   - name: mcp/
     summary: MCP server integration.
   - name: providers/
@@ -32,13 +31,6 @@ exports:
   - interface CommandHandlers
   - "function createProgram(handlers: CommandHandlers = defaultHandlers): Command"
   - "async function runCli( argv: string[] = process.argv, handlers: CommandHandlers = defaultHandlers, ): Promise<void>"
-interfaces:
-  - name: CommandHandlers
-    description: Exported from index.ts
-  - name: createProgram
-    description: Exported from index.ts
-  - name: runCli
-    description: Exported from index.ts
 dependencies:
   internal:
     - ./commands/bench.js
@@ -46,6 +38,7 @@ dependencies:
     - ./commands/doctor.js
     - ./commands/health.js
     - ./commands/ignore.js
+    - ./commands/index-cmd.js
     - ./commands/init.js
     - ./commands/regen.js
     - ./commands/rehash.js
@@ -73,6 +66,9 @@ imports:
   - path: ./commands/ignore.js
     symbols:
       - ignoreCommand
+  - path: ./commands/index-cmd.js
+    symbols:
+      - indexCommand
   - path: ./commands/init.js
     symbols:
       - initCommand
@@ -106,25 +102,12 @@ imports:
   - path: ./utils/env.js
     symbols:
       - loadEnvForCli
-internals:
-  - name: defaultHandlers
-    kind: constant
-    file: index.ts
-  - name: isInvokedDirectly
-    kind: function
-    file: index.ts
-  - name: invokedDirectly
-    kind: constant
-    file: index.ts
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
-  - files
-  - interfaces
   - exports
   - dependencies.internal
   - imports
-  - internals
   - subdirectories
