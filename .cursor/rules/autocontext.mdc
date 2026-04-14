@@ -1,10 +1,9 @@
-# AGENTS.md
+---
+description: autocontext — the map of this codebase (read before grepping)
+globs: ["**/*"]
+alwaysApply: true
+---
 
-> How to navigate this codebase. Read this before grepping or opening files —
-> autocontext (below) has the map.
-> Project: autocontext
-
-<!-- autocontext:agents-section -->
 ## autocontext
 
 **autocontext is your map of this codebase.** Before you grep, before you open random files, query here — every directory has a `.context.yaml` summarizing its purpose, architectural decisions, and sometimes a `rules:` block that is mechanically enforced. Parsing these files by hand is the wrong move; use the tools below.
@@ -41,4 +40,3 @@
 | `tests` | Test suite. |
 
 Full index: `list_contexts` (MCP) or `context status`.
-<!-- autocontext:agents-section-end -->

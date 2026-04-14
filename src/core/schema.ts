@@ -180,6 +180,13 @@ const verifyBlockSchema = z.object({
 
 // --- Config file schema (.context.config.yaml) ---
 
+export const agentsFormatEnum = z.enum(["agents", "claude", "copilot", "cursor"]);
+
+export const agentsBlockSchema = z.object({
+  formats: z.array(agentsFormatEnum).optional()
+    .describe("Which agent instruction files to emit/update. Defaults: auto-detect existing, else ['agents']."),
+}).strict();
+
 export const configSchema = z.object({
   provider: z.enum(["anthropic", "openai", "google", "ollama"]).describe("LLM provider"),
   model: z.string().optional().describe("Model ID override"),
@@ -191,6 +198,8 @@ export const configSchema = z.object({
     .describe("Minimum estimated tokens for a directory to get a .context.yaml (default: 4096)"),
   verify: verifyBlockSchema.optional()
     .describe("Commands the `context verify` command runs to populate evidence"),
+  agents: agentsBlockSchema.optional()
+    .describe("Which agent instruction files to emit (AGENTS / CLAUDE / Copilot / Cursor)"),
 });
 
 export type VerifyCommand = z.infer<typeof verifyCommandSchema>;
@@ -218,16 +227,8 @@ export const CONFIG_FILENAME = ".context.config.yaml";
 
 // --- Default maintenance instruction ---
 
-export const DEFAULT_MAINTENANCE = `If you modify files in this directory, update this .context.yaml to reflect
-your changes. Update the summary, and any decisions or constraints that changed.
-Do NOT update the fingerprint manually — run \`context rehash\` or it will be
-updated automatically on the next \`context status\` check.
-If you only read files in this directory, do not modify this file.
-Do not include secrets, API keys, passwords, or PII in this file.`;
+export const DEFAULT_MAINTENANCE =
+  "Read-only visit: don't modify this file. Changed code here? Update `summary`, `decisions`, `constraints`; run `context rehash` (never edit `fingerprint`). No secrets.";
 
-export const FULL_MAINTENANCE = `If you modify files in this directory, update this .context.yaml to reflect
-your changes. Update the files list, interfaces, and current_state sections.
-Do NOT update the fingerprint manually — run \`context rehash\` or it will be
-updated automatically on the next \`context status\` check.
-If you only read files in this directory, do not modify this file.
-Do not include secrets, API keys, passwords, or PII in this file.`;
+export const FULL_MAINTENANCE =
+  "Read-only visit: don't modify this file. Changed code here? Update `summary`, `files`, `interfaces`, `current_state`; run `context rehash` (never edit `fingerprint`). No secrets.";

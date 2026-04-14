@@ -1,15 +1,10 @@
 version: 1
-last_updated: 2026-04-14T13:47:09.906Z
+last_updated: 2026-04-14T20:15:20.740Z
 fingerprint: cf4930a4
 scope: src/policy/evaluators
 summary: Source directory.
-maintenance: |-
-  If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the summary, and any decisions or constraints that changed.
-  Do NOT update the fingerprint manually — run `context rehash` or it will be
-  updated automatically on the next `context status` check.
-  If you only read files in this directory, do not modify this file.
-  Do not include secrets, API keys, passwords, or PII in this file.
+maintenance: "Read-only visit: don't modify this file. Changed code here? Update `summary`, `decisions`, `constraints`;
+  run `context rehash` (never edit `fingerprint`). No secrets."
 dependencies:
   internal:
     - ../glob.js

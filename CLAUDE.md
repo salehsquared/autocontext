@@ -1,4 +1,4 @@
-# AGENTS.md
+# CLAUDE.md
 
 > How to navigate this codebase. Read this before grepping or opening files —
 > autocontext (below) has the map.

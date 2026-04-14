@@ -8,7 +8,12 @@ import { createProvider, type ProviderName } from "../providers/index.js";
 import { loadConfig, saveConfig, resolveApiKey } from "../utils/config.js";
 import { loadScanOptions } from "../utils/scan-options.js";
 import { successMsg, errorMsg, warnMsg, progressBar, heading, dim } from "../utils/display.js";
-import { updateAgentsMd } from "../core/markdown-writer.js";
+import {
+  updateAgentsFiles,
+  resolveAgentsFormats,
+  parseAgentsFormats,
+  type AgentsUpdateResult,
+} from "../core/markdown-writer.js";
 import { ensureAutocontextGitignored } from "../core/gitignore.js";
 import { indexCommand } from "./index-cmd.js";
 import { poolMap } from "../utils/pool.js";
@@ -41,6 +46,17 @@ interface GenerationMetrics {
   generation_start_ms: number;
 }
 
+function reportAgentsResults(results: AgentsUpdateResult[]): void {
+  for (const r of results) {
+    if (r.action === "skipped") continue;
+    const verb =
+      r.action === "created" ? "created"
+      : r.action === "appended" ? "updated (section appended)"
+      : "updated (section refreshed)";
+    console.log(successMsg(`${r.path} ${verb}`));
+  }
+}
+
 function trackSummarySource(metrics: GenerationMetrics, source: SummarySource): void {
   if (source === "docstring") metrics.summary_from_docstring++;
   else if (source === "dirname") metrics.summary_from_dirname++;
@@ -70,7 +86,7 @@ function printMetrics(metrics: GenerationMetrics): void {
   console.log(dim(`    completed in ${elapsed}s`));
 }
 
-export async function initCommand(options: { noLlm?: boolean; path?: string; evidence?: boolean; noAgents?: boolean; parallel?: number; full?: boolean }): Promise<void> {
+export async function initCommand(options: { noLlm?: boolean; path?: string; evidence?: boolean; noAgents?: boolean; agentsFormat?: string; parallel?: number; full?: boolean }): Promise<void> {
   const rootPath = resolve(options.path ?? ".");
 
   console.log(heading("\nWelcome to context.\n"));
@@ -266,13 +282,14 @@ export async function initCommand(options: { noLlm?: boolean; path?: string; evi
     const projectName = rootContext?.project?.name ?? "this project";
 
     try {
-      const action = await updateAgentsMd(rootPath, entries, projectName);
-      if (action === "created") console.log(successMsg("AGENTS.md created"));
-      else if (action === "appended") console.log(successMsg("AGENTS.md updated (section appended)"));
-      else if (action === "replaced") console.log(successMsg("AGENTS.md updated (section refreshed)"));
+      const cliFormats = parseAgentsFormats(options.agentsFormat);
+      const configFormats = (resolvedConfig as ConfigFile | null | undefined)?.agents?.formats;
+      const formats = resolveAgentsFormats(rootPath, cliFormats, configFormats);
+      const results = await updateAgentsFiles(rootPath, entries, projectName, formats);
+      reportAgentsResults(results);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      console.log(warnMsg(`AGENTS.md: ${msg}`));
+      console.log(warnMsg(`agent instructions: ${msg}`));
     }
   }
 

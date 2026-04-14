@@ -1,42 +1,10 @@
 version: 1
-last_updated: 2026-04-14T05:57:17.774Z
-fingerprint: 11de4ac0
+last_updated: 2026-04-14T20:15:21.279Z
+fingerprint: 02ee5905
 scope: tests
 summary: Test suite.
-maintenance: |-
-  If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the summary, and any decisions or constraints that changed.
-  Do NOT update the fingerprint manually — run `context rehash` or it will be
-  updated automatically on the next `context status` check.
-  If you only read files in this directory, do not modify this file.
-  Do not include secrets, API keys, passwords, or PII in this file.
-subdirectories:
-  - name: bench/
-    summary: Test suite.
-  - name: commands/
-    summary: CLI command implementations.
-  - name: core/
-    summary: Core functionality.
-  - name: e2e/
-    summary: Source directory.
-  - name: fixtures/
-    summary: Test fixtures.
-  - name: generator/
-    summary: Code generation.
-  - name: index/
-    summary: Test suite.
-  - name: mcp/
-    summary: MCP server integration.
-  - name: utils/
-    summary: Utility functions.
-exports:
-  - "async function createTmpDir(): Promise<string>"
-  - "async function cleanupTmpDir(dir: string): Promise<void>"
-  - 'async function createFile(dirPath: string, name: string, content = ""): Promise<void>'
-  - 'async function createNestedFile(basePath: string, relativePath: string, content = ""): Promise<void>'
-  - "function makeValidContext(overrides?: Partial<ContextFile>): ContextFile"
-  - "function makeLeanContext(overrides?: Partial<ContextFile>): ContextFile"
-  - "function makeScanResult(path: string, overrides?: Partial<ScanResult>): ScanResult"
+maintenance: "Read-only visit: don't modify this file. Changed code here? Update `summary`, `decisions`, `constraints`;
+  run `context rehash` (never edit `fingerprint`). No secrets."
 dependencies:
   internal:
     - ../core/scanner.js
@@ -59,6 +27,51 @@ dependencies:
     - ../src/index/store.js
     - ../src/providers/index.js
     - ../src/utils/config.js
+subdirectories:
+  - name: bench/
+    summary: Test suite.
+  - name: cache/
+    summary: Test suite.
+  - name: commands/
+    summary: CLI command implementations.
+  - name: core/
+    summary: Core functionality.
+  - name: e2e/
+    summary: Source directory.
+  - name: fixtures/
+    summary: Test fixtures.
+  - name: generator/
+    summary: Code generation.
+  - name: helpers/
+    summary: Helper functions.
+  - name: impact/
+    summary: Test suite.
+  - name: index/
+    summary: Test suite.
+  - name: lib/
+    summary: Library modules.
+  - name: mcp/
+    summary: MCP server integration.
+  - name: pack/
+    summary: Test suite.
+  - name: policy/
+    summary: Test suite.
+  - name: utils/
+    summary: Utility functions.
+  - name: verify/
+    summary: Test suite.
+  - name: view/
+    summary: Test suite.
+testing:
+  - "Conventions: *.test / *.spec colocated"
+exports:
+  - "async function createTmpDir(): Promise<string>"
+  - "async function cleanupTmpDir(dir: string): Promise<void>"
+  - 'async function createFile(dirPath: string, name: string, content = ""): Promise<void>'
+  - 'async function createNestedFile(basePath: string, relativePath: string, content = ""): Promise<void>'
+  - "function makeValidContext(overrides?: Partial<ContextFile>): ContextFile"
+  - "function makeLeanContext(overrides?: Partial<ContextFile>): ContextFile"
+  - "function makeScanResult(path: string, overrides?: Partial<ScanResult>): ScanResult"
 imports:
   - path: ../core/scanner.js
     symbols:
@@ -163,3 +176,5 @@ derived_fields:
   - dependencies.internal
   - imports
   - subdirectories
+  - testing
+semantic_fingerprint: fa404eda9d02

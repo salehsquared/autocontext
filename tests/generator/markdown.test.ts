@@ -59,23 +59,35 @@ describe("generateAgentsMd", () => {
     expect(result).toContain("Project: my-project");
   });
 
-  it("includes How to Use section", () => {
+  it("includes the core action playbooks", () => {
     const result = generateAgentsMd("my-project", sampleEntries);
-    expect(result).toContain("### How to Use Context Files");
-    expect(result).toContain("Before exploring a directory");
+    expect(result).toContain("### Before an edit");
+    expect(result).toContain("### Before a commit");
+    expect(result).toContain("### Do not");
   });
 
-  it("includes Maintenance section", () => {
+  it("routes to both MCP and CLI paths", () => {
     const result = generateAgentsMd("my-project", sampleEntries);
-    expect(result).toContain("### Maintenance");
-    expect(result).toContain("Update `summary`");
+    expect(result).toContain("### Routing");
+    expect(result).toContain("list_contexts");
+    expect(result).toContain("context validate --policy");
   });
 
-  it("lists all directory entries in the table", () => {
-    const result = generateAgentsMd("my-project", sampleEntries);
+  it("shows only the root + first-level directories in the top-level map", () => {
+    const entries: AgentsEntry[] = [
+      { scope: ".", summary: "root" },
+      { scope: "src", summary: "source" },
+      { scope: "src/commands", summary: "CLI handlers" },
+      { scope: "src/core", summary: "Core" },
+      { scope: "tests", summary: "Tests" },
+    ];
+    const result = generateAgentsMd("my-project", entries);
     expect(result).toContain("`.` (root)");
-    expect(result).toContain("`src/commands`");
-    expect(result).toContain("`src/core`");
+    expect(result).toContain("`src`");
+    expect(result).toContain("`tests`");
+    // Nested scopes should NOT appear in the top-level map.
+    expect(result).not.toContain("`src/commands`");
+    expect(result).not.toContain("`src/core`");
   });
 
   it("handles single entry (root only)", () => {
@@ -112,12 +124,11 @@ describe("generateAgentsSection", () => {
   it("includes directory table", () => {
     const result = generateAgentsSection(sampleEntries);
     expect(result).toContain("| Directory | Summary |");
-    expect(result).toContain("src/core");
   });
 
   it("includes workflow instructions", () => {
     const result = generateAgentsSection(sampleEntries);
-    expect(result).toContain("Before exploring a directory");
+    expect(result).toContain("Before an edit");
     expect(result).toContain("context status");
   });
 });
@@ -189,7 +200,9 @@ describe("applyAgentsSection", () => {
     expect(result).toContain("After");
     expect(result).toContain(AGENTS_SECTION_START);
     expect(result).not.toContain("Old summary");
-    expect(result).toContain("Core scanning and fingerprinting");
+    // The new section's routing text is present (nested scope summaries
+    // are omitted from the top-level map by design).
+    expect(result).toContain("### Routing");
   });
 
   it("preserves user content before and after markers on replace", () => {
