@@ -14,6 +14,25 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) an
 
 ## [Unreleased]
 
+### Added — Library API (T11)
+
+- **`autocontext` is now consumable as a library.** `package.json` declares
+  `main`, `types`, `exports`, and `sideEffects: false`. `import "autocontext"`
+  resolves to the curated barrel at `dist/lib.js` — never to the CLI bin.
+- **`src/lib.ts` curated surface** — every export tagged `@stability stable` or
+  `@stability experimental`. Stable: `buildPack`, `formatPackJson`/`Markdown`,
+  `scanProject`, `flattenBottomUp`, `readContext`, `writeContext`,
+  `loadConfig`, `checkFreshness`, `legacyState`, `UnsupportedVersionError`,
+  schema constants + types. Experimental: `openIndex`, `computeImpact`,
+  `computeSemanticFingerprint`, `extractPolicyFacts`, `runPolicies` + types.
+- **`docs/library.md`** — full reference, stability tiers, what's intentionally
+  internal, module resolution.
+- **MCP compat snapshot** (`tests/mcp/compat.test.ts`) — pins the byte-identical
+  output shape of the four legacy MCP tools (`query_context`,
+  `check_freshness`, `list_contexts`, `aggregate_evidence`). 4-state freshness
+  stays exclusive to `explain_staleness`; legacy callers always see the
+  3-state enum.
+
 ### Added
 
 - **Local code index** (Track T1) — new on-disk code-intelligence index at

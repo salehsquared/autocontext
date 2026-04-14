@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T14:53:50.627Z
-fingerprint: 7fd364e6
+last_updated: 2026-04-14T15:05:10.930Z
+fingerprint: a3bb027d
 scope: src
 summary: Source code.
 maintenance: |-
@@ -70,11 +70,11 @@ exports:
   - "function createProgram(handlers: CommandHandlers = defaultHandlers): Command"
   - "async function runCli( argv: string[] = process.argv, handlers: CommandHandlers = defaultHandlers, ): Promise<void>"
   - buildPack
+  - formatPackJson
+  - formatPackMarkdown
   - Pack
   - PackOptions
   - PackScope
-  - formatPackJson
-  - formatPackMarkdown
   - scanProject
   - flattenBottomUp
   - ScanResult
@@ -163,4 +163,4 @@ derived_fields:
   - imports
   - subdirectories
   - data_models
-semantic_fingerprint: 53e410c93500
+semantic_fingerprint: 0a7b14f29dce
