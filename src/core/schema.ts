@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ruleSchema } from "../policy/rules.js";
 
 // --- Shared field schemas ---
 
@@ -127,7 +128,14 @@ export const contextSchema = z.object({
     .describe("Field paths that were machine-derived (high confidence)"),
   evidence: evidenceSchema.optional()
     .describe("Machine-collected code health evidence"),
+
+  // Typed policy rules (T4). Subtree-scoped: rules declared in this directory
+  // apply to every descendant directory. Evaluated by `context validate --policy`.
+  rules: z.array(ruleSchema).optional()
+    .describe("Typed policy rules enforced by `context validate --policy`"),
 }).strict();
+
+export { ruleSchema, type Rule } from "../policy/rules.js";
 
 // --- Config file schema (.context.config.yaml) ---
 

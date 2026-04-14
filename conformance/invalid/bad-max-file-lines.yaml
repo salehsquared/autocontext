@@ -1,0 +1,9 @@
+version: 1
+last_updated: "2026-04-13T10:00:00.000Z"
+fingerprint: "ab12cd34"
+scope: "."
+summary: "max_file_lines.value must be a positive integer"
+maintenance: "Keep updated"
+rules:
+  - kind: "max_file_lines"
+    value: -1

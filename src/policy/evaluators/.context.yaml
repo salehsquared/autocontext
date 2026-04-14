@@ -1,0 +1,90 @@
+version: 1
+last_updated: 2026-04-14T13:47:09.906Z
+fingerprint: cf4930a4
+scope: src/policy/evaluators
+summary: Source directory.
+maintenance: |-
+  If you modify files in this directory, update this .context.yaml to reflect
+  your changes. Update the summary, and any decisions or constraints that changed.
+  Do NOT update the fingerprint manually — run `context rehash` or it will be
+  updated automatically on the next `context status` check.
+  If you only read files in this directory, do not modify this file.
+  Do not include secrets, API keys, passwords, or PII in this file.
+dependencies:
+  internal:
+    - ../glob.js
+    - ../rules.js
+    - ../scope.js
+    - ../types.js
+    - ./dependency-boundary.js
+    - ./evidence-requires.js
+    - ./forbid-import.js
+    - ./max-file-lines.js
+    - ./require-export.js
+    - ./require-import.js
+    - ./require-test-file.js
+exports:
+  - "async function evaluateDependencyBoundary( input: RuleEvaluationInput, ): Promise<Violation[]>"
+  - "async function evaluateEvidenceRequires( input: RuleEvaluationInput, ): Promise<Violation[]>"
+  - "async function evaluateForbidImport( input: RuleEvaluationInput, ): Promise<Violation[]>"
+  - "function sortImportViolations(vs: Violation[]): Violation[]"
+  - "evaluators: Record<RuleKind, RuleEvaluator>"
+  - "async function evaluateMaxFileLines( input: RuleEvaluationInput, ): Promise<Violation[]>"
+  - "async function evaluateRequireExport( input: RuleEvaluationInput, ): Promise<Violation[]>"
+  - "async function evaluateRequireImport( input: RuleEvaluationInput, ): Promise<Violation[]>"
+  - "async function evaluateRequireTestFile( input: RuleEvaluationInput, ): Promise<Violation[]>"
+imports:
+  - path: ../glob.js
+    symbols:
+      - compileGlob
+      - matchGlob
+  - path: ../rules.js
+    symbols:
+      - DependencyBoundaryRule
+      - EvidenceRequiresRule
+      - ForbidImportRule
+      - MaxFileLinesRule
+      - RequireExportRule
+      - RequireImportRule
+      - RequireTestFileRule
+      - RuleKind
+  - path: ../scope.js
+    symbols:
+      - dirInScope
+      - fileInScope
+  - path: ../types.js
+    symbols:
+      - RuleEvaluationInput
+      - RuleEvaluator
+      - Violation
+  - path: ./dependency-boundary.js
+    symbols:
+      - evaluateDependencyBoundary
+  - path: ./evidence-requires.js
+    symbols:
+      - evaluateEvidenceRequires
+  - path: ./forbid-import.js
+    symbols:
+      - evaluateForbidImport
+      - sortImportViolations
+  - path: ./max-file-lines.js
+    symbols:
+      - evaluateMaxFileLines
+  - path: ./require-export.js
+    symbols:
+      - evaluateRequireExport
+  - path: ./require-import.js
+    symbols:
+      - evaluateRequireImport
+  - path: ./require-test-file.js
+    symbols:
+      - evaluateRequireTestFile
+derived_fields:
+  - version
+  - last_updated
+  - fingerprint
+  - scope
+  - exports
+  - dependencies.internal
+  - imports
+semantic_fingerprint: 32ffc733bdad

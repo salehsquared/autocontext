@@ -1,0 +1,5 @@
+{
+  "description": ".strict() rejects unknown fields inside a rule object",
+  "expected": "invalid",
+  "category": "policy"
+}

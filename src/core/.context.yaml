@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T06:25:55.711Z
-fingerprint: c83c9c15
+last_updated: 2026-04-14T13:47:09.801Z
+fingerprint: be54e08d
 scope: src/core
 summary: Core functionality.
 maintenance: |-
@@ -16,6 +16,7 @@ dependencies:
     - ../index/paths.js
     - ../index/store.js
     - ../index/types.js
+    - ../policy/rules.js
     - ../utils/config.js
     - ../utils/scan-options.js
     - ../utils/tokens.js
@@ -92,6 +93,10 @@ imports:
       - FileId
       - ImportEdge
       - IndexSymbol
+  - path: ../policy/rules.js
+    symbols:
+      - Rule
+      - ruleSchema
   - path: ../utils/config.js
     symbols:
       - loadConfig
@@ -134,4 +139,4 @@ derived_fields:
   - dependencies.internal
   - imports
   - data_models
-semantic_fingerprint: 624c4eae6d37
+semantic_fingerprint: 84c40368411c

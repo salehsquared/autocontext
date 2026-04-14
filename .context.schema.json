@@ -409,6 +409,279 @@
         "collected_at"
       ],
       "additionalProperties": false
+    },
+    "rules": {
+      "description": "Typed policy rules enforced by `context validate --policy`",
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "forbid_import"
+              },
+              "from": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                ],
+                "description": "Glob pattern, or non-empty array of patterns (leading '!' negates when inside an array)."
+              },
+              "to": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                ],
+                "description": "Glob pattern, or non-empty array of patterns (leading '!' negates when inside an array)."
+              },
+              "message": {
+                "description": "Human-readable override for the default violation message.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "from",
+              "to"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "require_import"
+              },
+              "from": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                ],
+                "description": "Glob pattern, or non-empty array of patterns (leading '!' negates when inside an array)."
+              },
+              "to": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                ],
+                "description": "Glob pattern, or non-empty array of patterns (leading '!' negates when inside an array)."
+              },
+              "message": {
+                "description": "Human-readable override for the default violation message.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "from",
+              "to"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "require_export"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "symbol_kind": {
+                "description": "Optional symbol-kind filter. Named `symbol_kind` (not `kind`) to avoid collision with the rule discriminator.",
+                "type": "string",
+                "enum": [
+                  "function",
+                  "class",
+                  "interface",
+                  "type",
+                  "constant",
+                  "enum"
+                ]
+              },
+              "message": {
+                "description": "Human-readable override for the default violation message.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "name"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "max_file_lines"
+              },
+              "value": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "exclude": {
+                "description": "Globs of files excluded from the limit (last-match-wins when negated).",
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "message": {
+                "description": "Human-readable override for the default violation message.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "require_test_file"
+              },
+              "for": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Glob of source files that require a test file."
+              },
+              "pattern": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Test file pattern. Supports {name} and {ext} placeholders. Example: '{name}.test.{ext}'."
+              },
+              "message": {
+                "description": "Human-readable override for the default violation message.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "for",
+              "pattern"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "dependency_boundary"
+              },
+              "from": {
+                "type": "string",
+                "minLength": 1
+              },
+              "allowed_to": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "message": {
+                "description": "Human-readable override for the default violation message.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "from",
+              "allowed_to"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "evidence_requires"
+              },
+              "test_status": {
+                "type": "string",
+                "const": "passing"
+              },
+              "typecheck": {
+                "type": "string",
+                "const": "clean"
+              },
+              "lint_status": {
+                "type": "string",
+                "const": "clean"
+              },
+              "coverage_min": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "message": {
+                "description": "Human-readable override for the default violation message.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      }
     }
   },
   "required": [

@@ -1,0 +1,32 @@
+version: 1
+last_updated: "2026-04-13T10:00:00.000Z"
+fingerprint: "ab12cd34"
+scope: "."
+summary: "Root context exercising multiple policy rule kinds"
+maintenance: "Keep updated"
+rules:
+  - kind: "forbid_import"
+    from: "src/server/**"
+    to:
+      - "src/client/**"
+      - "!src/client/types.ts"
+    message: "server code must not depend on browser code"
+  - kind: "require_export"
+    name: "buildPack"
+    symbol_kind: "function"
+  - kind: "max_file_lines"
+    value: 500
+    exclude:
+      - "**/*.generated.ts"
+  - kind: "require_test_file"
+    for: "src/**/*.ts"
+    pattern: "{name}.test.{ext}"
+  - kind: "dependency_boundary"
+    from: "src/policy/**"
+    allowed_to:
+      - "src/index/**"
+      - "src/core/**"
+  - kind: "evidence_requires"
+    test_status: "passing"
+    typecheck: "clean"
+    coverage_min: 80

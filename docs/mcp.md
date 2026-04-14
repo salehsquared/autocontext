@@ -1,6 +1,6 @@
 # MCP Contract
 
-autocontext exposes four tools via [Model Context Protocol](https://modelcontextprotocol.io) (stdio transport). This document defines their exact request/response shapes.
+autocontext exposes its tools via [Model Context Protocol](https://modelcontextprotocol.io) (stdio transport). This document defines their exact request/response shapes.
 
 ## Tools Overview
 
@@ -10,6 +10,9 @@ autocontext exposes four tools via [Model Context Protocol](https://modelcontext
 | `check_freshness` | Check if a specific context is fresh, stale, or missing | Before relying on a context — verify it's current |
 | `query_context` | Retrieve context content with optional field filtering | Read the actual context data for a scope |
 | `aggregate_evidence` | Aggregate code health evidence across all scopes | Get project-wide test, typecheck, lint, and coverage summary |
+| `explain_staleness` | 4-state freshness classification (fresh / cosmetic_stale / semantic_stale / missing) | Distinguish cosmetic edits from API-surface changes |
+| `build_context_pack` | Token-budgeted Markdown or JSON pack from query / file / symbol seed | Assemble a focused brief for an agent |
+| `check_policies` | Evaluate typed `rules:` blocks against the local code index | Enforce import boundaries, exports, max lines, evidence, etc. |
 
 **Recommended call sequences:**
 - Content: `list_contexts` → `check_freshness` → `query_context`

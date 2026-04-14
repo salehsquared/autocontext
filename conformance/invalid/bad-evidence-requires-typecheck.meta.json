@@ -1,0 +1,5 @@
+{
+  "description": "Codifies that evidence_requires.typecheck literal is 'clean', not 'passing'. Do not relax.",
+  "expected": "invalid",
+  "category": "policy"
+}

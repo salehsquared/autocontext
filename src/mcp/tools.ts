@@ -550,6 +550,51 @@ export function registerTools(server: McpServer, defaultRoot: string): void {
   );
 
   server.registerTool(
+    "check_policies",
+    {
+      title: "Check Policies",
+      description:
+        "Evaluate typed policy rules (forbid_import, require_import, require_export, " +
+        "max_file_lines, require_test_file, dependency_boundary, evidence_requires) " +
+        "against the local code index. Returns violations keyed by rule kind and scope. " +
+        "Requires the index — returns {ok: false, index_state: \"missing\"} otherwise.",
+      inputSchema: {
+        scope: z.string().optional().describe(
+          "Project-relative POSIX directory to limit evaluation to. Default: whole project.",
+        ),
+        rule_kinds: z
+          .array(
+            z.enum([
+              "forbid_import",
+              "require_import",
+              "require_export",
+              "max_file_lines",
+              "require_test_file",
+              "dependency_boundary",
+              "evidence_requires",
+            ]),
+          )
+          .optional()
+          .describe("Filter to only these rule kinds. Default: all kinds."),
+        path: z.string().optional().describe("Project root path override."),
+      },
+    },
+    async (input) => {
+      const { runPolicies } = await import("../policy/engine.js");
+      const projectRoot = resolve(input.path ?? defaultRoot);
+      const run = await runPolicies({
+        projectRoot,
+        scope: input.scope,
+        ruleKinds: input.rule_kinds,
+      });
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(run, null, 2) }],
+        isError: !run.ok,
+      };
+    },
+  );
+
+  server.registerTool(
     "aggregate_evidence",
     {
       title: "Aggregate Evidence",

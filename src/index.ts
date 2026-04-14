@@ -187,9 +187,16 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
     .command("validate")
     .description("Check all .context.yaml files for syntax and schema errors")
     .option("--strict", "Cross-reference declared fields against source code")
+    .option("--policy", "Evaluate typed rules: blocks against the local code index")
+    .option("--json", "Emit machine-readable JSON (suppresses human output)")
     .option("-p, --path <path>", "Project root path")
     .action(async (opts) => {
-      await handlers.validateCommand({ path: opts.path, strict: opts.strict });
+      await handlers.validateCommand({
+        path: opts.path,
+        strict: opts.strict,
+        policy: opts.policy,
+        json: opts.json,
+      });
     });
 
   program

@@ -1,0 +1,5 @@
+{
+  "description": "Context with the new rules: array, exercising multiple rule kinds (forbid_import, require_export, max_file_lines, require_test_file, dependency_boundary, evidence_requires)",
+  "expected": "valid",
+  "category": "policy"
+}

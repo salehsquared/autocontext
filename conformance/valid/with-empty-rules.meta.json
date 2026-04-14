@@ -1,0 +1,5 @@
+{
+  "description": "Zero-length rules: array parses successfully and evaluates as a no-op",
+  "expected": "valid",
+  "category": "policy"
+}

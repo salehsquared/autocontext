@@ -1,0 +1,5 @@
+{
+  "description": "Rules: discriminated union rejects unknown kinds",
+  "expected": "invalid",
+  "category": "policy"
+}
