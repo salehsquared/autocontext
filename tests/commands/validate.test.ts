@@ -376,4 +376,19 @@ describe("validateCommand", () => {
       expect(output).toContain("file cross-ref skipped");
     });
   });
+
+  describe("--policy mode", () => {
+    it("exits 2 when the index is missing", async () => {
+      await createFile(tmpDir, "index.ts", "export const x = 1;");
+      const fp = await computeFingerprint(tmpDir);
+      await writeContext(tmpDir, makeValidContext({ fingerprint: fp }));
+
+      await expect(
+        validateCommand({ path: tmpDir, policy: true }),
+      ).rejects.toThrow("process.exit");
+      expect(exitCode).toBe(2);
+      const output = logs.join("\n");
+      expect(output).toContain("index is missing or stale");
+    });
+  });
 });

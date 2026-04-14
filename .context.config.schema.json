@@ -46,6 +46,620 @@
       "type": "integer",
       "minimum": -9007199254740991,
       "maximum": 9007199254740991
+    },
+    "verify": {
+      "description": "Commands the `context verify` command runs to populate evidence",
+      "type": "object",
+      "properties": {
+        "test": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "command": {
+                  "type": "string",
+                  "description": "Shell command to execute"
+                },
+                "cwd": {
+                  "description": "Working directory relative to project root (defaults to resolved scope)",
+                  "type": "string"
+                },
+                "timeout_seconds": {
+                  "description": "Per-command timeout (default: 600)",
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "env": {
+                  "description": "Extra env vars merged into process.env",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "artifact": {
+                  "description": "Path to JSON/XML the runner produces; if absent, parser reads stdout",
+                  "type": "string"
+                },
+                "parser": {
+                  "description": "Override auto-detected parser",
+                  "type": "string",
+                  "enum": [
+                    "vitest-json",
+                    "jest-json",
+                    "junit-xml",
+                    "go-test-json",
+                    "tsc",
+                    "eslint-json",
+                    "istanbul-summary",
+                    "pytest-cov",
+                    "exit-code"
+                  ]
+                }
+              },
+              "required": [
+                "command"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "typecheck": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "command": {
+                  "type": "string",
+                  "description": "Shell command to execute"
+                },
+                "cwd": {
+                  "description": "Working directory relative to project root (defaults to resolved scope)",
+                  "type": "string"
+                },
+                "timeout_seconds": {
+                  "description": "Per-command timeout (default: 600)",
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "env": {
+                  "description": "Extra env vars merged into process.env",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "artifact": {
+                  "description": "Path to JSON/XML the runner produces; if absent, parser reads stdout",
+                  "type": "string"
+                },
+                "parser": {
+                  "description": "Override auto-detected parser",
+                  "type": "string",
+                  "enum": [
+                    "vitest-json",
+                    "jest-json",
+                    "junit-xml",
+                    "go-test-json",
+                    "tsc",
+                    "eslint-json",
+                    "istanbul-summary",
+                    "pytest-cov",
+                    "exit-code"
+                  ]
+                }
+              },
+              "required": [
+                "command"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "lint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "command": {
+                  "type": "string",
+                  "description": "Shell command to execute"
+                },
+                "cwd": {
+                  "description": "Working directory relative to project root (defaults to resolved scope)",
+                  "type": "string"
+                },
+                "timeout_seconds": {
+                  "description": "Per-command timeout (default: 600)",
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "env": {
+                  "description": "Extra env vars merged into process.env",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "artifact": {
+                  "description": "Path to JSON/XML the runner produces; if absent, parser reads stdout",
+                  "type": "string"
+                },
+                "parser": {
+                  "description": "Override auto-detected parser",
+                  "type": "string",
+                  "enum": [
+                    "vitest-json",
+                    "jest-json",
+                    "junit-xml",
+                    "go-test-json",
+                    "tsc",
+                    "eslint-json",
+                    "istanbul-summary",
+                    "pytest-cov",
+                    "exit-code"
+                  ]
+                }
+              },
+              "required": [
+                "command"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "build": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "command": {
+                  "type": "string",
+                  "description": "Shell command to execute"
+                },
+                "cwd": {
+                  "description": "Working directory relative to project root (defaults to resolved scope)",
+                  "type": "string"
+                },
+                "timeout_seconds": {
+                  "description": "Per-command timeout (default: 600)",
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "env": {
+                  "description": "Extra env vars merged into process.env",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "artifact": {
+                  "description": "Path to JSON/XML the runner produces; if absent, parser reads stdout",
+                  "type": "string"
+                },
+                "parser": {
+                  "description": "Override auto-detected parser",
+                  "type": "string",
+                  "enum": [
+                    "vitest-json",
+                    "jest-json",
+                    "junit-xml",
+                    "go-test-json",
+                    "tsc",
+                    "eslint-json",
+                    "istanbul-summary",
+                    "pytest-cov",
+                    "exit-code"
+                  ]
+                }
+              },
+              "required": [
+                "command"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "coverage": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "command": {
+                  "type": "string",
+                  "description": "Shell command to execute"
+                },
+                "cwd": {
+                  "description": "Working directory relative to project root (defaults to resolved scope)",
+                  "type": "string"
+                },
+                "timeout_seconds": {
+                  "description": "Per-command timeout (default: 600)",
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "env": {
+                  "description": "Extra env vars merged into process.env",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "artifact": {
+                  "description": "Path to JSON/XML the runner produces; if absent, parser reads stdout",
+                  "type": "string"
+                },
+                "parser": {
+                  "description": "Override auto-detected parser",
+                  "type": "string",
+                  "enum": [
+                    "vitest-json",
+                    "jest-json",
+                    "junit-xml",
+                    "go-test-json",
+                    "tsc",
+                    "eslint-json",
+                    "istanbul-summary",
+                    "pytest-cov",
+                    "exit-code"
+                  ]
+                }
+              },
+              "required": [
+                "command"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "default_timeout_seconds": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "scope_overrides": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "test": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "command": {
+                        "type": "string",
+                        "description": "Shell command to execute"
+                      },
+                      "cwd": {
+                        "description": "Working directory relative to project root (defaults to resolved scope)",
+                        "type": "string"
+                      },
+                      "timeout_seconds": {
+                        "description": "Per-command timeout (default: 600)",
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "env": {
+                        "description": "Extra env vars merged into process.env",
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "type": "string"
+                        }
+                      },
+                      "artifact": {
+                        "description": "Path to JSON/XML the runner produces; if absent, parser reads stdout",
+                        "type": "string"
+                      },
+                      "parser": {
+                        "description": "Override auto-detected parser",
+                        "type": "string",
+                        "enum": [
+                          "vitest-json",
+                          "jest-json",
+                          "junit-xml",
+                          "go-test-json",
+                          "tsc",
+                          "eslint-json",
+                          "istanbul-summary",
+                          "pytest-cov",
+                          "exit-code"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "command"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "typecheck": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "command": {
+                        "type": "string",
+                        "description": "Shell command to execute"
+                      },
+                      "cwd": {
+                        "description": "Working directory relative to project root (defaults to resolved scope)",
+                        "type": "string"
+                      },
+                      "timeout_seconds": {
+                        "description": "Per-command timeout (default: 600)",
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "env": {
+                        "description": "Extra env vars merged into process.env",
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "type": "string"
+                        }
+                      },
+                      "artifact": {
+                        "description": "Path to JSON/XML the runner produces; if absent, parser reads stdout",
+                        "type": "string"
+                      },
+                      "parser": {
+                        "description": "Override auto-detected parser",
+                        "type": "string",
+                        "enum": [
+                          "vitest-json",
+                          "jest-json",
+                          "junit-xml",
+                          "go-test-json",
+                          "tsc",
+                          "eslint-json",
+                          "istanbul-summary",
+                          "pytest-cov",
+                          "exit-code"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "command"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "lint": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "command": {
+                        "type": "string",
+                        "description": "Shell command to execute"
+                      },
+                      "cwd": {
+                        "description": "Working directory relative to project root (defaults to resolved scope)",
+                        "type": "string"
+                      },
+                      "timeout_seconds": {
+                        "description": "Per-command timeout (default: 600)",
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "env": {
+                        "description": "Extra env vars merged into process.env",
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "type": "string"
+                        }
+                      },
+                      "artifact": {
+                        "description": "Path to JSON/XML the runner produces; if absent, parser reads stdout",
+                        "type": "string"
+                      },
+                      "parser": {
+                        "description": "Override auto-detected parser",
+                        "type": "string",
+                        "enum": [
+                          "vitest-json",
+                          "jest-json",
+                          "junit-xml",
+                          "go-test-json",
+                          "tsc",
+                          "eslint-json",
+                          "istanbul-summary",
+                          "pytest-cov",
+                          "exit-code"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "command"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "build": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "command": {
+                        "type": "string",
+                        "description": "Shell command to execute"
+                      },
+                      "cwd": {
+                        "description": "Working directory relative to project root (defaults to resolved scope)",
+                        "type": "string"
+                      },
+                      "timeout_seconds": {
+                        "description": "Per-command timeout (default: 600)",
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "env": {
+                        "description": "Extra env vars merged into process.env",
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "type": "string"
+                        }
+                      },
+                      "artifact": {
+                        "description": "Path to JSON/XML the runner produces; if absent, parser reads stdout",
+                        "type": "string"
+                      },
+                      "parser": {
+                        "description": "Override auto-detected parser",
+                        "type": "string",
+                        "enum": [
+                          "vitest-json",
+                          "jest-json",
+                          "junit-xml",
+                          "go-test-json",
+                          "tsc",
+                          "eslint-json",
+                          "istanbul-summary",
+                          "pytest-cov",
+                          "exit-code"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "command"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "coverage": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "command": {
+                        "type": "string",
+                        "description": "Shell command to execute"
+                      },
+                      "cwd": {
+                        "description": "Working directory relative to project root (defaults to resolved scope)",
+                        "type": "string"
+                      },
+                      "timeout_seconds": {
+                        "description": "Per-command timeout (default: 600)",
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "env": {
+                        "description": "Extra env vars merged into process.env",
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "type": "string"
+                        }
+                      },
+                      "artifact": {
+                        "description": "Path to JSON/XML the runner produces; if absent, parser reads stdout",
+                        "type": "string"
+                      },
+                      "parser": {
+                        "description": "Override auto-detected parser",
+                        "type": "string",
+                        "enum": [
+                          "vitest-json",
+                          "jest-json",
+                          "junit-xml",
+                          "go-test-json",
+                          "tsc",
+                          "eslint-json",
+                          "istanbul-summary",
+                          "pytest-cov",
+                          "exit-code"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "command"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
     }
   },
   "required": [

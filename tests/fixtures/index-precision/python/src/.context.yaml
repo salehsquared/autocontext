@@ -1,0 +1,27 @@
+version: 1
+last_updated: 2026-04-14T01:58:41.470Z
+fingerprint: 70b2eb7d
+scope: tests/fixtures/index-precision/python/src
+summary: Source code.
+maintenance: |-
+  If you modify files in this directory, update this .context.yaml to reflect
+  your changes. Update the summary, and any decisions or constraints that changed.
+  Do NOT update the fingerprint manually — run `context rehash` or it will be
+  updated automatically on the next `context status` check.
+  If you only read files in this directory, do not modify this file.
+  Do not include secrets, API keys, passwords, or PII in this file.
+exports:
+  - def run() -> int
+  - def outer() -> int
+  - def shadowed() -> int
+  - def origin() -> Point
+  - "def add(a: int, b: int) -> int"
+  - "def multiply(a: int, b: int) -> int"
+  - class Point
+  - "def capitalize(s: str) -> str"
+derived_fields:
+  - version
+  - last_updated
+  - fingerprint
+  - scope
+  - exports

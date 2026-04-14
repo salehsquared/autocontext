@@ -1,48 +1,15 @@
 version: 1
-last_updated: 2026-02-20T16:42:18.903Z
-fingerprint: 3820c953
+last_updated: 2026-04-14T05:57:17.737Z
+fingerprint: adf71ce7
 scope: tests/commands
 summary: CLI command implementations.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the files list, interfaces, and current_state sections.
+  your changes. Update the summary, and any decisions or constraints that changed.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-files:
-  - name: bench.test.ts
-    purpose: Test file
-  - name: config.test.ts
-    purpose: Test file
-  - name: doctor.test.ts
-    purpose: Test file
-  - name: health.test.ts
-    purpose: Test file
-  - name: ignore.test.ts
-    purpose: Test file
-  - name: init-llm.test.ts
-    purpose: Test file
-  - name: init.test.ts
-    purpose: Test file
-  - name: regen-provider.test.ts
-    purpose: Test file
-  - name: regen.test.ts
-    purpose: Test file
-  - name: rehash.test.ts
-    purpose: Test file
-  - name: show.test.ts
-    purpose: Test file
-  - name: stats.test.ts
-    purpose: Test file
-  - name: status.test.ts
-    purpose: Test file
-  - name: validate.test.ts
-    purpose: Test file
-  - name: watch-command.test.ts
-    purpose: Test file
-  - name: watch.test.ts
-    purpose: Test file
 dependencies:
   internal:
     - ../../src/bench/types.js
@@ -138,73 +105,10 @@ imports:
       - createTmpDir
       - makeLeanContext
       - makeValidContext
-internals:
-  - name: loadConfigMock
-    kind: constant
-    file: bench.test.ts
-  - name: resolveApiKeyMock
-    kind: constant
-    file: bench.test.ts
-  - name: loadScanOptionsMock
-    kind: constant
-    file: bench.test.ts
-  - name: createProviderMock
-    kind: constant
-    file: bench.test.ts
-  - name: scanProjectMock
-    kind: constant
-    file: bench.test.ts
-  - name: flattenBottomUpMock
-    kind: constant
-    file: bench.test.ts
-  - name: readContextMock
-    kind: constant
-    file: bench.test.ts
-  - name: checkFreshnessMock
-    kind: constant
-    file: bench.test.ts
-  - name: buildDepSetsMock
-    kind: constant
-    file: bench.test.ts
-  - name: buildReverseDepsMock
-    kind: constant
-    file: bench.test.ts
-  - name: buildDirFactsMock
-    kind: constant
-    file: bench.test.ts
-  - name: isGitRepoMock
-    kind: constant
-    file: bench.test.ts
-  - name: getFixCommitsMock
-    kind: constant
-    file: bench.test.ts
-  - name: getFeatureCommitsMock
-    kind: constant
-    file: bench.test.ts
-  - name: generateTasksMock
-    kind: constant
-    file: bench.test.ts
-  - name: runBenchMock
-    kind: constant
-    file: bench.test.ts
-  - name: aggregateResultsMock
-    kind: constant
-    file: bench.test.ts
-  - name: aggregateMultiRepoMock
-    kind: constant
-    file: bench.test.ts
-  - name: cleanupReposMock
-    kind: constant
-    file: bench.test.ts
-  - name: cloneRepoMock
-    kind: constant
-    file: bench.test.ts
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
-  - files
   - dependencies.internal
   - imports
-  - internals

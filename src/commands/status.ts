@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
 import { scanProject, flattenBottomUp } from "../core/scanner.js";
 import { readContext, UnsupportedVersionError } from "../core/writer.js";
-import { checkFreshness, type FreshnessState } from "../core/fingerprint.js";
+import { checkFreshness, legacyState, type FreshnessState } from "../core/fingerprint.js";
 import { freshnessIcon, heading, dim, warnMsg } from "../utils/display.js";
 import { loadScanOptions } from "../utils/scan-options.js";
 import { loadConfig } from "../utils/config.js";
@@ -54,7 +54,7 @@ export async function statusCommand(options: { path?: string; json?: boolean }):
         fingerprint: context.fingerprint,
         summary: context.summary,
       });
-      if (state === "stale") {
+      if (legacyState(state) === "stale") {
         staleCount++;
         stalePaths.push(dir.relativePath);
         issues++;
@@ -76,10 +76,16 @@ export async function statusCommand(options: { path?: string; json?: boolean }):
   entries.sort((a, b) => a.scope.localeCompare(b.scope));
 
   if (options.json) {
-    // JSON mode: emit ONLY the JSON object to stdout. No headings, colors, or extra logs.
+    // JSON mode: emit the pre-T2 three-state shape by default — consumers
+    // that parse `state === "stale"` must keep working. `freshness_breakdown`
+    // carries the 4-state counts for opt-in consumers.
+    const legacyEntries = entries.map((e) => ({
+      ...e,
+      state: legacyState(e.state),
+    }));
     process.stdout.write(JSON.stringify({
       root: rootPath,
-      directories: entries,
+      directories: legacyEntries,
       summary: {
         total: dirs.length,
         tracked,
@@ -97,9 +103,9 @@ export async function statusCommand(options: { path?: string; json?: boolean }):
 
   for (const entry of entries) {
     const label = entry.scope === "." ? "(root)" : entry.scope;
-    console.log(`  ${freshnessIcon(entry.state === "missing" ? "missing" : entry.state)}  ${label}`);
+    console.log(`  ${freshnessIcon(entry.state)}  ${label}`);
 
-    if (entry.state === "stale") {
+    if (legacyState(entry.state) === "stale") {
       console.log(`               (files changed since last update)`);
     }
   }

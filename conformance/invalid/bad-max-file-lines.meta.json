@@ -1,0 +1,5 @@
+{
+  "description": "Negative max_file_lines.value rejected by .positive()",
+  "expected": "invalid",
+  "category": "policy"
+}

@@ -3,6 +3,10 @@
  * Each provider adapts a specific LLM SDK to this common interface.
  */
 export interface LLMProvider {
+  /** Human-readable provider identifier (matches ProviderName). */
+  readonly name: string;
+  /** Model id actually in use (resolved default if the caller didn't pick one). */
+  readonly model: string;
   /** Generate a response from the LLM */
   generate(systemPrompt: string, userPrompt: string): Promise<string>;
 }

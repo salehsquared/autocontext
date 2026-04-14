@@ -1,0 +1,5 @@
+{
+  "description": "Invalid: semantic_fingerprint is 16 hex chars, not 12 — violates the /^[0-9a-f]{12}$/ regex",
+  "expected": "invalid",
+  "category": "semantic-fingerprint"
+}

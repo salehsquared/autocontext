@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ruleSchema } from "../policy/rules.js";
 
 // --- Shared field schemas ---
 
@@ -88,6 +89,11 @@ export const contextSchema = z.object({
   version: z.literal(SCHEMA_VERSION).describe("Schema version (must be 1)"),
   last_updated: z.string().describe("ISO 8601 timestamp"),
   fingerprint: z.string().describe("Short hash of directory contents"),
+  semantic_fingerprint: z
+    .string()
+    .regex(/^[0-9a-f]{12}$/)
+    .optional()
+    .describe("Semantic fingerprint (12-hex sha256) over exported API, imports, and policy facts"),
   scope: z.string().describe("Relative path from project root"),
   summary: z.string().describe("1-3 sentence description of this directory"),
   files: z.array(fileEntrySchema).optional().describe("Files in this directory"),
@@ -122,6 +128,54 @@ export const contextSchema = z.object({
     .describe("Field paths that were machine-derived (high confidence)"),
   evidence: evidenceSchema.optional()
     .describe("Machine-collected code health evidence"),
+
+  // Typed policy rules (T4). Subtree-scoped: rules declared in this directory
+  // apply to every descendant directory. Evaluated by `context validate --policy`.
+  rules: z.array(ruleSchema).optional()
+    .describe("Typed policy rules enforced by `context validate --policy`"),
+}).strict();
+
+export { ruleSchema, type Rule } from "../policy/rules.js";
+
+// --- verify: block (T9) ---
+
+const verifyCommandObjectSchema = z.object({
+  command: z.string().describe("Shell command to execute"),
+  cwd: z.string().optional().describe("Working directory relative to project root (defaults to resolved scope)"),
+  timeout_seconds: z.number().int().positive().optional().describe("Per-command timeout (default: 600)"),
+  env: z.record(z.string(), z.string()).optional().describe("Extra env vars merged into process.env"),
+  artifact: z.string().optional().describe("Path to JSON/XML the runner produces; if absent, parser reads stdout"),
+  parser: z.enum([
+    "vitest-json",
+    "jest-json",
+    "junit-xml",
+    "go-test-json",
+    "tsc",
+    "eslint-json",
+    "istanbul-summary",
+    "pytest-cov",
+    "exit-code",
+  ]).optional().describe("Override auto-detected parser"),
+}).strict();
+
+const verifyCommandSchema = z.union([z.string(), verifyCommandObjectSchema]);
+
+const verifyScopeOverrideSchema = z.object({
+  test: verifyCommandSchema.optional(),
+  typecheck: verifyCommandSchema.optional(),
+  lint: verifyCommandSchema.optional(),
+  build: verifyCommandSchema.optional(),
+  coverage: verifyCommandSchema.optional(),
+}).strict();
+
+const verifyBlockSchema = z.object({
+  test: verifyCommandSchema.optional(),
+  typecheck: verifyCommandSchema.optional(),
+  lint: verifyCommandSchema.optional(),
+  build: verifyCommandSchema.optional(),
+  coverage: verifyCommandSchema.optional(),
+  default_timeout_seconds: z.number().int().positive().optional(),
+  scope_overrides: z.record(z.string(), verifyScopeOverrideSchema).optional(),
 }).strict();
 
 // --- Config file schema (.context.config.yaml) ---
@@ -135,7 +189,13 @@ export const configSchema = z.object({
   mode: z.enum(["lean", "full"]).optional().describe("Default generation mode (lean omits files/interfaces)"),
   min_tokens: z.number().int().optional()
     .describe("Minimum estimated tokens for a directory to get a .context.yaml (default: 4096)"),
+  verify: verifyBlockSchema.optional()
+    .describe("Commands the `context verify` command runs to populate evidence"),
 });
+
+export type VerifyCommand = z.infer<typeof verifyCommandSchema>;
+export type VerifyBlock = z.infer<typeof verifyBlockSchema>;
+export type VerifyKind = "test" | "typecheck" | "lint" | "build" | "coverage";
 
 // --- Types ---
 

@@ -137,3 +137,16 @@ When reading evidence from `.context.yaml`:
 3. Use `test_tool` / `typecheck_tool` / `lint_tool` for provenance — know which tool produced the data
 4. `typecheck: "unknown"` and `lint_status: "unknown"` mean the artifact exists but is stale (sources changed since)
 5. Evidence is always in `derived_fields` — it is machine-collected ground truth (when fresh)
+
+## Active verification (`context verify`)
+
+`context verify` closes the read-only loop: it runs your own test/typecheck/lint/coverage commands, normalizes the output to the enums in this document, and writes the result back into the `evidence:` block of the appropriate `.context.yaml` files. See [docs/verify.md](verify.md) for config, security model, parsers, CI example, and exit codes.
+
+### Sidecar (rejected for v1)
+
+The roadmap previously considered writing verify's output to a separate `.context.evidence.yaml` sidecar file. Rejected, for the record:
+
+- **Single source of truth.** Every existing reader (`context health`, `doctor`, `aggregate_evidence` MCP tool, `check_policies`) already expects inline `evidence:`. A sidecar doubles every read path.
+- **Atomicity.** Inline evidence updates in the same YAML write as `last_updated`. A sidecar can diverge.
+- **Discoverability.** Users grep `.context.yaml` for "did the tests pass?". A sidecar is invisible.
+- **Schema surface.** No new schema, no new validation, no version bump.

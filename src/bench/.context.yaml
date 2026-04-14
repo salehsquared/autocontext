@@ -2,7 +2,17 @@ version: 1
 last_updated: 2026-02-20T16:42:18.559Z
 fingerprint: 43b0dffa
 scope: src/bench
-summary: Source directory.
+summary: Benchmark harness — five comparator arms (baseline / context / pack / pack+impact / pack+policy), index-grounded ground-truth, and BenchProvenance pinning.
+decisions:
+  - what: "Bench provenance pinned in every report (seed, index_version, schema_version, autocontext_git_sha, etc.)"
+    why: "Reproducibility. A bench number without provenance is an anecdote. Same provenance tuple → byte-identical JSON modulo timestamp/latency_ms."
+  - what: "Ground truth synthesized from T1 index + T2 impact only — never hand-labelled, never LLM-generated"
+    why: "Hand labels drift; LLM labels can hallucinate. Index ground truth is exactly what the index can verify, which is the ceiling we're benchmarking against."
+  - what: "Five-arm matrix is additive — baseline/context/delta stay byte-compatible with 0.1.x consumers"
+    why: "Existing bench dashboards parse the legacy fields. New arms/matrix/arm_deltas live alongside them; removal would be breaking."
+constraints:
+  - "Pack arms hard-fail on missing index. Silent fallback to context would make regressions invisible."
+  - "compare-bench.mjs refuses to compare reports with diverging schema_version or question_template_version. Bumping either forces a baseline refresh."
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
   your changes. Update the files list, interfaces, and current_state sections.

@@ -124,15 +124,16 @@ describe("checkFreshness", () => {
     expect(result.state).toBe("fresh");
   });
 
-  it("returns 'stale' when fingerprints differ", async () => {
+  it("returns 'cosmetic_stale' on legacy yaml (no stored semantic fp) when fingerprints differ", async () => {
     await createFile(tmpDir, "a.ts", "code");
     const oldFingerprint = await computeFingerprint(tmpDir);
 
     await new Promise((r) => setTimeout(r, 50));
     await createFile(tmpDir, "a.ts", "modified code with different size");
 
+    // No storedSemanticFingerprint option → legacy path → cosmetic_stale, not semantic_stale.
     const result = await checkFreshness(tmpDir, oldFingerprint);
-    expect(result.state).toBe("stale");
+    expect(result.state).toBe("cosmetic_stale");
   });
 
   it("returns 'missing' when storedFingerprint is undefined", async () => {

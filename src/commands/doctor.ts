@@ -1,8 +1,9 @@
 import { resolve, join } from "node:path";
 import { readFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { parse } from "yaml";
 import { scanProject, flattenBottomUp } from "../core/scanner.js";
-import { checkFreshness } from "../core/fingerprint.js";
+import { checkFreshness, legacyState } from "../core/fingerprint.js";
 import { contextSchema, CONTEXT_FILENAME, type ContextFile } from "../core/schema.js";
 import { loadConfig, resolveApiKey, getDefaultApiKeyEnv } from "../utils/config.js";
 import { loadScanOptions } from "../utils/scan-options.js";
@@ -10,6 +11,10 @@ import { filterByMinTokens } from "../utils/tokens.js";
 import { successMsg, warnMsg, errorMsg } from "../utils/display.js";
 import { readAgentsMd } from "../core/markdown-writer.js";
 import { AGENTS_SECTION_START } from "../generator/markdown.js";
+import { hasAutocontextEntry } from "../core/gitignore.js";
+import { manifestPath } from "../index/paths.js";
+import { INDEX_VERSION } from "../index/version.js";
+import type { IndexManifest } from "../index/types.js";
 
 interface CheckResult {
   name: string;
@@ -118,7 +123,7 @@ export async function doctorCommand(options: { path?: string; json?: boolean }):
   for (const { dir, result } of dirResults) {
     if ("ctx" in result) {
       const { state } = await checkFreshness(dir.path, result.ctx.fingerprint);
-      if (state === "stale") staleCount++;
+      if (legacyState(state) === "stale") staleCount++;
     }
   }
 
@@ -158,7 +163,70 @@ export async function doctorCommand(options: { path?: string; json?: boolean }):
     });
   }
 
-  // 6. AGENTS.md check
+  // 6. .gitignore check for .autocontext/
+  const gitignorePath = join(rootPath, ".gitignore");
+  if (existsSync(gitignorePath)) {
+    const giContent = await readFile(gitignorePath, "utf8");
+    if (hasAutocontextEntry(giContent)) {
+      checks.push({
+        name: "gitignore",
+        status: "pass",
+        message: ".autocontext/ is gitignored",
+      });
+    } else {
+      checks.push({
+        name: "gitignore",
+        status: "warn",
+        message: ".autocontext/ is not in .gitignore",
+        fix: "context init",
+      });
+    }
+  } else {
+    checks.push({
+      name: "gitignore",
+      status: "warn",
+      message: "No .gitignore found (repo may not be a git project)",
+    });
+  }
+
+  // 7. Index check — manifest present & at current INDEX_VERSION
+  const mPath = manifestPath(rootPath);
+  if (existsSync(mPath)) {
+    try {
+      const raw = await readFile(mPath, "utf8");
+      const manifest = JSON.parse(raw) as IndexManifest;
+      if (manifest.index_version === INDEX_VERSION) {
+        checks.push({
+          name: "index",
+          status: "pass",
+          message: `.autocontext/index/ at version ${manifest.index_version} (${manifest.file_count} files)`,
+        });
+      } else {
+        checks.push({
+          name: "index",
+          status: "warn",
+          message: `index version ${manifest.index_version} differs from tool version ${INDEX_VERSION}`,
+          fix: "context index --rebuild",
+        });
+      }
+    } catch {
+      checks.push({
+        name: "index",
+        status: "warn",
+        message: "index manifest is unreadable",
+        fix: "context index --rebuild",
+      });
+    }
+  } else {
+    checks.push({
+      name: "index",
+      status: "warn",
+      message: "No code index found",
+      fix: "context index",
+    });
+  }
+
+  // 8. AGENTS.md check
   const agentsMd = await readAgentsMd(rootPath);
   if (agentsMd !== null) {
     if (agentsMd.includes(AGENTS_SECTION_START)) {
@@ -182,6 +250,25 @@ export async function doctorCommand(options: { path?: string; json?: boolean }):
       message: "No AGENTS.md found",
       fix: "context init",
     });
+  }
+
+  // verify: security advisory — warn when configured but first-run marker is absent
+  if (config?.verify) {
+    const markerExists = existsSync(join(rootPath, ".autocontext/verify.first-run"));
+    if (!markerExists) {
+      checks.push({
+        name: "verify_config",
+        status: "warn",
+        message: "verify: is configured but has never been run on this checkout",
+        fix: "Review commands in .context.config.yaml, then run `context verify --dry-run`",
+      });
+    } else {
+      checks.push({
+        name: "verify_config",
+        status: "pass",
+        message: "verify: is configured and has been acknowledged",
+      });
+    }
   }
 
   // Compute summary

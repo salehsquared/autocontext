@@ -1,0 +1,7 @@
+version: 1
+last_updated: "2026-04-13T10:00:00.000Z"
+fingerprint: "ab12cd34"
+scope: "."
+summary: "Context with an empty rules array (no-op at evaluation time)"
+maintenance: "Keep updated"
+rules: []

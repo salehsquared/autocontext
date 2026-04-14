@@ -1,35 +1,23 @@
 version: 1
-last_updated: 2026-02-20T16:42:18.736Z
-fingerprint: edd7ae84
+last_updated: 2026-04-14T02:54:00.266Z
+fingerprint: 203146a6
 scope: src/generator
 summary: Code generation.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the files list, interfaces, and current_state sections.
+  your changes. Update the summary, and any decisions or constraints that changed.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-files:
-  - name: ast.ts
-    purpose: "Exports: detectExportsAST, detectExportSignaturesAST, TopLevelDecl (+2 more)"
-  - name: dependencies.ts
-    purpose: "Exports: detectExternalDeps, detectInternalDeps"
-  - name: evidence.ts
-    purpose: "Exports: collectBasicEvidence, resolveGitHeadSha, getNewestFileMtimeMs"
-  - name: imports.ts
-    purpose: "Exports: detectImportBindings"
-  - name: internals.ts
-    purpose: "Exports: detectInternals"
-  - name: llm.ts
-    purpose: "Exports: generateLLMContext"
-  - name: markdown.ts
-    purpose: "Exports: AGENTS_SECTION_START, AGENTS_SECTION_END, AgentsEntry (+5 more)"
-  - name: prompts.ts
-    purpose: "Exports: SYSTEM_PROMPT, LEAN_SYSTEM_PROMPT, buildUserPrompt"
-  - name: static.ts
-    purpose: "Exports: SummarySource, StaticContextResult, generateStaticContext (+4 more)"
 exports:
+  - "ALL_DECL_CONFIGS: Record<string, AllDeclsConfig>"
+  - "function getGrammarsDir(): string"
+  - "async function loadTreeSitter(): Promise<boolean>"
+  - 'async function getParser(): Promise<InstanceType<typeof import("web-tree-sitter").Parser>>'
+  - 'async function getLanguage(wasmFile: string): Promise<InstanceType<typeof import("web-tree-sitter").Language>>'
+  - 'function getQuery(lang: InstanceType<typeof import("web-tree-sitter").Language>, queryStr: string):
+    InstanceType<typeof import("web-tree-sitter").Query>'
   - "async function detectExportsAST( content: string, ext: string, ): Promise<string[] | null>"
   - "async function detectExportSignaturesAST( content: string, ext: string, ): Promise<"
   - interface TopLevelDecl
@@ -50,45 +38,6 @@ exports:
   - "function escapeSummary(text: string): string"
   - "function generateAgentsSection(entries: AgentsEntry[]): string"
   - "function generateAgentsMd( projectName: string, entries: AgentsEntry[], ): string"
-  - 'function detectAgentsAction( existingContent: string | null, newSection: string, ): "create" | "append" | "replace"
-    | "skip"'
-  - 'function applyAgentsSection( existingContent: string, newSection: string, action: "append" | "replace", ): string'
-  - SYSTEM_PROMPT
-  - LEAN_SYSTEM_PROMPT
-  - 'function buildUserPrompt( scanResult: ScanResult, fileContents: Map<string, string>, childContexts: Map<string,
-    ContextFile>, isRoot: boolean, externalDeps?: string[], mode: "lean" | "full" = "lean", ): string'
-  - type SummarySource
-interfaces:
-  - name: detectExportsAST
-    description: Exported from ast.ts
-  - name: detectExportSignaturesAST
-    description: Exported from ast.ts
-  - name: TopLevelDecl
-    description: Exported from ast.ts
-  - name: detectAllTopLevelAST
-    description: Exported from ast.ts
-  - name: isTreeSitterAvailable
-    description: Exported from ast.ts
-  - name: detectExternalDeps
-    description: Exported from dependencies.ts
-  - name: detectInternalDeps
-    description: Exported from dependencies.ts
-  - name: collectBasicEvidence
-    description: Exported from evidence.ts
-  - name: resolveGitHeadSha
-    description: Exported from evidence.ts
-  - name: getNewestFileMtimeMs
-    description: Exported from evidence.ts
-  - name: detectImportBindings
-    description: Exported from imports.ts
-  - name: detectInternals
-    description: Exported from internals.ts
-  - name: generateLLMContext
-    description: Exported from llm.ts
-  - name: AGENTS_SECTION_START
-    description: Exported from markdown.ts
-  - name: AGENTS_SECTION_END
-    description: Exported from markdown.ts
 dependencies:
   internal:
     - ../core/fingerprint.js
@@ -151,75 +100,11 @@ imports:
     symbols:
       - detectExportsWithFallback
       - extractOneSignature
-internals:
-  - name: LanguageConfig
-    kind: interface
-    file: ast.ts
-  - name: LANGUAGE_CONFIGS
-    kind: constant
-    file: ast.ts
-  - name: AllDeclsConfig
-    kind: interface
-    file: ast.ts
-  - name: ALL_DECL_CONFIGS
-    kind: constant
-    file: ast.ts
-  - name: languageCache
-    kind: constant
-    file: ast.ts
-  - name: queryCache
-    kind: constant
-    file: ast.ts
-  - name: getGrammarsDir
-    kind: function
-    file: ast.ts
-  - name: loadTreeSitter
-    kind: function
-    file: ast.ts
-  - name: getParser
-    kind: function
-    file: ast.ts
-  - name: getLanguage
-    kind: function
-    file: ast.ts
-  - name: getQuery
-    kind: function
-    file: ast.ts
-  - name: extractSignatureFromNode
-    kind: function
-    file: ast.ts
-  - name: cleanFunctionSignature
-    kind: function
-    file: ast.ts
-  - name: escapeRegex
-    kind: function
-    file: ast.ts
-  - name: stripDepsComments
-    kind: function
-    file: dependencies.ts
-  - name: collectVitestResults
-    kind: function
-    file: evidence.ts
-  - name: collectJsonTestResults
-    kind: function
-    file: evidence.ts
-  - name: parseTestJson
-    kind: function
-    file: evidence.ts
-  - name: collectJunitResults
-    kind: function
-    file: evidence.ts
-  - name: collectTypecheckEvidence
-    kind: function
-    file: evidence.ts
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
-  - files
-  - interfaces
   - exports
   - dependencies.internal
   - imports
-  - internals

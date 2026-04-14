@@ -1,4 +1,8 @@
 import type { ContextFile } from "../core/schema.js";
+import type { Pack } from "../pack/types.js";
+import type { ImpactReport } from "../impact/impact.js";
+import type { Violation } from "../policy/types.js";
+import { formatPackMarkdown } from "../pack/format.js";
 
 export const BENCH_SYSTEM_PROMPT = `You are an AI assistant helping a developer understand and work with a codebase.
 Answer questions precisely based ONLY on the information provided.
@@ -81,6 +85,74 @@ export function buildContextPrompt(
 
   prompt += `\nBased on this project documentation, answer the following question:\n${question}`;
   return prompt;
+}
+
+/**
+ * Pack arm — feed the model the ranked pack output as documentation.
+ * Uses markdown format with section delimiters so the model sees the
+ * same shape T3 produces for real integrations.
+ */
+export function buildPackPrompt(
+  pack: Pack,
+  question: string,
+  sourceScope?: string,
+): string {
+  const scopeLine = sourceScope ? ` centered on \`${sourceScope}/\`` : "";
+  const packMd = formatPackMarkdown(pack);
+  return `Here is a retrieval-ranked project pack${scopeLine}:\n\n${packMd}\n\nBased on this pack, answer the following question:\n${question}`;
+}
+
+/**
+ * Pack + impact arm — pack bodies plus the T2 impact-set summary.
+ */
+export function buildPackImpactPrompt(
+  pack: Pack,
+  impact: ImpactReport | null,
+  question: string,
+  sourceScope?: string,
+): string {
+  const base = buildPackPrompt(pack, question, sourceScope);
+  if (!impact) return base;
+  const lines: string[] = [];
+  lines.push("\n## Impact set (T2 — import-bound references only)");
+  lines.push(impact.caveat);
+  if (impact.seeds.length > 0) {
+    lines.push(`\nSeeds: ${impact.seeds.map((s) => s.symbol ? `${s.file}#${s.symbol}` : s.file).join(", ")}`);
+  }
+  if (impact.affected_scopes.length > 0) {
+    lines.push("\nAffected scopes:");
+    for (const s of impact.affected_scopes.slice(0, 20)) {
+      lines.push(`  - ${s.scope} (hops ${s.min_hops}, ${s.file_count} file${s.file_count === 1 ? "" : "s"})`);
+    }
+    if (impact.affected_scopes.length > 20) {
+      lines.push(`  … ${impact.affected_scopes.length - 20} more`);
+    }
+  }
+  return `${base}\n\n${lines.join("\n")}`;
+}
+
+/**
+ * Pack + policy arm — pack bodies plus the T4 violations whose scope
+ * overlaps the pack's admitted scopes.
+ */
+export function buildPackPolicyPrompt(
+  pack: Pack,
+  violations: Violation[],
+  question: string,
+  sourceScope?: string,
+): string {
+  const base = buildPackPrompt(pack, question, sourceScope);
+  if (violations.length === 0) return base;
+  const lines: string[] = [];
+  lines.push("\n## Policy violations (T4)");
+  for (const v of violations.slice(0, 30)) {
+    const loc = v.file ? (v.line ? `${v.file}:${v.line}` : v.file) : v.scope;
+    lines.push(`  - [${v.rule_kind}] ${v.message} (${loc})`);
+  }
+  if (violations.length > 30) {
+    lines.push(`  … ${violations.length - 30} more`);
+  }
+  return `${base}\n\n${lines.join("\n")}`;
 }
 
 export function buildJudgePrompt(

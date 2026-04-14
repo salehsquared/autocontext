@@ -1,20 +1,28 @@
 version: 1
-last_updated: 2026-02-20T16:42:18.797Z
-fingerprint: 4b928199
+last_updated: 2026-04-14T05:57:17.723Z
+fingerprint: 9578b386
 scope: src/mcp
-summary: MCP server integration.
+summary: MCP server (stdio transport) + 12 tools grouped by intent (discover / read / navigate / analyze / assemble). Capability resource at autocontext://capabilities.
+decisions:
+  - what: "All four v1 MCP tools preserve their output contracts byte-for-byte"
+    why: "Existing MCP clients (Claude Code, Cursor, Windsurf) parse the current shapes. The compat snapshot in tests/mcp/compat.test.ts guards this across releases."
+  - what: "New navigation tools hard-fail on INDEX_MISSING instead of auto-rebuilding"
+    why: "An MCP call that takes >30s to rebuild the index is indistinguishable from a hang to most clients. Agents surface the remediation to the user."
+  - what: "find_references returns import-bound references only"
+    why: "Pinned reference_kind: \"import_bound\" + caveat string on every response. A zero result is not proof of zero callers — this honesty beats silent inaccuracy."
+  - what: "10 KB serialized response ceiling on nav tools via binary-search truncation"
+    why: "Large responses are both expensive and usually noisy. Forces agents to narrow via scope/limit."
+constraints:
+  - "Breaking changes to query_context / check_freshness / list_contexts / aggregate_evidence require a tools_version bump and are guarded by tests/mcp/compat.test.ts."
+  - "find_references response metadata must always include reference_kind: \"import_bound\" and the pinned caveat string."
+  - "No MCP handler ever rebuilds the index, runs the LLM, or shells out to user commands."
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the files list, interfaces, and current_state sections.
+  your changes. Update the summary, and any decisions or constraints that changed.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-files:
-  - name: server.ts
-    purpose: "Exports: startMcpServer"
-  - name: tools.ts
-    purpose: "Exports: QueryContextInput, QueryContextResult, CheckFreshnessInput (+9 more)"
 exports:
   - "async function startMcpServer(rootPath: string): Promise<void>"
   - interface QueryContextInput
@@ -30,19 +38,6 @@ exports:
   - "async function handleListContexts( input: ListContextsInput, defaultRoot: string, ): Promise<ListContextsResult>"
   - "async function handleAggregateEvidence( input:"
   - "function registerTools(server: McpServer, defaultRoot: string): void"
-interfaces:
-  - name: startMcpServer
-    description: Exported from server.ts
-  - name: QueryContextInput
-    description: Exported from tools.ts
-  - name: QueryContextResult
-    description: Exported from tools.ts
-  - name: CheckFreshnessInput
-    description: Exported from tools.ts
-  - name: CheckFreshnessResult
-    description: Exported from tools.ts
-  - name: ListContextsInput
-    description: Exported from tools.ts
 dependencies:
   internal:
     - ../core/fingerprint.js
@@ -58,8 +53,10 @@ imports:
   - path: ../core/fingerprint.js
     symbols:
       - FreshnessState
+      - LegacyFreshnessState
       - checkFreshness
       - computeFingerprint
+      - legacyState
   - path: ../core/health.js
     symbols:
       - AggregateEvidenceResult
@@ -88,27 +85,11 @@ imports:
   - path: ./tools.js
     symbols:
       - registerTools
-internals:
-  - name: FILTERABLE_FIELDS
-    kind: constant
-    file: tools.ts
-  - name: METADATA_FIELDS
-    kind: constant
-    file: tools.ts
-  - name: resolveAndValidate
-    kind: function
-    file: tools.ts
-  - name: contextFileExists
-    kind: function
-    file: tools.ts
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
-  - files
-  - interfaces
   - exports
   - dependencies.internal
   - imports
-  - internals

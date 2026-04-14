@@ -1,0 +1,10 @@
+version: 1
+last_updated: "2026-04-13T00:00:00.000Z"
+fingerprint: "abc12345"
+semantic_fingerprint: "0123456789ab"
+scope: "src/core"
+summary: "Valid context carrying both fingerprints (disk + semantic)"
+files:
+  - name: "index.ts"
+    purpose: "Entry point"
+maintenance: "Keep updated"

@@ -6,7 +6,19 @@ import type { ScanResult } from "../core/scanner.js";
 import type { ContextFile } from "../core/schema.js";
 import { SCHEMA_VERSION, DEFAULT_MAINTENANCE, FULL_MAINTENANCE, contextSchema } from "../core/schema.js";
 import { computeFingerprint } from "../core/fingerprint.js";
-import { SYSTEM_PROMPT, LEAN_SYSTEM_PROMPT, buildUserPrompt } from "./prompts.js";
+import {
+  SYSTEM_PROMPT,
+  LEAN_SYSTEM_PROMPT,
+  buildUserPrompt,
+  PROMPT_TEMPLATE_VERSION,
+} from "./prompts.js";
+import {
+  cacheGet,
+  cachePut,
+  isCacheEnabled,
+} from "../cache/cache-store.js";
+import { computeCacheKey, sha256Hex } from "../cache/key.js";
+import { CACHE_VERSION } from "../cache/types.js";
 import { detectExternalDeps, detectInternalDeps } from "./dependencies.js";
 import { detectImportBindings } from "./imports.js";
 import { detectInternals } from "./internals.js";
@@ -22,7 +34,14 @@ export async function generateLLMContext(
   provider: LLMProvider,
   scanResult: ScanResult,
   childContexts: Map<string, ContextFile>,
-  options?: { evidence?: boolean; mode?: "lean" | "full" },
+  options?: {
+    evidence?: boolean;
+    mode?: "lean" | "full";
+    /** Project root — enables the LLM response cache when provided. */
+    projectRoot?: string;
+    /** Explicit opt-out; defaults to `true` unless AUTOCONTEXT_CACHE=0. */
+    cacheEnabled?: boolean;
+  },
 ): Promise<ContextFile> {
   const mode = options?.mode ?? "lean";
   const isFull = mode === "full";
@@ -42,9 +61,53 @@ export async function generateLLMContext(
   const preDetectedDeps = isFull ? await detectExternalDeps(scanResult.path) : [];
   const userPrompt = buildUserPrompt(scanResult, fileContents, childContexts, isRoot, preDetectedDeps, mode);
 
-  // Call LLM
+  // Call LLM (with optional deterministic cache).
   const systemPrompt = isFull ? SYSTEM_PROMPT : LEAN_SYSTEM_PROMPT;
-  const rawResponse = await provider.generate(systemPrompt, userPrompt);
+  const fingerprint = await computeFingerprint(scanResult.path);
+
+  const cacheOn =
+    (options?.cacheEnabled ?? true) && isCacheEnabled() && !!options?.projectRoot;
+  let cacheKey: string | null = null;
+  if (cacheOn && options?.projectRoot) {
+    cacheKey = computeCacheKey({
+      cache_version: CACHE_VERSION,
+      schema_version: SCHEMA_VERSION,
+      prompt_template_ver: PROMPT_TEMPLATE_VERSION,
+      provider: provider.name,
+      model: provider.model,
+      mode,
+      system_prompt_sha: sha256Hex(systemPrompt),
+      user_prompt_sha: sha256Hex(userPrompt),
+      input_fingerprint: fingerprint,
+      scope: scanResult.relativePath,
+    });
+  }
+
+  let rawResponse: string | null = null;
+  if (cacheKey && options?.projectRoot) {
+    const hit = await cacheGet(options.projectRoot, cacheKey);
+    if (hit) rawResponse = hit.response;
+  }
+  if (rawResponse === null) {
+    rawResponse = await provider.generate(systemPrompt, userPrompt);
+    if (cacheKey && options?.projectRoot) {
+      await cachePut(options.projectRoot, {
+        key: cacheKey,
+        created_at: new Date().toISOString(),
+        meta: {
+          cache_version: CACHE_VERSION,
+          schema_version: SCHEMA_VERSION,
+          prompt_template_ver: PROMPT_TEMPLATE_VERSION,
+          provider: provider.name,
+          model: provider.model,
+          mode,
+          scope: scanResult.relativePath,
+          input_fingerprint: fingerprint,
+        },
+        response: rawResponse,
+      });
+    }
+  }
 
   // Strip markdown fences if present
   const yamlStr = rawResponse
@@ -54,7 +117,6 @@ export async function generateLLMContext(
 
   // Parse and merge with required fields
   const llmOutput = parse(yamlStr) as Record<string, unknown>;
-  const fingerprint = await computeFingerprint(scanResult.path);
 
   const context: ContextFile = {
     version: SCHEMA_VERSION,
@@ -144,6 +206,33 @@ export async function generateLLMContext(
     }
   }
 
+  // Overlay lightweight T5-A extractors — static extraction is authoritative
+  // for these fields, so any LLM output is overwritten.
+  const { extractEnvironment } = await import("./extractors/environment.js");
+  const { extractTesting } = await import("./extractors/testing.js");
+  const { extractTodos } = await import("./extractors/todos.js");
+  const { extractConfig } = await import("./extractors/config.js");
+  const { extractDataModels } = await import("./extractors/data-models.js");
+  const { extractEvents } = await import("./extractors/events.js");
+  const envVars = await extractEnvironment(scanResult);
+  if (envVars.length > 0) context.environment = envVars;
+  else delete context.environment;
+  const testingEntries = await extractTesting(scanResult);
+  if (testingEntries.length > 0) context.testing = testingEntries;
+  else delete context.testing;
+  const todoEntries = await extractTodos(scanResult);
+  if (todoEntries.length > 0) context.todos = todoEntries;
+  else delete context.todos;
+  const configEntries = await extractConfig(scanResult);
+  if (configEntries.length > 0) context.config = configEntries;
+  else delete context.config;
+  const dataModels = await extractDataModels(scanResult);
+  if (dataModels.length > 0) context.data_models = dataModels;
+  else delete context.data_models;
+  const eventsEntries = await extractEvents(scanResult);
+  if (eventsEntries.length > 0) context.events = eventsEntries;
+  else delete context.events;
+
   // Collect evidence (per-directory, opt-in)
   if (options?.evidence) {
     // Compute newest source file mtime for staleness comparison
@@ -172,6 +261,12 @@ export async function generateLLMContext(
   if (context.subdirectories) derivedFields.push("subdirectories");
   if (context.project) derivedFields.push("project");
   if (context.evidence) derivedFields.push("evidence");
+  if (context.environment) derivedFields.push("environment");
+  if (context.testing) derivedFields.push("testing");
+  if (context.todos) derivedFields.push("todos");
+  if (context.config) derivedFields.push("config");
+  if (context.data_models) derivedFields.push("data_models");
+  if (context.events) derivedFields.push("events");
   context.derived_fields = derivedFields;
 
   // Validate against schema — if it fails, fall back to a minimal valid context

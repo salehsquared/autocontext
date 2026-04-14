@@ -1,0 +1,95 @@
+version: 1
+last_updated: 2026-04-14T17:38:35.683Z
+fingerprint: e145231f
+scope: tests/policy
+summary: Test suite.
+maintenance: |-
+  If you modify files in this directory, update this .context.yaml to reflect
+  your changes. Update the summary, and any decisions or constraints that changed.
+  Do NOT update the fingerprint manually — run `context rehash` or it will be
+  updated automatically on the next `context status` check.
+  If you only read files in this directory, do not modify this file.
+  Do not include secrets, API keys, passwords, or PII in this file.
+dependencies:
+  internal:
+    - ../../src/core/schema.js
+    - ../../src/core/writer.js
+    - ../../src/index/types.js
+    - ../../src/policy/engine.js
+    - ../../src/policy/evaluators/dependency-boundary.js
+    - ../../src/policy/evaluators/evidence-requires.js
+    - ../../src/policy/evaluators/forbid-import.js
+    - ../../src/policy/evaluators/max-file-lines.js
+    - ../../src/policy/evaluators/require-export.js
+    - ../../src/policy/evaluators/require-import.js
+    - ../../src/policy/evaluators/require-test-file.js
+    - ../../src/policy/glob.js
+    - ../../src/policy/rules.js
+    - ../../src/policy/types.js
+    - ../helpers.js
+    - ../helpers/memory-index-store.js
+testing:
+  - "Conventions: *.test / *.spec colocated"
+imports:
+  - path: ../../src/core/schema.js
+    symbols:
+      - ContextFile
+  - path: ../../src/core/writer.js
+    symbols:
+      - writeConfig
+      - writeContext
+  - path: ../../src/index/types.js
+    symbols:
+      - IndexSymbol
+  - path: ../../src/policy/engine.js
+    symbols:
+      - runPolicies
+  - path: ../../src/policy/evaluators/dependency-boundary.js
+    symbols:
+      - evaluateDependencyBoundary
+  - path: ../../src/policy/evaluators/evidence-requires.js
+    symbols:
+      - evaluateEvidenceRequires
+  - path: ../../src/policy/evaluators/forbid-import.js
+    symbols:
+      - evaluateForbidImport
+  - path: ../../src/policy/evaluators/max-file-lines.js
+    symbols:
+      - evaluateMaxFileLines
+  - path: ../../src/policy/evaluators/require-export.js
+    symbols:
+      - evaluateRequireExport
+  - path: ../../src/policy/evaluators/require-import.js
+    symbols:
+      - evaluateRequireImport
+  - path: ../../src/policy/evaluators/require-test-file.js
+    symbols:
+      - evaluateRequireTestFile
+  - path: ../../src/policy/glob.js
+    symbols:
+      - compileGlob
+      - matchGlob
+  - path: ../../src/policy/rules.js
+    symbols:
+      - ruleSchema
+  - path: ../../src/policy/types.js
+    symbols:
+      - EvalContext
+  - path: ../helpers.js
+    symbols:
+      - cleanupTmpDir
+      - createNestedFile
+      - createTmpDir
+      - makeValidContext
+  - path: ../helpers/memory-index-store.js
+    symbols:
+      - createMemoryIndexStore
+derived_fields:
+  - version
+  - last_updated
+  - fingerprint
+  - scope
+  - dependencies.internal
+  - imports
+  - testing
+semantic_fingerprint: 1dc0aed9fa5e

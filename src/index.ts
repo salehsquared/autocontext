@@ -17,8 +17,18 @@ import { doctorCommand } from "./commands/doctor.js";
 import { statsCommand } from "./commands/stats.js";
 import { healthCommand } from "./commands/health.js";
 import { benchCommand } from "./commands/bench.js";
+import { indexCommand } from "./commands/index-cmd.js";
+import { impactCommand } from "./commands/impact.js";
+import { cacheClearCommand, cacheStatsCommand } from "./commands/cache.js";
+import { diffCommand } from "./commands/diff.js";
+import { timelineCommand } from "./commands/timeline.js";
+import { hotspotsCommand } from "./commands/hotspots.js";
+import { packCommand } from "./commands/pack.js";
+import { verifyCommand } from "./commands/verify.js";
+import { viewCommand } from "./commands/view.js";
 import { startMcpServer } from "./mcp/server.js";
 import { loadEnvForCli } from "./utils/env.js";
+import { AUTOCONTEXT_VERSION } from "./version.js";
 import { errorMsg } from "./utils/display.js";
 
 export interface CommandHandlers {
@@ -35,6 +45,16 @@ export interface CommandHandlers {
   statsCommand: typeof statsCommand;
   healthCommand: typeof healthCommand;
   benchCommand: typeof benchCommand;
+  indexCommand: typeof indexCommand;
+  impactCommand: typeof impactCommand;
+  cacheStatsCommand: typeof cacheStatsCommand;
+  cacheClearCommand: typeof cacheClearCommand;
+  diffCommand: typeof diffCommand;
+  timelineCommand: typeof timelineCommand;
+  hotspotsCommand: typeof hotspotsCommand;
+  packCommand: typeof packCommand;
+  verifyCommand: typeof verifyCommand;
+  viewCommand: typeof viewCommand;
   startMcpServer: typeof startMcpServer;
 }
 
@@ -52,6 +72,16 @@ const defaultHandlers: CommandHandlers = {
   statsCommand,
   healthCommand,
   benchCommand,
+  indexCommand,
+  impactCommand,
+  cacheStatsCommand,
+  cacheClearCommand,
+  diffCommand,
+  timelineCommand,
+  hotspotsCommand,
+  packCommand,
+  verifyCommand,
+  viewCommand,
   startMcpServer,
 };
 
@@ -81,7 +111,7 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
   program
     .name("context")
     .description("Folder-level documentation for LLMs — .context.yaml files for every directory")
-    .version("0.1.0");
+    .version(AUTOCONTEXT_VERSION);
 
   program
     .command("init")
@@ -126,6 +156,7 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
     .option("--evidence", "Collect test/typecheck evidence from existing artifacts")
     .option("--no-agents", "Skip AGENTS.md generation")
     .option("--stale", "Only regenerate stale or missing contexts")
+    .option("--semantic-stale", "Like --stale, but skip cosmetic-only drift (requires index)")
     .option("--dry-run", "Preview what would be regenerated without changes")
     .option("--full", "Generate verbose context (files, interfaces, dependencies)")
     .option("--parallel <n>", "Process directories in parallel (n = concurrency)", parseInt)
@@ -144,6 +175,7 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
         evidence: opts.evidence,
         noAgents: opts.agents === false,
         stale: opts.stale,
+        semanticStale: opts.semanticStale,
         dryRun: opts.dryRun,
         parallel: opts.parallel,
         full: opts.full,
@@ -162,9 +194,16 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
     .command("validate")
     .description("Check all .context.yaml files for syntax and schema errors")
     .option("--strict", "Cross-reference declared fields against source code")
+    .option("--policy", "Evaluate typed rules: blocks against the local code index")
+    .option("--json", "Emit machine-readable JSON (suppresses human output)")
     .option("-p, --path <path>", "Project root path")
     .action(async (opts) => {
-      await handlers.validateCommand({ path: opts.path, strict: opts.strict });
+      await handlers.validateCommand({
+        path: opts.path,
+        strict: opts.strict,
+        policy: opts.policy,
+        json: opts.json,
+      });
     });
 
   program
@@ -244,6 +283,8 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
     .command("bench")
     .description("Benchmark whether .context.yaml files improve LLM accuracy")
     .option("--json", "Output machine-readable JSON")
+    .option("--arm <csv>", "Comma-separated arms: baseline,context,pack,pack+impact,pack+policy")
+    .option("--pack-budget <n>", "Token budget for pack arms", parseInt)
     .option("--iterations <n>", "Repeat each task N times", parseInt)
     .option("--tasks <path>", "Path to manual tasks YAML file")
     .option("--max-tasks <n>", "Maximum tasks to generate", parseInt)
@@ -258,6 +299,8 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
       await handlers.benchCommand({
         path: opts.path,
         json: opts.json,
+        arm: opts.arm,
+        packBudget: opts.packBudget,
         iterations: opts.iterations,
         tasks: opts.tasks,
         maxTasks: opts.maxTasks,
@@ -267,6 +310,155 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
         allowStale: opts.allowStale,
         repo: opts.repo,
         defaultRepos: opts.defaultRepos,
+      });
+    });
+
+  program
+    .command("index")
+    .description("Build or refresh the local code index under .autocontext/index/")
+    .option("--rebuild", "Wipe .autocontext/index/ and build from scratch")
+    .option("-p, --path <path>", "Project root path")
+    .action(async (opts) => {
+      await handlers.indexCommand({ rebuild: opts.rebuild, path: opts.path });
+    });
+
+  const cacheCmd = program
+    .command("cache")
+    .description("Manage the deterministic LLM response cache");
+  cacheCmd
+    .command("stats")
+    .description("Show cache status + size")
+    .option("--json", "Output machine-readable JSON")
+    .option("-p, --path <path>", "Project root path")
+    .action(async (opts) => {
+      await handlers.cacheStatsCommand({ path: opts.path, json: opts.json });
+    });
+  cacheCmd
+    .command("clear")
+    .description("Remove every cached LLM response from .autocontext/llm-cache/")
+    .option("-p, --path <path>", "Project root path")
+    .action(async (opts) => {
+      await handlers.cacheClearCommand({ path: opts.path });
+    });
+
+  program
+    .command("diff <range>")
+    .description("Diff meaningful .context.yaml fields between two git revisions (e.g. main..feature)")
+    .option("--scope <path>", "Restrict to a single scope")
+    .option("--json", "Output machine-readable JSON")
+    .option("-p, --path <path>", "Project root path")
+    .action(async (range, opts) => {
+      await handlers.diffCommand(range, { path: opts.path, scope: opts.scope, json: opts.json });
+    });
+
+  program
+    .command("timeline [target]")
+    .description("Show git history of a scope's .context.yaml")
+    .option("--max <n>", "Maximum number of commits (default 50)", parseInt)
+    .option("--json", "Output machine-readable JSON")
+    .option("-p, --path <path>", "Project root path")
+    .action(async (target, opts) => {
+      await handlers.timelineCommand(target, {
+        path: opts.path,
+        max: opts.max,
+        json: opts.json,
+      });
+    });
+
+  program
+    .command("hotspots")
+    .description("Rank scopes by context churn (semantic fingerprint changes, or raw commits)")
+    .option("--max <n>", "Maximum rows (default 20)", parseInt)
+    .option("--raw-count", "Force raw commit count metric even if semantic fingerprints are present")
+    .option("--json", "Output machine-readable JSON")
+    .option("-p, --path <path>", "Project root path")
+    .action(async (opts) => {
+      await handlers.hotspotsCommand({
+        path: opts.path,
+        max: opts.max,
+        rawCount: opts.rawCount,
+        json: opts.json,
+      });
+    });
+
+  program
+    .command("pack")
+    .description("Build a token-budgeted context pack for an agent prompt")
+    .option("--query <text>", "Free-text query seed")
+    .option("--file <path>", "File path seed — pack the scope that owns this file")
+    .option("--symbol <name>", "Symbol-name seed — pack scopes exporting this name")
+    .option("--budget <n>", "Target token budget (default 4000)", parseInt)
+    .option("--format <fmt>", "md | json (default: md on TTY, json otherwise)")
+    .option("--out <path>", "Write output to file instead of stdout")
+    .option("-p, --path <path>", "Project root path")
+    .action(async (opts) => {
+      await handlers.packCommand({
+        path: opts.path,
+        query: opts.query,
+        file: opts.file,
+        symbol: opts.symbol,
+        budget: opts.budget,
+        format: opts.format,
+        out: opts.out,
+      });
+    });
+
+  program
+    .command("impact <target>")
+    .description("List directories affected by changes to a file or symbol")
+    .option("--json", "Output machine-readable JSON")
+    .option("--max-depth <n>", "Maximum BFS hops (default 3)", parseInt)
+    .option("--max <n>", "Maximum affected files (default 100)", parseInt)
+    .option("-p, --path <path>", "Project root path")
+    .action(async (target, opts) => {
+      await handlers.impactCommand(target, {
+        path: opts.path,
+        json: opts.json,
+        maxDepth: opts.maxDepth,
+        max: opts.max,
+      });
+    });
+
+  program
+    .command("verify [scope]")
+    .description("Run configured test/typecheck/lint/coverage commands and write evidence back into .context.yaml")
+    .option("--only <kinds>", "Comma-separated subset: test,typecheck,lint,coverage,build")
+    .option("--timeout <s>", "Override per-command timeout (seconds)")
+    .option("--merge", "Merge new evidence over old instead of replacing")
+    .option("--strict", "Treat any unknown status as a non-zero exit")
+    .option("--dry-run", "Print the resolved plan; do not run or write")
+    .option("-y, --yes", "Skip the first-run confirmation prompt")
+    .option("--json", "Emit VerifyRunReport JSON to stdout")
+    .option("-p, --path <path>", "Project root path")
+    .action(async (scope, opts) => {
+      await handlers.verifyCommand({
+        path: opts.path,
+        scope,
+        only: opts.only,
+        timeout: opts.timeout,
+        merge: opts.merge,
+        strict: opts.strict,
+        dryRun: opts.dryRun,
+        yes: opts.yes,
+        json: opts.json,
+      });
+    });
+
+  program
+    .command("view")
+    .description("Generate a self-contained HTML report of this project's .context.yaml + index + policy state")
+    .option("--out <path>", "Output file (default: context-report.html)")
+    .option("--open", "Open the generated file in the default browser")
+    .option("--no-graph", "Omit the dependency graph view")
+    .option("--no-source", "Omit source excerpts, signatures, and raw YAML (smaller file)")
+    .option("-p, --path <path>", "Project root path")
+    .action(async (opts) => {
+      await handlers.viewCommand({
+        path: opts.path,
+        out: opts.out,
+        open: opts.open,
+        noGraph: opts.graph === false,
+        noSource: opts.source === false,
       });
     });
 

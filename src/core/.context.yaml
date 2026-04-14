@@ -1,96 +1,94 @@
 version: 1
-last_updated: 2026-02-20T16:42:18.697Z
-fingerprint: 0cf12d18
+last_updated: 2026-04-14T17:38:35.538Z
+fingerprint: 41f5a7ca
 scope: src/core
 summary: Core functionality.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the files list, interfaces, and current_state sections.
+  your changes. Update the summary, and any decisions or constraints that changed.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-files:
-  - name: fingerprint.ts
-    purpose: "Exports: computeFingerprint, FreshnessState, checkFreshness"
-  - name: health.ts
-    purpose: "Exports: HealthSummary, EvidenceEntry, AggregateEvidenceResult (+1 more)"
-  - name: markdown-writer.ts
-    purpose: "Exports: AGENTS_FILENAME, readAgentsMd, writeAgentsMd (+1 more)"
-  - name: scanner.ts
-    purpose: "Exports: ScanResult, ScanOptions, scanProject (+2 more)"
-  - name: schema.ts
-    purpose: "Exports: SCHEMA_VERSION, contextSchema, configSchema (+15 more)"
-  - name: writer.ts
-    purpose: "Exports: UnsupportedVersionError, writeContext, readContext (+2 more)"
-exports:
-  - "async function computeFingerprint(dirPath: string, ignorePatterns: string[] = []): Promise<string>"
-  - type FreshnessState
-  - "async function checkFreshness( dirPath: string, storedFingerprint: string | undefined, ignorePatterns: string[] =
-    [], ): Promise<"
-  - interface HealthSummary
-  - interface EvidenceEntry
-  - interface AggregateEvidenceResult
-  - "async function aggregateEvidence(rootPath: string): Promise<AggregateEvidenceResult>"
-  - AGENTS_FILENAME
-  - "async function readAgentsMd(rootPath: string): Promise<string | null>"
-  - "async function writeAgentsMd(rootPath: string, content: string): Promise<void>"
-  - 'async function updateAgentsMd( rootPath: string, entries: AgentsEntry[], projectName: string, ): Promise<"created"
-    | "appended" | "replaced" | "skipped">'
-  - interface ScanResult
-  - interface ScanOptions
-  - "async function scanProject( rootPath: string, options: ScanOptions ="
-  - "function groupByDepth(root: ScanResult): ScanResult[][]"
-  - "function flattenBottomUp(result: ScanResult): ScanResult[]"
-  - SCHEMA_VERSION
-  - contextSchema
-  - configSchema
-  - type ContextFile
-  - type ConfigFile
-  - type FileEntry
-  - type InterfaceEntry
-  - type DecisionEntry
-  - type SubdirectoryEntry
-interfaces:
-  - name: computeFingerprint
-    description: Exported from fingerprint.ts
-  - name: FreshnessState
-    description: Exported from fingerprint.ts
-  - name: checkFreshness
-    description: Exported from fingerprint.ts
-  - name: HealthSummary
-    description: Exported from health.ts
-  - name: EvidenceEntry
-    description: Exported from health.ts
-  - name: AggregateEvidenceResult
-    description: Exported from health.ts
-  - name: aggregateEvidence
-    description: Exported from health.ts
-  - name: AGENTS_FILENAME
-    description: Exported from markdown-writer.ts
-  - name: readAgentsMd
-    description: Exported from markdown-writer.ts
-  - name: writeAgentsMd
-    description: Exported from markdown-writer.ts
-  - name: updateAgentsMd
-    description: Exported from markdown-writer.ts
-  - name: ScanResult
-    description: Exported from scanner.ts
-  - name: ScanOptions
-    description: Exported from scanner.ts
-  - name: scanProject
-    description: Exported from scanner.ts
-  - name: groupByDepth
-    description: Exported from scanner.ts
+decisions:
+  - what: Fingerprint uses stat() only, not file content
+    why: Performance — avoids reading every file on every status check. Content hashing happens separately in the index.
+  - what: Semantic fingerprint layered on top of stat fingerprint, not replacing it
+    why: Stat fingerprint stays the cheap first-pass detector; semantic fingerprint is the rich explainer for when the first
+      pass fires.
+  - what: FreshnessState extended to 4 values via opt-in; legacy 3-state preserved via legacyState() helper
+    why: ~12 consumer files depended on the old 3-state contract. Breaking changes would ripple through
+      display/watch/stats/doctor/bench/MCP output; legacyState() keeps the compat surface byte-identical.
+  - what: Index versioned separately from schema
+    why: INDEX_VERSION can bump freely for layout changes without affecting the .context.yaml SCHEMA_VERSION contract users
+      commit to git.
+constraints:
+  - FreshnessState changes must preserve legacyState() collapse for all existing JSON outputs.
+  - semantic_fingerprint field is optional; .context.yaml files without it are treated as cosmetic_stale, not
+    semantic_stale.
+  - checkFreshness default return shape stays 3-state; 4-state info is behind opts.index.
 dependencies:
   internal:
     - ../generator/markdown.js
+    - ../index/access.js
+    - ../index/paths.js
+    - ../index/store.js
+    - ../index/types.js
+    - ../policy/rules.js
     - ../utils/config.js
     - ../utils/scan-options.js
     - ../utils/tokens.js
     - ./scanner.js
     - ./schema.js
+    - ./semantic-fingerprint.js
     - ./writer.js
+data_models:
+  - 'interface CheckFreshnessOptions { storedSemanticFingerprint: string, index: import("../index/store.js").IndexStore,
+    contextFacts: import, projectRoot: string }'
+  - "interface CheckFreshnessResult { state: FreshnessState, computed: string, computedSemantic: string }"
+  - "interface CommitMeta { sha: string, authorName: string, authorEmail: string, timestamp: number, subject: string }"
+  - "interface LogOpts { since: string, until: string, max: number, follow: boolean }"
+  - "interface HealthSummary { tests: { passing: number; failing: number; unkn…, typecheck: { clean: number; errors:
+    number; unknown…, lint: { clean: number; errors: number; unknown…, coverage: { scopes_reported: number;
+    average_perce… }"
+  - "interface EvidenceEntry { scope: string, has_evidence: boolean, evidence: Evidence }"
+  - "interface AggregateEvidenceResult { root: string, total_scopes: number, scopes_with_evidence: number, health:
+    HealthSummary, scopes: EvidenceEntry[], scope_errors: Array<{ scope: string; error: string }>, error: string }"
+  - "interface ScanResult { path: string, relativePath: string, files: string[], hasContext: boolean, children:
+    ScanResult[] }"
+  - "interface ScanOptions { maxDepth: number, extraIgnore: string[] }"
+  - "interface StampResult { updated: number, skipped: number, changed: number }"
+  - "interface PolicyFacts { constraints: string[], rules: Array<Record<string, unknown>>, environment: string[] }"
+  - "interface FilePreimage { file: string, exported_symbols: Array, public_signatures: string[], import_edges: Array }"
+  - "interface DirectoryPreimage { schema_version_marker: typeof SEMANTIC_FINGERPRINT_MARKER, files: FilePreimage[],
+    policy_relevant_facts: { constraints: string[]; rules: Array<Re… }"
+exports:
+  - "async function computeFingerprint(dirPath: string, ignorePatterns: string[] = []): Promise<string>"
+  - type FreshnessState
+  - type LegacyFreshnessState
+  - "function legacyState(state: FreshnessState): LegacyFreshnessState"
+  - interface CheckFreshnessOptions
+  - interface CheckFreshnessResult
+  - "async function checkFreshness( dirPath: string, storedFingerprint: string | undefined, ignorePatterns: string[] =
+    [], opts?: CheckFreshnessOptions, ): Promise<CheckFreshnessResult>"
+  - class GitError
+  - interface CommitMeta
+  - "function isGitRepo(dirPath: string): boolean"
+  - "function revParse(repoPath: string, rev: string): string"
+  - "function showFileAtRev( repoPath: string, rev: string, relPath: string, ): string | null"
+  - interface LogOpts
+  - 'function logForPath( repoPath: string, relPath: string | ".", opts: LogOpts ='
+  - "function getChangedFiles(repoPath: string, sha: string): string[]"
+  - "function lsTreeFiles( repoPath: string, rev: string, filter?: ((path: string) => boolean) | string, ): string[]"
+  - "function mergeBase( repoPath: string, a: string, b: string, ): string | null"
+  - type EnsureResult
+  - "async function ensureAutocontextGitignored( rootPath: string, ): Promise<EnsureResult>"
+  - "function hasAutocontextEntry(gitignoreContent: string): boolean"
+  - interface HealthSummary
+  - interface EvidenceEntry
+  - interface AggregateEvidenceResult
+  - "async function aggregateEvidence(rootPath: string): Promise<AggregateEvidenceResult>"
+  - AGENTS_FILENAME
 imports:
   - path: ../generator/markdown.js
     symbols:
@@ -99,6 +97,26 @@ imports:
       - detectAgentsAction
       - generateAgentsMd
       - generateAgentsSection
+  - path: ../index/access.js
+    symbols:
+      - openReadOnlyIndex
+  - path: ../index/paths.js
+    symbols:
+      - AUTOCONTEXT_DIR
+      - manifestPath
+      - toFileId
+  - path: ../index/store.js
+    symbols:
+      - IndexStore
+  - path: ../index/types.js
+    symbols:
+      - FileId
+      - ImportEdge
+      - IndexSymbol
+  - path: ../policy/rules.js
+    symbols:
+      - Rule
+      - ruleSchema
   - path: ../utils/config.js
     symbols:
       - loadConfig
@@ -110,6 +128,7 @@ imports:
       - filterByMinTokens
   - path: ./scanner.js
     symbols:
+      - ScanResult
       - flattenBottomUp
       - scanProject
   - path: ./schema.js
@@ -122,79 +141,22 @@ imports:
       - SCHEMA_VERSION
       - configSchema
       - contextSchema
+  - path: ./semantic-fingerprint.js
+    symbols:
+      - computeSemanticFingerprint
+      - extractPolicyFacts
   - path: ./writer.js
     symbols:
       - UnsupportedVersionError
       - readContext
-internals:
-  - name: shouldIgnore
-    kind: function
-    file: fingerprint.ts
-  - name: emptyHealth
-    kind: function
-    file: health.ts
-  - name: contextFileExists
-    kind: function
-    file: health.ts
-  - name: ALWAYS_IGNORE
-    kind: constant
-    file: scanner.ts
-  - name: SOURCE_EXTENSIONS
-    kind: constant
-    file: scanner.ts
-  - name: MEANINGFUL_FILES
-    kind: constant
-    file: scanner.ts
-  - name: scanDir
-    kind: function
-    file: scanner.ts
-  - name: isSourceFile
-    kind: function
-    file: scanner.ts
-  - name: isIgnored
-    kind: function
-    file: scanner.ts
-  - name: normalizePath
-    kind: function
-    file: scanner.ts
-  - name: normalizePattern
-    kind: function
-    file: scanner.ts
-  - name: matchPattern
-    kind: function
-    file: scanner.ts
-  - name: globSegmentRegex
-    kind: function
-    file: scanner.ts
-  - name: globPathRegex
-    kind: function
-    file: scanner.ts
-  - name: globToRegexBody
-    kind: function
-    file: scanner.ts
-  - name: loadGitignore
-    kind: function
-    file: scanner.ts
-  - name: loadContextIgnore
-    kind: function
-    file: scanner.ts
-  - name: parseIgnoreFile
-    kind: function
-    file: scanner.ts
-  - name: fileEntrySchema
-    kind: constant
-    file: schema.ts
-  - name: interfaceEntrySchema
-    kind: constant
-    file: schema.ts
+      - writeContext
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
-  - files
-  - interfaces
   - exports
   - dependencies.internal
   - imports
-  - internals
+  - data_models
+semantic_fingerprint: 4b47733fad17

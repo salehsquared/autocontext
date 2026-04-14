@@ -141,6 +141,68 @@
 
 **Fix:** Use `--max-tasks`, `--seed`, and `--category` for current task control.
 
+### `find_references` / `impact` / `check_policies` return `INDEX_MISSING`
+
+**Symptom:** An MCP call returns `{ok: false, error: {code: "INDEX_MISSING", ...}}`; `context impact` exits non-zero with an index-missing message.
+
+**Cause:** The local code index at `.autocontext/index/` hasn't been built yet, or was wiped.
+
+**Fix:**
+
+```bash
+context index --rebuild
+```
+
+MCP handlers **never** auto-rebuild — a handler that blocks on indexing looks indistinguishable from a hang to most clients. Rebuilding is always an explicit user action.
+
+### `context validate --policy` exits 2 with "index is missing or stale"
+
+Same cause as above. Run `context index`, then re-run `validate --policy`.
+
+### `context pack` output truncated at budget
+
+**Symptom:** The pack's `used_tokens` is near the budget and `metadata.truncated: true`.
+
+**Fix:** Raise `--budget`, or narrow the seed. Symbol seeds (`--symbol`) are the most targeted; file seeds anchor on a specific scope; query seeds are broadest.
+
+### `context pack` chose the wrong top scope
+
+**Symptom:** Obvious scope doesn't appear or isn't top-ranked.
+
+**Cause:** BM25F weights may not match your prose. Query-zone stopwords are filtered; symbol-zone stopwords are retained, so spelling out a symbol name helps.
+
+**Fix:** Swap the seed kind (e.g. `--symbol foo` instead of `--query "foo"`), or narrow the query to terms that appear verbatim in the target scope's `decisions` / `summary`. The composite score is `0.55·BM25 + 0.35·proximity` — proximity helps when the target scope is close to another heavily-ranked scope in the import graph.
+
+### `context cache` hit but response feels stale
+
+**Symptom:** `context regen` finishes instantly but the output doesn't reflect recent code changes.
+
+**Cause:** The LLM cache is content-addressed — same prompt + same provider/model = same response. Cache key includes `PROMPT_TEMPLATE_VERSION`; bumping it invalidates all entries.
+
+**Fix:** `context cache clear` wipes the cache. Or use `context regen --force` for forward-compatibility (currently a no-op but reserved). Re-indexing first is usually unnecessary — the cache keys off the prompt, not the index.
+
+### `context verify` times out
+
+**Symptom:** A configured command in `.context.config.yaml` exits with `timed_out: true`.
+
+**Cause:** Default per-command timeout is 600 s. Heterogeneous runtimes — a 5-minute typecheck plus a 5-second lint — can trip this.
+
+**Fix:** Per-command `timeout_seconds` on the detailed form, or the global `verify.default_timeout_seconds`, or `--timeout <s>` at invocation time.
+
+### 4-state freshness not showing in my tool
+
+**Symptom:** `check_freshness` / `list_contexts` only return `fresh` / `stale` / `missing`.
+
+**Cause:** By design. These tools keep the 3-state legacy enum for back-compat (`tests/mcp/compat.test.ts` pins this). 4-state freshness lives exclusively on `explain_staleness`.
+
+**Fix:** Call `explain_staleness` when you need `cosmetic_stale` vs `semantic_stale`. The MCP `autocontext://capabilities` resource advertises which tools return each.
+
+### Generated `context-report.html` over 2 MB
+
+**Symptom:** `context view` exits 2 with a size-cap message.
+
+**Fix:** `--no-source` drops exports' signatures and raw YAML bodies; `--no-graph` drops the dependency-graph data. Either lever typically cuts the file size in half on a medium repo.
+
 ## Provider-Specific Issues
 
 ### Anthropic

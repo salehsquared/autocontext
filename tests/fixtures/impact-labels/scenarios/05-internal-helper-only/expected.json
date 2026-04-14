@@ -1,0 +1,7 @@
+{
+  "seed_files": ["src/core/math.ts"],
+  "expected_impact_directories": [],
+  "expected_not_in_impact": ["src/commands", "src/mcp"],
+  "semantic_fingerprint_unchanged": true,
+  "notes": "Adding an internal helper and using it inside an exported function does not change the public export signature. The semantic fingerprint should be stable. A fingerprint-only staleness model would false-positive here; impact analysis must not."
+}

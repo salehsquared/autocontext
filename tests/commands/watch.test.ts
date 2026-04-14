@@ -33,7 +33,8 @@ describe("watch building blocks", () => {
     await createFile(tmpDir, "index.ts", "this is much longer content that changes the size");
 
     const { state } = await checkFreshness(tmpDir, fp);
-    expect(state).toBe("stale");
+    // Legacy yaml (no stored semantic_fingerprint) never reports semantic_stale.
+    expect(state).toBe("cosmetic_stale");
   });
 
   it("reports missing when no fingerprint stored", async () => {

@@ -4,7 +4,7 @@
 
 Every `.context.yaml` file has a required `version` field. Currently: `version: 1`.
 
-The schema version tracks the **structure** of `.context.yaml` files — which fields exist, their types, and validation rules. It is independent of the autocontext CLI version (currently v0.1.0).
+The schema version tracks the **structure** of `.context.yaml` files — which fields exist, their types, and validation rules. It is independent of the autocontext CLI version (currently v0.2.0).
 
 ## Compatibility Guarantees
 
@@ -54,3 +54,25 @@ If you're building a tool that reads `.context.yaml`:
 | Version | Status | Schema File |
 |---------|--------|-------------|
 | 1 | **Current** | `.context.schema.json` |
+
+### 0.2.0 affirmation
+
+The 0.2.x line adds a substantial set of capabilities (local code index, semantic fingerprint, policy rules, active verification, prompt packs, library API, twelve-tool MCP) and **does not bump the schema version**. Every addition is optional:
+
+- `semantic_fingerprint` — optional 12-hex field. Absent → freshness falls back to 3-state.
+- `rules` — optional array. Absent → `validate --policy` reports "no rules defined" and exits 0.
+- Populated `environment` / `testing` / `todos` / `data_models` / `events` / `config` — shape unchanged (`string[]`); what changed is that static extractors now fill them.
+- `.context.config.yaml` `verify:` block — optional. Absent → `context verify` prints a help message and exits 2.
+
+Legacy `.context.yaml` files parse unchanged under 0.2.x. The MCP tools `query_context`, `check_freshness`, `list_contexts`, and `aggregate_evidence` preserve their output shapes byte-for-byte (locked by `tests/mcp/compat.test.ts`).
+
+## `INDEX_VERSION` (separate from schema)
+
+The local code index at `.autocontext/index/` carries its own integer version: `INDEX_VERSION` (stored in `.autocontext/index/manifest.json`). This is **orthogonal** to `SCHEMA_VERSION`.
+
+- Bumping `INDEX_VERSION` is free-form — format changes, new record fields, sharding changes — and triggers a rebuild on the next `context index` call.
+- Bumping `SCHEMA_VERSION` is a major event, signaled throughout `.context.yaml` files and all downstream tooling.
+
+The separation lets index-format evolution move at its own pace without affecting the `.context.yaml` contract users commit to git. Consumer tools that read the index should open it with `{ readOnly: true, autoRebuild: false }` and surface rebuild-needed states cleanly (`EAUTOCONTEXTREBUILD` / stale index) — **never** auto-rebuild inside a handler.
+
+See [docs/index.md](index.md) for the index layout, versioning decisions, and per-language coverage.

@@ -1,0 +1,131 @@
+version: 1
+last_updated: 2026-04-14T17:38:35.635Z
+fingerprint: e15f27bb
+scope: src/policy
+summary: Source directory.
+maintenance: |-
+  If you modify files in this directory, update this .context.yaml to reflect
+  your changes. Update the summary, and any decisions or constraints that changed.
+  Do NOT update the fingerprint manually — run `context rehash` or it will be
+  updated automatically on the next `context status` check.
+  If you only read files in this directory, do not modify this file.
+  Do not include secrets, API keys, passwords, or PII in this file.
+decisions:
+  - what: Typed discriminated-union objects, not a DSL
+    why: DSL-style policy languages (Rego, jsonnet, etc.) ship with a parser, sandbox, and learning curve. Seven typed kinds
+      cover the violations that actually show up in practice; adding an eighth is a Zod line + an evaluator file.
+  - what: Subtree scope semantics — rules apply to the declaring directory and all descendants
+    why: Most rules are project-wide. Inheritance from the root keeps boilerplate down; users tighten via the rule's `from`
+      glob or by moving the rule deeper.
+  - what: symbol_kind on require_export, not kind
+    why: Avoids collision with the Zod discriminator field. Naming this anything else would break the discriminated-union
+      parse.
+constraints:
+  - Rule shapes must match the existing evidence enum values exactly. evidence_requires.typecheck = "clean" (not
+    "passing"); the conformance fixture bad-evidence-requires-typecheck.yaml locks this.
+  - Evaluators stream from IndexStore.scanImports() — never load the full graph into memory.
+  - "MCP check_policies caps violations at 500; bigger results truncate with `truncated: true` (no silent loss)."
+dependencies:
+  internal:
+    - ../core/scanner.js
+    - ../core/schema.js
+    - ../index/access.js
+    - ../index/store.js
+    - ../utils/config.js
+    - ../utils/scan-options.js
+    - ../utils/tokens.js
+    - ./evaluators/index.js
+    - ./rules.js
+    - ./scope.js
+    - ./types.js
+subdirectories:
+  - name: evaluators/
+    summary: Source directory.
+data_models:
+  - "interface PolicyRunResult { ok: boolean, scope: string, rules_evaluated: number, rules_passed: number, violations:
+    Violation[], index_state: IndexState, truncated: boolean, contexts_scanned: number }"
+  - "interface RunPoliciesOptions { projectRoot: string, scope: string, ruleKinds: RuleKind[], maxViolations: number }"
+  - "interface CompiledEntry { regex: RegExp, negated: boolean }"
+  - "interface CompiledGlob { entries: CompiledEntry[], allNegated: boolean }"
+  - 'interface Violation { rule_kind: RuleKind, scope: string, message: string, file: string, line: number, symbol:
+    string, to: string, severity: "error", …+1 more }'
+  - "interface EvalContext { projectRoot: string, index: IndexStore, contexts: Map<string, ContextFile>, sourceFiles:
+    string[], fileLineCount: (file: string) => Promise<number> }"
+  - "interface RuleEvaluationInput { rule: Rule, ruleScope: string, ruleIndex: number, ctx: EvalContext }"
+exports:
+  - type IndexState
+  - interface PolicyRunResult
+  - interface RunPoliciesOptions
+  - "async function runPolicies( options: RunPoliciesOptions, ): Promise<PolicyRunResult>"
+  - type GlobPattern
+  - interface CompiledGlob
+  - "function compileGlob(pattern: GlobPattern): CompiledGlob"
+  - "function matchGlob(path: string, glob: CompiledGlob): boolean"
+  - forbidImportRule
+  - requireImportRule
+  - requireExportRule
+  - maxFileLinesRule
+  - requireTestFileRule
+  - dependencyBoundaryRule
+  - evidenceRequiresRule
+  - ruleSchema
+  - type Rule
+  - type ForbidImportRule
+  - type RequireImportRule
+  - type RequireExportRule
+  - type MaxFileLinesRule
+  - type RequireTestFileRule
+  - type DependencyBoundaryRule
+  - type EvidenceRequiresRule
+  - RULE_KINDS
+imports:
+  - path: ../core/scanner.js
+    symbols:
+      - ScanResult
+      - flattenBottomUp
+      - scanProject
+  - path: ../core/schema.js
+    symbols:
+      - CONTEXT_FILENAME
+      - ContextFile
+      - contextSchema
+  - path: ../index/access.js
+    symbols:
+      - openReadOnlyIndex
+  - path: ../index/store.js
+    symbols:
+      - IndexStore
+  - path: ../utils/config.js
+    symbols:
+      - loadConfig
+  - path: ../utils/scan-options.js
+    symbols:
+      - loadScanOptions
+  - path: ../utils/tokens.js
+    symbols:
+      - filterByMinTokens
+  - path: ./evaluators/index.js
+    symbols:
+      - evaluators
+  - path: ./rules.js
+    symbols:
+      - Rule
+      - RuleKind
+  - path: ./scope.js
+    symbols:
+      - normalizeScope
+  - path: ./types.js
+    symbols:
+      - EvalContext
+      - Violation
+derived_fields:
+  - version
+  - last_updated
+  - fingerprint
+  - scope
+  - exports
+  - dependencies.internal
+  - imports
+  - subdirectories
+  - data_models
+semantic_fingerprint: d684a45d5e28

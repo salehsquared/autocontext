@@ -1,109 +1,99 @@
 version: 1
-last_updated: 2026-02-20T16:42:18.626Z
-fingerprint: 232824dc
+last_updated: 2026-04-14T17:38:35.365Z
+fingerprint: 47a6003c
 scope: src/commands
 summary: CLI command implementations.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the files list, interfaces, and current_state sections.
+  your changes. Update the summary, and any decisions or constraints that changed.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-files:
-  - name: bench.ts
-    purpose: "Exports: benchCommand"
-  - name: config.ts
-    purpose: "Exports: configCommand"
-  - name: doctor.ts
-    purpose: "Exports: doctorCommand"
-  - name: health.ts
-    purpose: "Exports: healthCommand"
-  - name: ignore.ts
-    purpose: "Exports: ignoreCommand"
-  - name: init.ts
-    purpose: "Exports: initCommand"
-  - name: regen.ts
-    purpose: "Exports: regenCommand"
-  - name: rehash.ts
-    purpose: "Exports: rehashCommand"
-  - name: show.ts
-    purpose: "Exports: showCommand"
-  - name: stats.ts
-    purpose: "Exports: statsCommand"
-  - name: status.ts
-    purpose: "Exports: statusCommand"
-  - name: validate.ts
-    purpose: "Exports: validateCommand"
-  - name: watch.ts
-    purpose: "Exports: findTrackedDirForFile, watchCommand"
-exports:
-  - "async function benchCommand(options: BenchOptions): Promise<void>"
-  - "async function configCommand( options:"
-  - "async function doctorCommand(options:"
-  - "async function healthCommand(options:"
-  - "async function ignoreCommand(targetPath: string, options:"
-  - "async function initCommand(options:"
-  - "async function regenCommand( targetPath: string | undefined, options:"
-  - "async function rehashCommand(options:"
-  - "async function showCommand(targetPath: string): Promise<void>"
-  - "async function statsCommand(options:"
-  - "async function statusCommand(options:"
-  - "async function validateCommand(options:"
-  - "function findTrackedDirForFile( filePath: string, rootPath: string, trackedDirPaths: Iterable<string>, ): string |
-    undefined"
-  - "async function watchCommand( options:"
-interfaces:
-  - name: benchCommand
-    description: Exported from bench.ts
-  - name: configCommand
-    description: Exported from config.ts
-  - name: doctorCommand
-    description: Exported from doctor.ts
-  - name: healthCommand
-    description: Exported from health.ts
-  - name: ignoreCommand
-    description: Exported from ignore.ts
-  - name: initCommand
-    description: Exported from init.ts
-  - name: regenCommand
-    description: Exported from regen.ts
-  - name: rehashCommand
-    description: Exported from rehash.ts
-  - name: showCommand
-    description: Exported from show.ts
-  - name: statsCommand
-    description: Exported from stats.ts
-  - name: statusCommand
-    description: Exported from status.ts
-  - name: validateCommand
-    description: Exported from validate.ts
-  - name: findTrackedDirForFile
-    description: Exported from watch.ts
-  - name: watchCommand
-    description: Exported from watch.ts
 dependencies:
   internal:
     - ../bench/git.js
+    - ../bench/ground-truth-impact.js
+    - ../bench/ground-truth-symbols.js
     - ../bench/ground-truth.js
+    - ../bench/provenance.js
     - ../bench/repos.js
     - ../bench/runner.js
     - ../bench/scorer.js
     - ../bench/tasks.js
     - ../bench/types.js
+    - ../cache/cache-store.js
     - ../core/fingerprint.js
+    - ../core/git.js
+    - ../core/gitignore.js
     - ../core/health.js
     - ../core/markdown-writer.js
     - ../core/scanner.js
     - ../core/schema.js
+    - ../core/semantic-fingerprint-writer.js
     - ../core/writer.js
-    - ../generator/dependencies.js
-    - ../generator/llm.js
-    - ../generator/markdown.js
-    - ../generator/static.js
-    - ../providers/index.js
-    - ../utils/config.js
-    - ../utils/display.js
+environment:
+  - CI
+  - FROZEN_TIME
+data_models:
+  - "interface CacheCommandOptions { path: string, json: boolean }"
+  - "interface DiffCommandOptions { path: string, scope: string, json: boolean }"
+  - "interface ScopeDiff { scope: string, present_in_a: boolean, present_in_b: boolean, changes: Array }"
+  - 'interface CheckResult { name: string, status: "pass" | "warn" | "fail", message: string, fix: string }'
+  - "interface HotspotsCommandOptions { path: string, max: number, json: boolean, rawCount: boolean }"
+  - "interface HotspotRow { scope: string, commit_count: number, semantic_changes: number, last_touched_sha: string,
+    last_touched_at: number }"
+  - "interface ImpactCommandOptions { path: string, json: boolean, maxDepth: number, max: number }"
+  - "interface IndexCommandOptions { rebuild: boolean, path: string, dryRun: boolean }"
+  - "interface GenerationMetrics { total_scanned: number, skipped_min_tokens: number, generated: number,
+    exports_extracted: number, exports_total: number, summary_from_docstring: number, summary_from_dirname: number,
+    summary_from_pattern: number, …+5 more }"
+  - 'interface PackCommandOptions { path: string, query: string, file: string, symbol: string, budget: number, format:
+    "md" | "json", out: string }'
+  - "interface GenerationMetrics { total_scanned: number, skipped_min_tokens: number, generated: number,
+    exports_extracted: number, exports_total: number, summary_from_docstring: number, summary_from_dirname: number,
+    summary_from_pattern: number, …+5 more }"
+  - 'interface DirStats { scope: string, sourceTokens: number, contextTokens: number, reductionPercent: number,
+    freshness: FreshnessState | "missing", fileCount: number, exportCount: number, hasDecisions: boolean, …+7 more }'
+  - 'interface StatusEntry { scope: string, state: FreshnessState | "missing", fingerprint: string | null, summary:
+    string | null }'
+  - "interface TimelineCommandOptions { path: string, max: number, json: boolean }"
+  - 'interface StrictFinding { severity: "warning" | "info", message: string }'
+  - "interface VerifyCommandOptions { path: string, scope: string, only: string, timeout: string, merge: boolean,
+    strict: boolean, dryRun: boolean, yes: boolean, …+1 more }"
+  - "interface ViewCommandOptions { path: string, out: string, open: boolean, noGraph: boolean, noSource: boolean }"
+  - "interface DirState { dir: ScanResult, state: FreshnessState }"
+events:
+  - on("SIGINT") via process
+  - on("SIGTERM") via process
+  - on("all") via watcher
+  - once("data") via stdin
+exports:
+  - "async function benchCommand(options: BenchOptions): Promise<void>"
+  - interface CacheCommandOptions
+  - "async function cacheStatsCommand(options: CacheCommandOptions ="
+  - "async function cacheClearCommand(options: CacheCommandOptions ="
+  - "function cacheRuntimeStatus():"
+  - "async function configCommand( options:"
+  - interface DiffCommandOptions
+  - "async function diffCommand( range: string | undefined, options: DiffCommandOptions ="
+  - "async function doctorCommand(options:"
+  - "async function healthCommand(options:"
+  - interface HotspotsCommandOptions
+  - "async function hotspotsCommand(options: HotspotsCommandOptions ="
+  - "async function ignoreCommand(targetPath: string, options:"
+  - interface ImpactCommandOptions
+  - "async function impactCommand( target: string | undefined, options: ImpactCommandOptions ="
+  - interface IndexCommandOptions
+  - "async function indexCommand(options: IndexCommandOptions ="
+  - "async function collectIndexableFiles(rootPath: string): Promise<FileId[]>"
+  - "async function initCommand(options:"
+  - interface PackCommandOptions
+  - "async function packCommand(options: PackCommandOptions ="
+  - "async function regenCommand( targetPath: string | undefined, options:"
+  - "async function rehashCommand(options:"
+  - "async function showCommand(targetPath: string): Promise<void>"
+  - "async function statsCommand(options:"
 imports:
   - path: ../bench/git.js
     symbols:
@@ -111,11 +101,22 @@ imports:
       - getFeatureCommits
       - getFixCommits
       - isGitRepo
+  - path: ../bench/ground-truth-impact.js
+    symbols:
+      - generateImpactTasks
+  - path: ../bench/ground-truth-symbols.js
+    symbols:
+      - generateSymbolTasks
   - path: ../bench/ground-truth.js
     symbols:
       - buildDepSets
       - buildDirFacts
       - buildReverseDeps
+  - path: ../bench/provenance.js
+    symbols:
+      - IMPACT_VERSION
+      - PACK_BUDGET_DEFAULT
+      - buildProvenance
   - path: ../bench/repos.js
     symbols:
       - DEFAULT_REPOS
@@ -130,16 +131,39 @@ imports:
   - path: ../bench/tasks.js
     symbols:
       - generateTasks
+      - limitTasks
   - path: ../bench/types.js
     symbols:
+      - ARMS
       - BenchOptions
       - BenchReport
+      - ConditionName
+      - DEFAULT_ARM_SET
       - MultiRepoReport
+      - TaskCategory
+  - path: ../cache/cache-store.js
+    symbols:
+      - cacheClear
+      - cacheStats
+      - isCacheEnabled
   - path: ../core/fingerprint.js
     symbols:
       - FreshnessState
       - checkFreshness
       - computeFingerprint
+      - legacyState
+  - path: ../core/git.js
+    symbols:
+      - GitError
+      - isGitRepo
+      - logForPath
+      - lsTreeFiles
+      - revParse
+      - showFileAtRev
+  - path: ../core/gitignore.js
+    symbols:
+      - ensureAutocontextGitignored
+      - hasAutocontextEntry
   - path: ../core/health.js
     symbols:
       - aggregateEvidence
@@ -158,114 +182,26 @@ imports:
       - CONTEXT_FILENAME
       - ConfigFile
       - ContextFile
+      - VerifyKind
       - contextSchema
+  - path: ../core/semantic-fingerprint-writer.js
+    symbols:
+      - hasIndex
+      - stampSemanticFingerprintsForDirs
   - path: ../core/writer.js
     symbols:
       - UnsupportedVersionError
       - readContext
       - writeContext
-  - path: ../generator/dependencies.js
-    symbols:
-      - detectInternalDeps
-  - path: ../generator/llm.js
-    symbols:
-      - generateLLMContext
-  - path: ../generator/markdown.js
-    symbols:
-      - AGENTS_SECTION_START
-  - path: ../generator/static.js
-    symbols:
-      - SummarySource
-      - detectExportsWithFallback
-      - generateStaticContext
-  - path: ../providers/index.js
-    symbols:
-      - ProviderName
-      - createProvider
-  - path: ../utils/config.js
-    symbols:
-      - getDefaultApiKeyEnv
-      - loadConfig
-      - resolveApiKey
-      - saveConfig
-  - path: ../utils/display.js
-    symbols:
-      - dim
-      - errorMsg
-      - freshnessIcon
-      - heading
-      - progressBar
-      - successMsg
-      - warnMsg
-internals:
-  - name: runSingleBench
-    kind: function
-    file: bench.ts
-  - name: runMultiRepo
-    kind: function
-    file: bench.ts
-  - name: printReport
-    kind: function
-    file: bench.ts
-  - name: printMultiRepoReport
-    kind: function
-    file: bench.ts
-  - name: CheckResult
-    kind: interface
-    file: doctor.ts
-  - name: readRawContext
-    kind: function
-    file: doctor.ts
-  - name: ask
-    kind: function
-    file: init.ts
-  - name: GenerationMetrics
-    kind: interface
-    file: init.ts
-  - name: trackSummarySource
-    kind: function
-    file: init.ts
-  - name: printMetrics
-    kind: function
-    file: init.ts
-  - name: GenerationMetrics
-    kind: interface
-    file: regen.ts
-  - name: trackSummarySource
-    kind: function
-    file: regen.ts
-  - name: printMetrics
-    kind: function
-    file: regen.ts
-  - name: fmtNum
-    kind: function
-    file: stats.ts
-  - name: percentile
-    kind: function
-    file: stats.ts
-  - name: round1
-    kind: function
-    file: stats.ts
-  - name: DirStats
-    kind: interface
-    file: stats.ts
-  - name: signalScore
-    kind: function
-    file: stats.ts
-  - name: computeContextLag
-    kind: function
-    file: stats.ts
-  - name: dirExtensions
-    kind: function
-    file: stats.ts
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
-  - files
-  - interfaces
   - exports
   - dependencies.internal
   - imports
-  - internals
+  - environment
+  - data_models
+  - events
+semantic_fingerprint: 736addcee52d

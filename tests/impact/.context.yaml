@@ -1,0 +1,52 @@
+version: 1
+last_updated: 2026-04-14T06:04:38.099Z
+fingerprint: 2ba17226
+scope: tests/impact
+summary: Test suite.
+maintenance: |-
+  If you modify files in this directory, update this .context.yaml to reflect
+  your changes. Update the summary, and any decisions or constraints that changed.
+  Do NOT update the fingerprint manually — run `context rehash` or it will be
+  updated automatically on the next `context status` check.
+  If you only read files in this directory, do not modify this file.
+  Do not include secrets, API keys, passwords, or PII in this file.
+dependencies:
+  internal:
+    - ../../src/impact/impact.js
+    - ../../src/index/builder.js
+    - ../../src/index/paths.js
+    - ../../src/index/store.js
+    - ../../src/index/types.js
+    - ../helpers.js
+imports:
+  - path: ../../src/impact/impact.js
+    symbols:
+      - ImpactSeed
+      - computeImpact
+  - path: ../../src/index/builder.js
+    symbols:
+      - buildIndex
+      - commitBuild
+  - path: ../../src/index/paths.js
+    symbols:
+      - toFileId
+  - path: ../../src/index/store.js
+    symbols:
+      - IndexStore
+      - openIndex
+  - path: ../../src/index/types.js
+    symbols:
+      - FileId
+      - IndexSymbol
+  - path: ../helpers.js
+    symbols:
+      - cleanupTmpDir
+      - createTmpDir
+derived_fields:
+  - version
+  - last_updated
+  - fingerprint
+  - scope
+  - dependencies.internal
+  - imports
+semantic_fingerprint: dac071184a55

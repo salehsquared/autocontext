@@ -14,3 +14,7 @@ scripts/sync-context.local.sh
 
 # Planning docs (not shipped)
 PLAN.md
+
+# Local code index (T1)
+.autocontext/
+.DS_Store

@@ -1,0 +1,9 @@
+version: 1
+last_updated: "2026-04-13T00:00:00.000Z"
+fingerprint: "abc12345"
+scope: "src/legacy"
+summary: "Legacy context without semantic_fingerprint remains valid (the field is optional)"
+files:
+  - name: "index.ts"
+    purpose: "Entry point"
+maintenance: "Keep updated"

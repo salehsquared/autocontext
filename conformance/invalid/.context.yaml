@@ -1,79 +1,18 @@
 version: 1
-last_updated: 2026-02-20T16:42:18.490Z
-fingerprint: 3e263e81
+last_updated: 2026-04-14T06:00:07.482Z
+fingerprint: ddb5ef83
 scope: conformance/invalid
 summary: Source directory.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the files list, interfaces, and current_state sections.
+  your changes. Update the summary, and any decisions or constraints that changed.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-files:
-  - name: bad-coverage.meta.json
-    purpose: JSON data/configuration
-  - name: bad-coverage.yaml
-    purpose: YAML configuration
-  - name: bad-decision-entry.meta.json
-    purpose: JSON data/configuration
-  - name: bad-decision-entry.yaml
-    purpose: YAML configuration
-  - name: bad-evidence.meta.json
-    purpose: JSON data/configuration
-  - name: bad-evidence.yaml
-    purpose: YAML configuration
-  - name: bad-file-entry.meta.json
-    purpose: JSON data/configuration
-  - name: bad-file-entry.yaml
-    purpose: YAML configuration
-  - name: bad-files-shape.meta.json
-    purpose: JSON data/configuration
-  - name: bad-files-shape.yaml
-    purpose: YAML configuration
-  - name: bad-interface-entry.meta.json
-    purpose: JSON data/configuration
-  - name: bad-interface-entry.yaml
-    purpose: YAML configuration
-  - name: bad-yaml-syntax.meta.json
-    purpose: JSON data/configuration
-  - name: bad-yaml-syntax.yaml
-    purpose: YAML configuration
-  - name: extra-field.meta.json
-    purpose: JSON data/configuration
-  - name: extra-field.yaml
-    purpose: YAML configuration
-  - name: missing-fingerprint.meta.json
-    purpose: JSON data/configuration
-  - name: missing-fingerprint.yaml
-    purpose: YAML configuration
-  - name: missing-maintenance.meta.json
-    purpose: JSON data/configuration
-  - name: missing-maintenance.yaml
-    purpose: YAML configuration
-  - name: missing-scope.meta.json
-    purpose: JSON data/configuration
-  - name: missing-scope.yaml
-    purpose: YAML configuration
-  - name: missing-summary.meta.json
-    purpose: JSON data/configuration
-  - name: missing-summary.yaml
-    purpose: YAML configuration
-  - name: missing-version.meta.json
-    purpose: JSON data/configuration
-  - name: missing-version.yaml
-    purpose: YAML configuration
-  - name: wrong-version-type.meta.json
-    purpose: JSON data/configuration
-  - name: wrong-version-type.yaml
-    purpose: YAML configuration
-  - name: wrong-version-value.meta.json
-    purpose: JSON data/configuration
-  - name: wrong-version-value.yaml
-    purpose: YAML configuration
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
-  - files
+semantic_fingerprint: b457d1b996af

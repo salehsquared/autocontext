@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-02-20T17:06:30.986Z
-fingerprint: 1cbfbb86
+last_updated: 2026-04-14T06:00:07.623Z
+fingerprint: 474706fc
 scope: .
 summary: Folder-level documentation for LLMs — .context.yaml files for every directory
 maintenance: |-
@@ -45,3 +45,4 @@ derived_fields:
   - subdirectories
   - project
   - structure
+semantic_fingerprint: 966dea2d1816

@@ -122,3 +122,9 @@ context validate --strict
 # In CI — see docs/ci.md for pipeline setup
 context validate --strict
 ```
+
+## Policy Engine
+
+`context validate --policy` runs the typed policy engine over `rules:` blocks in every `.context.yaml`. Seven rule kinds, no DSL, no call-graph reasoning. See [docs/policies.md](policies.md) for the rule reference, glob dialect, JSON output schema, CI integration, and the `check_policies` MCP tool.
+
+Policy evaluation requires a built code index (`context index`); without one, the command exits 2.

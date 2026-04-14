@@ -12,6 +12,100 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) an
 
 ---
 
+## [Unreleased] — 0.2.0
+
+Major minor: the 0.2.x line ships a local code index, token-budgeted prompt packs, typed policy rules, 4-state freshness, active verification, a self-contained HTML viewer, a library API, and a twelve-tool MCP surface. **Schema stays at v1** — every addition is optional; every legacy `.context.yaml` keeps parsing.
+
+**Upgrade note.** Existing projects only need three one-shot actions after installing 0.2.x:
+
+1. `context index --rebuild` — build the local symbol + reference graph at `.autocontext/index/`.
+2. `context regen --all --stale` — populate the new `semantic_fingerprint` and the `environment`/`testing`/`todos`/`data_models`/`events`/`config` fields.
+3. `context doctor` — confirm `.autocontext/` is gitignored (first run of `context init` does this automatically; older checkouts may need `echo '.autocontext/' >> .gitignore`).
+
+Nothing else changes. `context status`, `check_freshness`, `list_contexts`, `query_context`, and `aggregate_evidence` all keep their v1 output shapes byte-for-byte — a compat snapshot at `tests/mcp/compat.test.ts` locks that down.
+
+### Added — Bench expansion (T12)
+
+- **Three new comparator arms** — `pack`, `pack+impact`, `pack+policy`. Each
+  exercises an upstream capability track (T3 retrieval, T2 impact, T4 policy)
+  against the legacy `baseline`/`context` arms. The legacy `delta` field stays
+  unchanged; new `arms`, `matrix`, and `arm_deltas` fields are additive.
+- **Three new task categories** — `find-definition`, `find-callers`, and
+  `impact-of-change`. Ground truth is synthesized exclusively from the T1 index
+  (`IndexStore.findSymbolsByName` / `getReferencesTo`) and T2's `computeImpact`.
+  Every task now carries a `ground_truth_provenance` block
+  (`source` / `precision_class` / `recall_class`) so analyzers can filter or
+  weight by confidence tier. Precision never exceeds what T1 can verify —
+  import-bound references only.
+- **`BenchReport.provenance`** — pins seed, versions (schema, index, BM25,
+  impact, policy, question_template, token_estimator), provider/model, and
+  autocontext git SHA. Two runs with the same tuple must produce byte-identical
+  JSON modulo `timestamp` / `latency_ms`.
+- **`scripts/compare-bench.mjs`** — regression canary. Diffs two JSON reports,
+  exits 1 when `delta.accuracy_gain` or any `arm_deltas[arm].accuracy_gain`
+  regressed beyond `--threshold` (default 0.02), and exits 2 when
+  `question_template_version` or `schema_version` diverges.
+- **Library exports** — `runBench`, `generateTasks`, `generateSymbolTasks`,
+  `generateImpactTasks`, `buildProvenance`, `ARMS`, plus bench type aliases.
+  All tagged `@stability experimental`.
+
+### Added — Library API (T11)
+
+- **`autocontext` is now consumable as a library.** `package.json` declares
+  `main`, `types`, `exports`, and `sideEffects: false`. `import "autocontext"`
+  resolves to the curated barrel at `dist/lib.js` — never to the CLI bin.
+- **`src/lib.ts` curated surface** — every export tagged `@stability stable` or
+  `@stability experimental`. Stable: `buildPack`, `formatPackJson`/`Markdown`,
+  `scanProject`, `flattenBottomUp`, `readContext`, `writeContext`,
+  `loadConfig`, `checkFreshness`, `legacyState`, `UnsupportedVersionError`,
+  schema constants + types. Experimental: `openIndex`, `computeImpact`,
+  `computeSemanticFingerprint`, `extractPolicyFacts`, `runPolicies` + types.
+- **`docs/library.md`** — full reference, stability tiers, what's intentionally
+  internal, module resolution.
+- **MCP compat snapshot** (`tests/mcp/compat.test.ts`) — pins the byte-identical
+  output shape of the four legacy MCP tools (`query_context`,
+  `check_freshness`, `list_contexts`, `aggregate_evidence`). 4-state freshness
+  stays exclusive to `explain_staleness`; legacy callers always see the
+  3-state enum.
+
+### Added
+
+- **Local code index** (Track T1) — new on-disk code-intelligence index at
+  `.autocontext/index/` that persists symbols, imports, import-bound
+  references, and directory-level import edges. Populated by a tree-sitter
+  analyzer for TypeScript, JavaScript (TS/JS), and Python in v1. Accessible
+  via a new `IndexStore` interface (default NDJSON backend; pluggable for a
+  future SQLite backend). Reference extraction is **import-bound only**
+  (namespace member access, dynamic imports, and transitive re-export chains
+  are out of scope); measured precision on fixture:
+  - TS/JS: precision 1.00 / recall 1.00 (target: 0.95 / 0.70)
+  - Python: precision 1.00 / recall 1.00 (target: 0.90 / 0.70)
+- **New CLI command** — `context index [--rebuild]` builds or refreshes the
+  local code index. Runs automatically after `context init` and full-tree
+  `context regen` (including the pre-commit hook's path).
+- **`.autocontext/` gitignore handling** — `context init` appends
+  `.autocontext/` to `.gitignore` when the file exists; `context doctor`
+  verifies the entry.
+- **`INDEX_VERSION`** — internal version tag for the on-disk index, bumped
+  independently of the `.context.yaml` schema. A mismatch triggers a
+  rebuild; **the schema stays at v1** for this track.
+
+### Changed
+
+- `context doctor` gains two additional checks: `gitignore` (verifies
+  `.autocontext/` is gitignored) and `index` (verifies manifest is present
+  and at the current `INDEX_VERSION`).
+- Scanner's `ALWAYS_IGNORE` now includes `.autocontext` so the index
+  directory is never traversed during generation.
+
+### Not yet indexed
+
+- **Go and Rust** — tree-sitter queries are spec'd in the T1-B plan
+  (package-qualified `selector_expression` for Go, `use_declaration`
+  bindings for Rust) but no analyzer ships in this release. `.go` / `.rs`
+  files are ignored by the index for now; they continue to work for
+  `.context.yaml` generation via the existing pipeline.
+
 ## [0.1.0] - 2026-02-13
 
 Initial public release.

@@ -9,6 +9,12 @@ import { detectExternalDeps, detectInternalDeps } from "./dependencies.js";
 import { detectImportBindings } from "./imports.js";
 import { detectInternals } from "./internals.js";
 import { collectBasicEvidence } from "./evidence.js";
+import { extractEnvironment } from "./extractors/environment.js";
+import { extractTesting } from "./extractors/testing.js";
+import { extractTodos } from "./extractors/todos.js";
+import { extractConfig } from "./extractors/config.js";
+import { extractDataModels } from "./extractors/data-models.js";
+import { extractEvents } from "./extractors/events.js";
 
 export type SummarySource = "project" | "docstring" | "dirname" | "pattern" | "fallback";
 
@@ -26,6 +32,7 @@ export async function generateStaticContext(
   childContexts: Map<string, ContextFile>,
   options?: { evidence?: boolean; mode?: "lean" | "full" },
 ): Promise<StaticContextResult> {
+  const existing = childContexts.get(scanResult.path);
   const mode = options?.mode ?? "lean";
   const isFull = mode === "full";
 
@@ -119,6 +126,26 @@ export async function generateStaticContext(
     }
   }
 
+  // Lightweight extractors (T5-A): environment, testing, todos, config.
+  // All run in both lean and full modes — they're small arrays of strings.
+  const envVars = await extractEnvironment(scanResult);
+  if (envVars.length > 0) context.environment = envVars;
+
+  const testingEntries = await extractTesting(scanResult);
+  if (testingEntries.length > 0) context.testing = testingEntries;
+
+  const todoEntries = await extractTodos(scanResult);
+  if (todoEntries.length > 0) context.todos = todoEntries;
+
+  const configEntries = await extractConfig(scanResult);
+  if (configEntries.length > 0) context.config = configEntries;
+
+  const dataModels = await extractDataModels(scanResult);
+  if (dataModels.length > 0) context.data_models = dataModels;
+
+  const eventsEntries = await extractEvents(scanResult);
+  if (eventsEntries.length > 0) context.events = eventsEntries;
+
   // Root-level: always add project metadata and structure
   if (isRoot) {
     context.project = (await detectProjectMeta(scanResult.path)) ?? {
@@ -151,6 +178,21 @@ export async function generateStaticContext(
     if (evidence) context.evidence = evidence;
   }
 
+  // Preserve user-authored narrative + policy fields from the existing
+  // .context.yaml. Extractors never synthesize these; regen must not wipe them.
+  if (existing && "decisions" in existing) {
+    context.decisions = existing.decisions;
+  }
+  if (existing && "constraints" in existing) {
+    context.constraints = existing.constraints;
+  }
+  if (existing && "rules" in existing) {
+    context.rules = existing.rules;
+  }
+  if (existing?.current_state && !context.current_state) {
+    context.current_state = existing.current_state;
+  }
+
   // Populate derived_fields
   const derivedFields: string[] = [
     "version", "last_updated", "fingerprint", "scope",
@@ -168,6 +210,12 @@ export async function generateStaticContext(
   if (context.project) derivedFields.push("project");
   if (context.structure) derivedFields.push("structure");
   if (context.evidence) derivedFields.push("evidence");
+  if (context.environment) derivedFields.push("environment");
+  if (context.testing) derivedFields.push("testing");
+  if (context.todos) derivedFields.push("todos");
+  if (context.config) derivedFields.push("config");
+  if (context.data_models) derivedFields.push("data_models");
+  if (context.events) derivedFields.push("events");
   context.derived_fields = derivedFields;
 
   return { context, summarySource };

@@ -6,6 +6,7 @@ import { CONTEXT_FILENAME, CONFIG_FILENAME } from "./schema.js";
 const ALWAYS_IGNORE = new Set([
   "node_modules",
   ".git",
+  ".autocontext",
   "dist",
   "build",
   "out",

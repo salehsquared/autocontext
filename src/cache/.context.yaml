@@ -1,0 +1,56 @@
+version: 1
+last_updated: 2026-04-14T06:21:24.253Z
+fingerprint: 641d4fe1
+scope: src/cache
+summary: Content-addressed LLM response cache at `.autocontext/llm-cache/`. Sharded layout, deterministic keys.
+decisions:
+  - what: "Cache key includes PROMPT_TEMPLATE_VERSION"
+    why: "Bumping the template version invalidates every entry instead of leaving stale prompt/response pairs around. Cache misses are cheap; stale hits are expensive."
+  - what: "Cache key also pins provider name + model"
+    why: "Same prompt to claude-3-5-haiku-latest vs claude-opus-4-6 produces different responses. Cross-model contamination would be silent."
+constraints:
+  - "Never cache errors, rate-limit responses, streaming responses, or empty responses. Only successful, complete completions."
+  - "Cache files are content-addressed — never write outside the sharded directory layout. Bypassing the layout breaks `context cache stats` / `clear`."
+maintenance: |-
+  If you modify files in this directory, update this .context.yaml to reflect
+  your changes. Update the summary, and any decisions or constraints that changed.
+  Do NOT update the fingerprint manually — run `context rehash` or it will be
+  updated automatically on the next `context status` check.
+  If you only read files in this directory, do not modify this file.
+  Do not include secrets, API keys, passwords, or PII in this file.
+dependencies:
+  internal:
+    - ../index/paths.js
+    - ./types.js
+exports:
+  - "function cacheRoot(projectRoot: string): string"
+  - "async function cacheGet( projectRoot: string, key: string, ): Promise<CacheEnvelope | null>"
+  - "async function cachePut( projectRoot: string, envelope: CacheEnvelope, ): Promise<void>"
+  - "async function cacheClear(projectRoot: string): Promise<number>"
+  - "async function cacheStats(projectRoot: string): Promise<CacheStats>"
+  - "function isCacheEnabled(): boolean"
+  - "function computeCacheKey(inputs: CacheKeyInputs): string"
+  - "function sha256Hex(s: string): string"
+  - CACHE_VERSION
+  - interface CacheKeyInputs
+  - interface CacheEnvelope
+  - interface CacheStats
+imports:
+  - path: ../index/paths.js
+    symbols:
+      - AUTOCONTEXT_DIR
+  - path: ./types.js
+    symbols:
+      - CACHE_VERSION
+      - CacheEnvelope
+      - CacheKeyInputs
+      - CacheStats
+derived_fields:
+  - version
+  - last_updated
+  - fingerprint
+  - scope
+  - exports
+  - dependencies.internal
+  - imports
+semantic_fingerprint: 2b7377abc8ae

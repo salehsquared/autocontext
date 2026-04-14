@@ -1,0 +1,87 @@
+{
+  "cases": [
+    {
+      "name": "01-happy-path",
+      "source_file": "src/01-happy-path.ts",
+      "expected_references": [
+        {"target_file": "src/math.ts", "target_symbol": "add", "count": 1}
+      ],
+      "notes": "Control case."
+    },
+    {
+      "name": "02-aliased",
+      "source_file": "src/02-aliased.ts",
+      "expected_references": [
+        {"target_file": "src/math.ts", "target_symbol": "add", "count": 1},
+        {"target_file": "src/math.ts", "target_symbol": "multiply", "count": 1}
+      ],
+      "notes": "Aliases (`as`) still resolve to the original exported name."
+    },
+    {
+      "name": "03-default-import",
+      "source_file": "src/03-default-import.ts",
+      "expected_references": [
+        {"target_file": "src/strings.ts", "target_symbol": "default", "count": 1}
+      ],
+      "notes": "Default exports resolve under the conventional symbol name `default`."
+    },
+    {
+      "name": "04-namespace",
+      "source_file": "src/04-namespace.ts",
+      "expected_references": [],
+      "notes": "v1 DEFERRED: namespace imports require member-access resolution (`m.add`), which is outside the import-bound precision boundary. T1-B should NOT emit references here."
+    },
+    {
+      "name": "05-shadowing",
+      "source_file": "src/05-shadowing.ts",
+      "expected_references": [
+        {"target_file": "src/math.ts", "target_symbol": "add", "count": 1}
+      ],
+      "notes": "Only the outer use binds to the imported `add`. The shadowed `const add` inside `shadowed()` rebinds locally and MUST NOT be counted."
+    },
+    {
+      "name": "06-re-export",
+      "source_file": "src/06-re-export.ts",
+      "expected_references": [
+        {"target_file": "src/math.ts", "target_symbol": "add", "count": 1}
+      ],
+      "notes": "One-hop re-export is tracked. Transitive (2+ hop) re-export chains are out of scope for v1."
+    },
+    {
+      "name": "07-side-effect",
+      "source_file": "src/07-side-effect.ts",
+      "expected_references": [],
+      "notes": "Side-effect-only imports bind no symbols; zero expected references."
+    },
+    {
+      "name": "08-type-only",
+      "source_file": "src/08-type-only.ts",
+      "expected_references": [
+        {"target_file": "src/math.ts", "target_symbol": "Point", "count": 1}
+      ],
+      "notes": "Type-only imports are still import-bound references."
+    },
+    {
+      "name": "09-string-literal",
+      "source_file": "src/09-string-literal.ts",
+      "expected_references": [
+        {"target_file": "src/math.ts", "target_symbol": "add", "count": 1}
+      ],
+      "notes": "The string literal `\"add and multiply\"` MUST NOT produce a reference even though `add` appears in it."
+    },
+    {
+      "name": "10-unused",
+      "source_file": "src/10-unused.ts",
+      "expected_references": [],
+      "notes": "Imported but never referenced. Zero expected references. T1-B may emit the import edge, but no reference rows."
+    },
+    {
+      "name": "11-multiple-uses",
+      "source_file": "src/11-multiple-uses.ts",
+      "expected_references": [
+        {"target_file": "src/math.ts", "target_symbol": "add", "count": 3}
+      ],
+      "notes": "Three distinct use sites."
+    }
+  ]
+}

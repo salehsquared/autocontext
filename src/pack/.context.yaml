@@ -1,0 +1,131 @@
+version: 1
+last_updated: 2026-04-14T17:38:35.598Z
+fingerprint: dd8fad1c
+scope: src/pack
+summary: Source directory.
+maintenance: |-
+  If you modify files in this directory, update this .context.yaml to reflect
+  your changes. Update the summary, and any decisions or constraints that changed.
+  Do NOT update the fingerprint manually — run `context rehash` or it will be
+  updated automatically on the next `context status` check.
+  If you only read files in this directory, do not modify this file.
+  Do not include secrets, API keys, passwords, or PII in this file.
+decisions:
+  - what: BM25F, not embeddings
+    why: Deterministic byte-for-byte across same inputs + same index version. Embeddings would add a model dependency, a
+      vector index, and a re-rank policy — none of which beat BM25 on the .context.yaml corpus.
+  - what: "Composite score: 0.55·BM25 + 0.35·proximity + must-include bias"
+    why: BM25 alone misses scopes that are structurally close to a high-ranked scope. Graph proximity catches the
+      neighborhood; must-include bias keeps obvious answers on top.
+  - what: Tier-0 root summary (≤200 tokens) + tier-1 greedy (max 85% of remaining budget)
+    why: Root context is the fastest orientation; reserving a small slot for it keeps every pack self-contained. Tier-1 cap
+      leaves headroom for downstream tier-2/3 expansion if it ever ships.
+constraints:
+  - Output must be deterministic for (inputs, index_version, code_version). Required for cache hits and reproducibility
+    tests.
+  - BM25 zone weights and k1/b are version-locked via BM25_VERSION (T12 provenance). Bumping them invalidates bench
+    baselines.
+dependencies:
+  internal:
+    - ../core/scanner.js
+    - ../core/schema.js
+    - ../index/access.js
+    - ../index/paths.js
+    - ../index/store.js
+    - ../index/types.js
+    - ../utils/scan-options.js
+    - ../version.js
+    - ./bm25.js
+    - ./corpus.js
+    - ./graph-proximity.js
+    - ./tokenize.js
+    - ./types.js
+data_models:
+  - "interface PerDocZoneStats { tfByZone: Map<Zone, Map<string, number>>, zoneLengths: Record<Zone, number> }"
+  - "interface BM25Index { nDocs: number, df: Map<string, number>, zoneAvgDl: Record<Zone, number>, byScope: Map<string,
+    PerDocZoneStats> }"
+  - "interface ScopeDoc { scope: string, dirPath: string, context: ContextFile, zones: Record<Zone, string[]> }"
+  - 'interface ResolvedSeed { kind: "query" | "file" | "symbol", displayValue: string, queryText: string, graphDirs:
+    string[], mustIncludeScopes: Set<string> }'
+  - "interface PackOptions { projectRoot: string, query: string, file: string, symbol: string, budget: number, weights:
+    { alpha: number; beta: number; gamma: nu… }"
+  - "interface PackScope { scope: string, score: number, hops: number | null, rendered: string, mustInclude: boolean,
+    context: ContextFile, tokens: number }"
+  - 'interface Pack { seed: { kind: "query" | "file" | "symbol"; val…, budget: number, used_tokens: number, root: {
+    scope: string; summary: string } | nul…, scopes: PackScope[], warnings: string[], metadata: { autocontext_version:
+    string; n_scopes_… }'
+exports:
+  - "ZONE_WEIGHTS: Record<Zone, number>"
+  - interface BM25Index
+  - "function buildBM25(corpus: ScopeDoc[]): BM25Index"
+  - interface ScopeDoc
+  - "async function loadCorpus(projectRoot: string): Promise<ScopeDoc[]>"
+  - "function formatPackMarkdown(pack: Pack): string"
+  - "function formatPackJson(pack: Pack): string"
+  - "async function computeGraphProximity( store: IndexStore, seedDirs: string[], ): Promise<Map<string, number>>"
+  - "async function buildPack(opts: PackOptions): Promise<Pack>"
+  - _internals
+  - type Zone
+  - "function tokenize(text: string, zone: Zone): string[]"
+  - interface PackOptions
+  - interface PackScope
+  - interface Pack
+imports:
+  - path: ../core/scanner.js
+    symbols:
+      - flattenBottomUp
+      - scanProject
+  - path: ../core/schema.js
+    symbols:
+      - CONTEXT_FILENAME
+      - ContextFile
+      - contextSchema
+  - path: ../index/access.js
+    symbols:
+      - openReadOnlyIndex
+  - path: ../index/paths.js
+    symbols:
+      - manifestPath
+      - toFileId
+  - path: ../index/store.js
+    symbols:
+      - IndexStore
+  - path: ../index/types.js
+    symbols:
+      - DirEdge
+  - path: ../utils/scan-options.js
+    symbols:
+      - loadScanOptions
+  - path: ../version.js
+    symbols:
+      - AUTOCONTEXT_VERSION
+  - path: ./bm25.js
+    symbols:
+      - ZONE_WEIGHTS
+      - buildBM25
+  - path: ./corpus.js
+    symbols:
+      - ScopeDoc
+      - loadCorpus
+  - path: ./graph-proximity.js
+    symbols:
+      - computeGraphProximity
+  - path: ./tokenize.js
+    symbols:
+      - Zone
+      - tokenize
+  - path: ./types.js
+    symbols:
+      - Pack
+      - PackOptions
+      - PackScope
+derived_fields:
+  - version
+  - last_updated
+  - fingerprint
+  - scope
+  - exports
+  - dependencies.internal
+  - imports
+  - data_models
+semantic_fingerprint: 233fdb7a121e

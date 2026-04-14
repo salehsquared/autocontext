@@ -2,7 +2,7 @@ import { resolve, join } from "node:path";
 import { stat } from "node:fs/promises";
 import { scanProject, flattenBottomUp } from "../core/scanner.js";
 import { readContext, UnsupportedVersionError } from "../core/writer.js";
-import { checkFreshness, type FreshnessState } from "../core/fingerprint.js";
+import { checkFreshness, legacyState, type FreshnessState } from "../core/fingerprint.js";
 import { heading, dim, warnMsg } from "../utils/display.js";
 import { loadScanOptions } from "../utils/scan-options.js";
 import { loadConfig } from "../utils/config.js";
@@ -171,7 +171,7 @@ export async function statsCommand(options: { path?: string; json?: boolean }): 
       if (state === "fresh") {
         freshCount++;
         if (sourceTokens > contextTokens) freshTokensSaved += sourceTokens - contextTokens;
-      } else if (state === "stale") {
+      } else if (legacyState(state) === "stale") {
         staleCount++;
         lagHours = await computeContextLag(dir, context);
         if (lagHours !== null) staleLags.push(lagHours);
@@ -380,7 +380,7 @@ export async function statsCommand(options: { path?: string; json?: boolean }): 
     const red = entry.freshness === "missing" || entry.sourceTokens === 0
       ? "\u2014"
       : `${entry.reductionPercent}% (${entry.sourceTokens > 0 && entry.contextTokens > 0 ? Math.round(entry.sourceTokens / entry.contextTokens) : 0}x)`;
-    const staleMarker = entry.freshness === "stale" ? dim(" \u26a0") : "";
+    const staleMarker = legacyState(entry.freshness) === "stale" ? dim(" \u26a0") : "";
     console.log(`    ${label.padEnd(scopeWidth)}  ${src.padStart(8)}  ${ctx.padStart(8)}  ${red.padStart(10)}${staleMarker}`);
   }
 

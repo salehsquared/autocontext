@@ -1,0 +1,63 @@
+{
+  "cases": [
+    {
+      "name": "01-happy-path",
+      "source_file": "src/case_01_happy_path.py",
+      "expected_references": [
+        {"target_file": "src/math_mod.py", "target_symbol": "add", "count": 1}
+      ],
+      "notes": "Control case."
+    },
+    {
+      "name": "02-aliased",
+      "source_file": "src/case_02_aliased.py",
+      "expected_references": [
+        {"target_file": "src/math_mod.py", "target_symbol": "add", "count": 1},
+        {"target_file": "src/math_mod.py", "target_symbol": "multiply", "count": 1}
+      ],
+      "notes": "`import X as Y` resolves to the original name X."
+    },
+    {
+      "name": "03-module-import",
+      "source_file": "src/case_03_module_import.py",
+      "expected_references": [],
+      "notes": "v1 DEFERRED: `import math_mod` followed by `math_mod.add` requires member-access resolution, which is outside the import-bound precision boundary. T1-B should NOT emit references here."
+    },
+    {
+      "name": "04-shadowing",
+      "source_file": "src/case_04_shadowing.py",
+      "expected_references": [
+        {"target_file": "src/math_mod.py", "target_symbol": "add", "count": 1}
+      ],
+      "notes": "Only `outer()` uses the imported `add`. Inside `shadowed()`, a local `add = lambda ...` rebinds and MUST NOT count."
+    },
+    {
+      "name": "05-star-import",
+      "source_file": "src/case_05_star_import.py",
+      "expected_references": [],
+      "notes": "v1 DEFERRED: star imports bind an unpredictable set of names. Without type info or re-scanning the target module, T1-B cannot know which uses resolve through the star. Explicitly not tracked."
+    },
+    {
+      "name": "06-type-hint",
+      "source_file": "src/case_06_type_hint.py",
+      "expected_references": [
+        {"target_file": "src/math_mod.py", "target_symbol": "Point", "count": 2}
+      ],
+      "notes": "Both the type annotation `-> Point` and the constructor call `Point(0.0, 0.0)` count as reference sites."
+    },
+    {
+      "name": "07-string-and-docstring",
+      "source_file": "src/case_07_string_and_docstring.py",
+      "expected_references": [
+        {"target_file": "src/math_mod.py", "target_symbol": "add", "count": 1}
+      ],
+      "notes": "The docstring mention of `add` and the string literal `\"add and multiply\"` MUST NOT produce references."
+    },
+    {
+      "name": "08-unused",
+      "source_file": "src/case_08_unused.py",
+      "expected_references": [],
+      "notes": "Imported but never referenced."
+    }
+  ]
+}

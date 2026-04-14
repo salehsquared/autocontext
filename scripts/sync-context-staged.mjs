@@ -70,7 +70,22 @@ if (!hasNonContextChanges) {
   process.exit(0);
 }
 
-run("node", ["dist/index.js", "regen", "--all", "--stale", "--no-llm", "--no-agents", "-p", rootPath], {
+// Ensure the code index is warm before classifying staleness. The `index`
+// command is idempotent and incremental; <100ms on a warm clone, a full
+// build on a cold one.
+const idx = spawnSync("node", ["dist/index.js", "index", "-p", rootPath], {
+  cwd: rootPath,
+  stdio: "inherit",
+});
+// When the index is available, prefer the semantic gate — formatter /
+// comment-only diffs no longer trigger regen. Falls back to the legacy
+// cosmetic-aware gate on any index failure so the hook stays robust.
+const gateFlag = idx.status === 0 ? "--semantic-stale" : "--stale";
+if (idx.status !== 0) {
+  process.stderr.write("[autocontext] index build failed; falling back to --stale gate\n");
+}
+
+run("node", ["dist/index.js", "regen", "--all", gateFlag, "--no-llm", "--no-agents", "-p", rootPath], {
   cwd: rootPath,
 });
 

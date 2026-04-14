@@ -4,14 +4,15 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { readContext, UnsupportedVersionError } from "../core/writer.js";
 import { scanProject, flattenBottomUp } from "../core/scanner.js";
-import { checkFreshness, computeFingerprint } from "../core/fingerprint.js";
+import { checkFreshness, computeFingerprint, legacyState } from "../core/fingerprint.js";
 import { CONTEXT_FILENAME } from "../core/schema.js";
 import type { ContextFile } from "../core/schema.js";
-import type { FreshnessState } from "../core/fingerprint.js";
+import type { FreshnessState, LegacyFreshnessState } from "../core/fingerprint.js";
 import { loadScanOptions } from "../utils/scan-options.js";
 import { loadConfig } from "../utils/config.js";
 import { filterByMinTokens } from "../utils/tokens.js";
 import { aggregateEvidence, type AggregateEvidenceResult } from "../core/health.js";
+import { openReadOnlyIndex } from "../index/access.js";
 
 // Fields an LLM can request via the filter parameter
 const FILTERABLE_FIELDS = [
@@ -72,7 +73,9 @@ export interface CheckFreshnessInput {
 
 export interface CheckFreshnessResult {
   scope: string;
-  state: FreshnessState;
+  /** Legacy 3-state projection. New consumers opt into the 4-state enum via
+   *  the T2 `explain_staleness` tool. */
+  state: LegacyFreshnessState;
   fingerprint?: {
     stored: string;
     computed: string;
@@ -87,7 +90,9 @@ export interface ListContextsInput {
 
 export interface ContextEntry {
   scope: string;
-  state: FreshnessState;
+  /** Legacy 3-state projection. Expanded 4-state info lives on the T2
+   *  `explain_staleness` tool. */
+  state: LegacyFreshnessState;
   has_context: boolean;
   last_updated?: string;
   summary?: string;
@@ -186,7 +191,7 @@ export async function handleCheckFreshness(
     context = await readContext(targetDir);
   } catch (err) {
     if (err instanceof UnsupportedVersionError) {
-      return { scope: input.scope, state: "missing" as FreshnessState, error: err.message };
+      return { scope: input.scope, state: "missing", error: err.message };
     }
     throw err;
   }
@@ -198,7 +203,7 @@ export async function handleCheckFreshness(
 
   return {
     scope: input.scope,
-    state,
+    state: legacyState(state),
     fingerprint: {
       stored: context.fingerprint,
       computed,
@@ -241,7 +246,7 @@ export async function handleListContexts(
         const { state } = await checkFreshness(dir.path, context.fingerprint);
         entries.push({
           scope,
-          state,
+          state: legacyState(state),
           has_context: true,
           last_updated: context.last_updated,
           summary: context.summary,
@@ -286,6 +291,118 @@ export async function handleAggregateEvidence(
 }
 
 // --- MCP tool registration ---
+
+export interface ExplainStalenessInput {
+  scope: string;
+  path?: string;
+}
+
+export interface ExplainStalenessResult {
+  scope: string;
+  state: FreshnessState;
+  legacy_state: LegacyFreshnessState;
+  fingerprints: {
+    directory: { stored: string; computed: string } | null;
+    semantic: { stored: string | null; computed: string | null };
+  };
+  caveat: string;
+  error?: string;
+}
+
+export async function handleExplainStaleness(
+  input: ExplainStalenessInput,
+  defaultRoot: string,
+): Promise<ExplainStalenessResult> {
+  const rootPath = resolve(input.path ?? defaultRoot);
+  const targetDir = resolveAndValidate(rootPath, input.scope);
+  const baseCaveat =
+    "Staleness classification uses import-bound references only (precision \u2265 0.95, recall \u2265 0.70 for TS/JS; lower elsewhere).";
+
+  if (!targetDir) {
+    return {
+      scope: input.scope,
+      state: "missing",
+      legacy_state: "missing",
+      fingerprints: { directory: null, semantic: { stored: null, computed: null } },
+      caveat: baseCaveat,
+      error: "Invalid scope: path traversal detected",
+    };
+  }
+
+  let context;
+  try {
+    context = await readContext(targetDir);
+  } catch (err) {
+    if (err instanceof UnsupportedVersionError) {
+      return {
+        scope: input.scope,
+        state: "missing",
+        legacy_state: "missing",
+        fingerprints: { directory: null, semantic: { stored: null, computed: null } },
+        caveat: baseCaveat,
+        error: err.message,
+      };
+    }
+    throw err;
+  }
+  if (!context) {
+    return {
+      scope: input.scope,
+      state: "missing",
+      legacy_state: "missing",
+      fingerprints: { directory: null, semantic: { stored: null, computed: null } },
+      caveat: baseCaveat,
+    };
+  }
+
+  const access = await openReadOnlyIndex(rootPath);
+  if (access.state !== "ready") {
+    // No index — fall back to directory-fingerprint-only classification.
+    const { state, computed } = await checkFreshness(targetDir, context.fingerprint);
+    return {
+      scope: input.scope,
+      state,
+      legacy_state: legacyState(state),
+      fingerprints: {
+        directory: { stored: context.fingerprint, computed },
+        semantic: { stored: context.semantic_fingerprint ?? null, computed: null },
+      },
+      caveat: baseCaveat,
+      error: "INDEX_MISSING",
+    };
+  }
+
+  const { extractPolicyFacts } = await import("../core/semantic-fingerprint.js");
+  const store = access.store;
+  try {
+    const { state, computed, computedSemantic } = await checkFreshness(
+      targetDir,
+      context.fingerprint,
+      [],
+      {
+        storedSemanticFingerprint: context.semantic_fingerprint,
+        index: store,
+        contextFacts: extractPolicyFacts(context),
+        projectRoot: rootPath,
+      },
+    );
+    return {
+      scope: input.scope,
+      state,
+      legacy_state: legacyState(state),
+      fingerprints: {
+        directory: { stored: context.fingerprint, computed },
+        semantic: {
+          stored: context.semantic_fingerprint ?? null,
+          computed: computedSemantic ?? null,
+        },
+      },
+      caveat: baseCaveat,
+    };
+  } finally {
+    await store.close();
+  }
+}
 
 export function registerTools(server: McpServer, defaultRoot: string): void {
   server.registerTool(
@@ -366,6 +483,258 @@ export function registerTools(server: McpServer, defaultRoot: string): void {
       return {
         content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
         isError: !!result.error,
+      };
+    },
+  );
+
+  server.registerTool(
+    "build_context_pack",
+    {
+      title: "Build Context Pack",
+      description:
+        "Assemble a token-budgeted Markdown or JSON pack for an agent. " +
+        "Seeds: --query (free text), --file (path), --symbol (exported name). " +
+        "Retrieval: BM25F over the .context.yaml corpus plus directory-level " +
+        "graph proximity when the code index is available.",
+      inputSchema: {
+        query: z.string().optional().describe("Free-text query seed"),
+        file: z.string().optional().describe("File path seed (POSIX-relative to project root)"),
+        symbol: z.string().optional().describe("Exported symbol name seed"),
+        budget: z.number().int().positive().optional().describe("Token budget (default 4000)"),
+        format: z.enum(["md", "json"]).optional().describe("Output format (default md)"),
+        path: z.string().optional().describe("Project root path override"),
+      },
+    },
+    async (input) => {
+      const { buildPack } = await import("../pack/pack.js");
+      const { formatPackJson, formatPackMarkdown } = await import("../pack/format.js");
+      const pack = await buildPack({
+        projectRoot: resolve(input.path ?? defaultRoot),
+        query: input.query,
+        file: input.file,
+        symbol: input.symbol,
+        budget: input.budget,
+      });
+      const text = input.format === "json" ? formatPackJson(pack) : formatPackMarkdown(pack);
+      return { content: [{ type: "text" as const, text }] };
+    },
+  );
+
+  server.registerTool(
+    "explain_staleness",
+    {
+      title: "Explain Staleness",
+      description:
+        "Classify a scope's freshness using the 4-state enum " +
+        "(fresh | cosmetic_stale | semantic_stale | missing). Returns both " +
+        "fingerprints and a minimal change delta so agents can tell whether " +
+        "the API surface actually moved. Requires the local code index; " +
+        "returns error INDEX_MISSING otherwise.",
+      inputSchema: {
+        scope: z.string().describe(
+          'Relative path from project root, e.g. "src/core" or "." for root',
+        ),
+        path: z.string().optional().describe(
+          "Project root path override. Defaults to the server's configured root.",
+        ),
+      },
+    },
+    async (input) => {
+      const result = await handleExplainStaleness(input, defaultRoot);
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+        isError: !!result.error,
+      };
+    },
+  );
+
+  server.registerTool(
+    "find_definition",
+    {
+      title: "Find Definition",
+      description:
+        "Return every definition location for a bare symbol name. Backed by the T1 index; " +
+        "results are precise for exported symbols and deterministic (sorted by file, line). " +
+        "Scope to a directory or file when a name is common. Since v0.2.",
+      inputSchema: {
+        symbol: z.string().min(1).describe("Bare symbol name. Case-sensitive. No dotted paths."),
+        scope: z
+          .object({
+            file: z.string().optional(),
+            dir: z.string().optional(),
+          })
+          .optional(),
+        limit: z.number().int().positive().max(50).optional().describe("Default 25; hard cap 50."),
+        path: z.string().optional(),
+      },
+    },
+    async (input) => {
+      const { handleFindDefinition } = await import("./nav.js");
+      const result = await handleFindDefinition(input, defaultRoot);
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+        isError: !result.ok,
+      };
+    },
+  );
+
+  server.registerTool(
+    "find_references",
+    {
+      title: "Find References",
+      description:
+        "Import-bound references only — returns identifier uses bound by a static import " +
+        "statement in the same file. Free identifiers, member-access chains, and dynamic " +
+        "imports are NOT indexed; a zero result is not proof of zero callers. Pass " +
+        "`symbol_id` from find_definition for precise results. Since v0.2.",
+      inputSchema: {
+        symbol: z.string().optional(),
+        symbol_id: z.string().optional(),
+        scope: z
+          .object({
+            file: z.string().optional(),
+            dir: z.string().optional(),
+          })
+          .optional(),
+        limit: z.number().int().positive().max(50).optional(),
+        path: z.string().optional(),
+      },
+    },
+    async (input) => {
+      const { handleFindReferences } = await import("./nav.js");
+      const result = await handleFindReferences(input, defaultRoot);
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+        isError: !result.ok,
+      };
+    },
+  );
+
+  server.registerTool(
+    "find_related",
+    {
+      title: "Find Related",
+      description:
+        "Expand a file or symbol seed into a neighborhood: importers, importees, siblings, " +
+        "and directory neighbors. Use as a precursor to build_context_pack. Results sorted " +
+        "by strength desc, then file asc. Since v0.2.",
+      inputSchema: {
+        seed: z.object({
+          file: z.string().optional(),
+          symbol: z.string().optional(),
+        }),
+        kinds: z
+          .array(z.enum(["importers", "importees", "siblings", "dir_neighbors"]))
+          .optional()
+          .describe("Default: importers, importees, dir_neighbors."),
+        max_results: z.number().int().positive().max(50).optional(),
+        path: z.string().optional(),
+      },
+    },
+    async (input) => {
+      const { handleFindRelated } = await import("./nav.js");
+      const result = await handleFindRelated(input, defaultRoot);
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+        isError: !result.ok,
+      };
+    },
+  );
+
+  server.registerTool(
+    "search_context",
+    {
+      title: "Search Context",
+      description:
+        "BM25F search over the .context.yaml corpus. Returns ranked scopes with short " +
+        "excerpts. Use the results as seeds for build_context_pack or query_context. " +
+        "Since v0.2.",
+      inputSchema: {
+        query: z.string().min(1),
+        fields: z
+          .array(z.enum(["summary", "decisions", "constraints", "symbols", "state", "facets", "path"]))
+          .optional(),
+        limit: z.number().int().positive().max(50).optional().describe("Default 10; cap 50."),
+        path: z.string().optional(),
+      },
+    },
+    async (input) => {
+      const { handleSearchContext } = await import("./nav.js");
+      const result = await handleSearchContext(input, defaultRoot);
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+        isError: !result.ok,
+      };
+    },
+  );
+
+  server.registerTool(
+    "impact",
+    {
+      title: "Impact",
+      description:
+        "Reverse-BFS over the import graph to surface files affected by a change seed " +
+        "(file or symbol). Recall-imperfect: only import-bound references are followed. " +
+        "Use to narrow scope, not to prove absence of effect. Since v0.2.",
+      inputSchema: {
+        seed: z.string().min(1),
+        kind: z.enum(["file", "symbol", "diff"]).optional().describe("Default 'file'. 'diff' is not supported in v1."),
+        max_depth: z.number().int().positive().max(10).optional(),
+        max_results: z.number().int().positive().max(500).optional(),
+        path: z.string().optional(),
+      },
+    },
+    async (input) => {
+      const { handleImpact } = await import("./nav.js");
+      const result = await handleImpact(input, defaultRoot);
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+        isError: !result.ok,
+      };
+    },
+  );
+
+  server.registerTool(
+    "check_policies",
+    {
+      title: "Check Policies",
+      description:
+        "Evaluate typed policy rules (forbid_import, require_import, require_export, " +
+        "max_file_lines, require_test_file, dependency_boundary, evidence_requires) " +
+        "against the local code index. Returns violations keyed by rule kind and scope. " +
+        "Requires the index — returns {ok: false, index_state: \"missing\"} otherwise.",
+      inputSchema: {
+        scope: z.string().optional().describe(
+          "Project-relative POSIX directory to limit evaluation to. Default: whole project.",
+        ),
+        rule_kinds: z
+          .array(
+            z.enum([
+              "forbid_import",
+              "require_import",
+              "require_export",
+              "max_file_lines",
+              "require_test_file",
+              "dependency_boundary",
+              "evidence_requires",
+            ]),
+          )
+          .optional()
+          .describe("Filter to only these rule kinds. Default: all kinds."),
+        path: z.string().optional().describe("Project root path override."),
+      },
+    },
+    async (input) => {
+      const { runPolicies } = await import("../policy/engine.js");
+      const projectRoot = resolve(input.path ?? defaultRoot);
+      const run = await runPolicies({
+        projectRoot,
+        scope: input.scope,
+        ruleKinds: input.rule_kinds,
+      });
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(run, null, 2) }],
+        isError: !run.ok,
       };
     },
   );

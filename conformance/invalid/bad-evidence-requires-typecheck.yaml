@@ -1,0 +1,9 @@
+version: 1
+last_updated: "2026-04-13T10:00:00.000Z"
+fingerprint: "ab12cd34"
+scope: "."
+summary: "evidence_requires.typecheck must be 'clean', not 'passing'"
+maintenance: "Keep updated"
+rules:
+  - kind: "evidence_requires"
+    typecheck: "passing"

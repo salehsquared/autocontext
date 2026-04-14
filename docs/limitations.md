@@ -133,3 +133,26 @@ Tested on projects with hundreds of directories and thousands of files. Known sc
 - LLM generation is the bottleneck — one API call per directory
 - Static mode is fast (< 1 second for typical projects)
 - `maxDepth` config caps directory traversal to prevent runaway scanning
+
+## Code index (per-language)
+
+The local code index (`context index`) is syntactic — tree-sitter only, no type inference. Per-language honest status:
+
+| Language | Symbols | Imports | Import-bound references | Notes |
+|---|---|---|---|---|
+| TypeScript (`.ts`, `.tsx`) | Top-level declarations (functions, classes, interfaces, types, consts, enums). | Static imports, CJS `require`, dynamic (partial), re-exports. | Precision ≥ 0.95 / recall ≥ 0.70 on fixtures. | Methods on classes are not separate symbol rows. `.d.ts` declarations are indexed but filtered out of bench ground truth. |
+| JavaScript (`.js`, `.jsx`) | Same as TS. | Same as TS. | Same as TS. | Same analyzer. |
+| Python (`.py`) | Top-level functions / classes / dataclasses / `BaseModel` subclasses / module constants. | `import X` / `from X import Y` / relative imports. | Precision ≥ 0.90 / recall ≥ 0.70 on fixtures. | Decorators are parsed, not resolved. Class-body statements are not indexed as symbols. |
+| Go (`.go`) | Deferred in v1. | Deferred. | Deferred. | WASM grammar is copied; analyzer queries are specced. |
+| Rust (`.rs`) | Deferred in v1. | Deferred. | Deferred. | Same story. |
+
+### What the index explicitly does NOT do
+
+- **Polymorphic call resolution.** `foo.bar()` is not resolved to a specific definition when `foo` has a runtime-dispatched type.
+- **Member-access resolution.** `X.y.z` chains are not traversed beyond the import binding.
+- **Type inference.** No flow analysis, no generic instantiation, no type narrowing.
+- **Cross-package imports beyond one hop.** Resolving `"lodash"` stops at the package entry point; the index does not walk into `node_modules/`.
+- **Dynamic imports.** `import(x)` and `require(x)` where `x` is a variable are not followed.
+- **Shadowed identifiers across scopes.** The analyzer is scope-aware for top-level shadow detection; deeper scope walks are intentionally limited.
+
+These boundaries are the reason `find_references`, `impact`, and bench ground truth all carry pinned precision-class metadata. A zero result is not proof of zero callers. See [docs/trust-model.md](trust-model.md#index-trust-model) and [docs/index.md](index.md#precision-boundary-non-negotiable).

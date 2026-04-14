@@ -1,130 +1,191 @@
 version: 1
-last_updated: 2026-02-20T16:42:18.829Z
-fingerprint: e9b1ef0c
+last_updated: 2026-04-14T17:38:35.667Z
+fingerprint: ce9fbcfc
 scope: src
 summary: Source code.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the files list, interfaces, and current_state sections.
+  your changes. Update the summary, and any decisions or constraints that changed.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-files:
-  - name: index.ts
-    purpose: "Exports: CommandHandlers, createProgram, runCli"
+decisions:
+  - what: "rules: block enforces architectural boundaries mechanically"
+    why: Prose constraints drift. The policy engine verifies these every CI run against the local index.
+constraints:
+  - Architectural boundaries are enforced by `context validate --policy`. Adding an import that crosses a forbidden
+    boundary fails the policy check.
+dependencies:
+  internal:
+    - ../package.json
+    - ./commands/bench.js
+    - ./commands/cache.js
+    - ./commands/config.js
+    - ./commands/diff.js
+    - ./commands/doctor.js
+    - ./commands/health.js
+    - ./commands/hotspots.js
+    - ./commands/ignore.js
+    - ./commands/impact.js
+    - ./commands/index-cmd.js
+    - ./commands/init.js
+    - ./commands/pack.js
+    - ./commands/regen.js
+    - ./commands/rehash.js
+    - ./commands/show.js
+    - ./commands/stats.js
+    - ./commands/status.js
+    - ./commands/timeline.js
+    - ./commands/validate.js
 subdirectories:
   - name: bench/
-    summary: Source directory.
+    summary: Benchmark harness — five comparator arms (baseline / context / pack / pack+impact / pack+policy),
+      index-grounded ground-truth, and BenchProvenance pinning.
+  - name: cache/
+    summary: Content-addressed LLM response cache at `.autocontext/llm-cache/`. Sharded layout, deterministic keys.
   - name: commands/
     summary: CLI command implementations.
   - name: core/
     summary: Core functionality.
   - name: generator/
     summary: Code generation.
+  - name: impact/
+    summary: Documentation.
+  - name: index/
+    summary: Local symbol / reference / import-edge graph store. Pluggable IndexStore backed by NDJSON under
+      .autocontext/index/. Powers pack ranking, impact, semantic staleness, policies, and MCP navigation.
   - name: mcp/
-    summary: MCP server integration.
+    summary: MCP server (stdio transport) + 12 tools grouped by intent (discover / read / navigate / analyze / assemble).
+      Capability resource at autocontext://capabilities.
+  - name: pack/
+    summary: Source directory.
+  - name: policy/
+    summary: Source directory.
   - name: providers/
     summary: Abstract LLM provider interface.
   - name: utils/
     summary: Utility functions.
+  - name: verify/
+    summary: Active-verification orchestrator + nine output normalizers
+      (vitest/jest/junit/go-test/tsc/eslint/istanbul/pytest-cov/exit-code). Spawns the user's configured commands and
+      writes evidence atomically.
+  - name: view/
+    summary: Source directory.
+data_models:
+  - "interface CommandHandlers { initCommand: typeof initCommand, statusCommand: typeof statusCommand, regenCommand:
+    typeof regenCommand, rehashCommand: typeof rehashCommand, validateCommand: typeof validateCommand, showCommand:
+    typeof showCommand, configCommand: typeof configCommand, ignoreCommand: typeof ignoreCommand, …+16 more }"
+  - "interface PackageJsonShape { version: string }"
 exports:
   - interface CommandHandlers
   - "function createProgram(handlers: CommandHandlers = defaultHandlers): Command"
   - "async function runCli( argv: string[] = process.argv, handlers: CommandHandlers = defaultHandlers, ): Promise<void>"
-interfaces:
-  - name: CommandHandlers
-    description: Exported from index.ts
-  - name: createProgram
-    description: Exported from index.ts
-  - name: runCli
-    description: Exported from index.ts
-dependencies:
-  internal:
-    - ./commands/bench.js
-    - ./commands/config.js
-    - ./commands/doctor.js
-    - ./commands/health.js
-    - ./commands/ignore.js
-    - ./commands/init.js
-    - ./commands/regen.js
-    - ./commands/rehash.js
-    - ./commands/show.js
-    - ./commands/stats.js
-    - ./commands/status.js
-    - ./commands/validate.js
-    - ./commands/watch.js
-    - ./mcp/server.js
-    - ./utils/display.js
-    - ./utils/env.js
+  - buildPack
+  - formatPackJson
+  - formatPackMarkdown
+  - Pack
+  - PackOptions
+  - PackScope
+  - scanProject
+  - flattenBottomUp
+  - ScanResult
+  - readContext
+  - writeContext
+  - UnsupportedVersionError
+  - checkFreshness
+  - legacyState
+  - FreshnessState
+  - LegacyFreshnessState
+  - loadConfig
+  - ContextFile
+  - ConfigFile
+  - contextSchema
+  - configSchema
+  - SCHEMA_VERSION
 imports:
+  - path: ../package.json
+    symbols:
+      - default as pkg
+  - path: ./bench/ground-truth-impact.js
+    symbols:
+      - generateImpactTasks
+  - path: ./bench/ground-truth-symbols.js
+    symbols:
+      - generateSymbolTasks
+  - path: ./bench/provenance.js
+    symbols:
+      - buildProvenance
+  - path: ./bench/runner.js
+    symbols:
+      - runBench
+  - path: ./bench/tasks.js
+    symbols:
+      - generateTasks
+  - path: ./bench/types.js
+    symbols:
+      - ARMS
   - path: ./commands/bench.js
     symbols:
       - benchCommand
+  - path: ./commands/cache.js
+    symbols:
+      - cacheClearCommand
+      - cacheStatsCommand
   - path: ./commands/config.js
     symbols:
       - configCommand
+  - path: ./commands/diff.js
+    symbols:
+      - diffCommand
   - path: ./commands/doctor.js
     symbols:
       - doctorCommand
   - path: ./commands/health.js
     symbols:
       - healthCommand
+  - path: ./commands/hotspots.js
+    symbols:
+      - hotspotsCommand
   - path: ./commands/ignore.js
     symbols:
       - ignoreCommand
+  - path: ./commands/impact.js
+    symbols:
+      - impactCommand
+  - path: ./commands/index-cmd.js
+    symbols:
+      - indexCommand
   - path: ./commands/init.js
     symbols:
       - initCommand
+  - path: ./commands/pack.js
+    symbols:
+      - packCommand
   - path: ./commands/regen.js
     symbols:
       - regenCommand
-  - path: ./commands/rehash.js
-    symbols:
-      - rehashCommand
-  - path: ./commands/show.js
-    symbols:
-      - showCommand
-  - path: ./commands/stats.js
-    symbols:
-      - statsCommand
-  - path: ./commands/status.js
-    symbols:
-      - statusCommand
-  - path: ./commands/validate.js
-    symbols:
-      - validateCommand
-  - path: ./commands/watch.js
-    symbols:
-      - watchCommand
-  - path: ./mcp/server.js
-    symbols:
-      - startMcpServer
-  - path: ./utils/display.js
-    symbols:
-      - errorMsg
-  - path: ./utils/env.js
-    symbols:
-      - loadEnvForCli
-internals:
-  - name: defaultHandlers
-    kind: constant
-    file: index.ts
-  - name: isInvokedDirectly
-    kind: function
-    file: index.ts
-  - name: invokedDirectly
-    kind: constant
-    file: index.ts
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
-  - files
-  - interfaces
   - exports
   - dependencies.internal
   - imports
-  - internals
   - subdirectories
+  - data_models
+rules:
+  - kind: forbid_import
+    from: src/generator/**
+    to: src/mcp/**
+    message: Generators must not depend on the MCP layer.
+  - kind: forbid_import
+    from: src/core/**
+    to: src/commands/**
+    message: Core must not depend on CLI commands.
+  - kind: max_file_lines
+    value: 800
+    exclude:
+      - src/generator/ast.ts
+semantic_fingerprint: c2058cd7996c

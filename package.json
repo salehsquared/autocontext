@@ -1,8 +1,19 @@
 {
   "name": "autocontext",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Folder-level documentation for LLMs — .context.yaml files for every directory",
   "type": "module",
+  "main": "dist/lib.js",
+  "types": "dist/lib.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/lib.d.ts",
+      "import": "./dist/lib.js",
+      "default": "./dist/lib.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
   "bin": {
     "context": "dist/index.js"
   },
@@ -34,6 +45,7 @@
     "test:watch": "vitest",
     "test:conformance": "node conformance/runner.mjs",
     "test:e2e": "bash tests/e2e/smoke.sh",
+    "test:help": "node scripts/help-smoke.mjs",
     "lint": "tsc --noEmit",
     "prepublishOnly": "npm run build && npm test"
   },

@@ -98,7 +98,12 @@ async function crossReference(dir: ScanResult, context: ContextFile): Promise<St
   return findings;
 }
 
-export async function validateCommand(options: { path?: string; strict?: boolean }): Promise<void> {
+export async function validateCommand(options: {
+  path?: string;
+  strict?: boolean;
+  policy?: boolean;
+  json?: boolean;
+}): Promise<void> {
   const rootPath = resolve(options.path ?? ".");
 
   const config = await loadConfig(rootPath);
@@ -107,6 +112,8 @@ export async function validateCommand(options: { path?: string; strict?: boolean
   const allDirs = flattenBottomUp(scanResult);
   const { dirs } = await filterByMinTokens(allDirs, config?.min_tokens);
 
+  const jsonMode = options.json === true;
+  const schemaFindings: Array<{ scope: string; severity: string; message: string }> = [];
   let valid = 0;
   let invalid = 0;
   let missing = 0;
@@ -125,9 +132,10 @@ export async function validateCommand(options: { path?: string; strict?: boolean
 
       if (result.success) {
         if (dir.relativePath === "." && (!result.data.project || !result.data.structure)) {
-          console.log(warnMsg(`${label}: root .context.yaml should include 'project' and 'structure' fields`));
+          if (!jsonMode) console.log(warnMsg(`${label}: root .context.yaml should include 'project' and 'structure' fields`));
+          schemaFindings.push({ scope: dir.relativePath, severity: "warning", message: "root .context.yaml should include 'project' and 'structure' fields" });
         }
-        console.log(successMsg(`${label}`));
+        if (!jsonMode) console.log(successMsg(`${label}`));
         valid++;
 
         if (options.strict) {
@@ -138,18 +146,21 @@ export async function validateCommand(options: { path?: string; strict?: boolean
               continue;
             }
             if (finding.severity === "warning") {
-              console.log(warnMsg(`  strict: ${finding.message}`));
+              if (!jsonMode) console.log(warnMsg(`  strict: ${finding.message}`));
               strictWarnings++;
             } else {
-              console.log(dim(`    strict: ${finding.message}`));
+              if (!jsonMode) console.log(dim(`    strict: ${finding.message}`));
               strictInfo++;
             }
+            schemaFindings.push({ scope: dir.relativePath, severity: finding.severity, message: finding.message });
           }
         }
       } else {
-        console.log(errorMsg(`${label}`));
+        if (!jsonMode) console.log(errorMsg(`${label}`));
         for (const issue of result.error.issues) {
-          console.log(`       ${issue.path.join(".")}: ${issue.message}`);
+          const msg = `${issue.path.join(".")}: ${issue.message}`;
+          if (!jsonMode) console.log(`       ${msg}`);
+          schemaFindings.push({ scope: dir.relativePath, severity: "error", message: msg });
         }
         invalid++;
       }
@@ -157,15 +168,17 @@ export async function validateCommand(options: { path?: string; strict?: boolean
       if ((err as NodeJS.ErrnoException).code === "ENOENT") {
         missing++;
       } else {
-        console.log(errorMsg(`${label}: ${err instanceof Error ? err.message : "parse error"}`));
+        const msg = err instanceof Error ? err.message : "parse error";
+        if (!jsonMode) console.log(errorMsg(`${label}: ${msg}`));
+        schemaFindings.push({ scope: dir.relativePath, severity: "error", message: msg });
         invalid++;
       }
     }
   }
 
-  console.log(`\n${valid} valid, ${invalid} invalid, ${missing} missing.`);
+  if (!jsonMode) console.log(`\n${valid} valid, ${invalid} invalid, ${missing} missing.`);
 
-  if (options.strict && (strictWarnings > 0 || strictInfo > 0 || leanSkipped > 0)) {
+  if (!jsonMode && options.strict && (strictWarnings > 0 || strictInfo > 0 || leanSkipped > 0)) {
     const parts: string[] = [];
     if (strictWarnings > 0 || strictInfo > 0) {
       parts.push(`${strictWarnings} warning${strictWarnings !== 1 ? "s" : ""}, ${strictInfo} info`);
@@ -176,9 +189,79 @@ export async function validateCommand(options: { path?: string; strict?: boolean
     console.log(dim(`strict: ${parts.join("; ")} across ${dirs.length} director${dirs.length !== 1 ? "ies" : "y"}`));
   }
 
-  console.log("");
+  if (!jsonMode) console.log("");
 
-  if (invalid > 0) {
+  let policyExit = 0;
+  let policyPayload: unknown = null;
+  if (options.policy) {
+    const { runPolicies } = await import("../policy/engine.js");
+    const run = await runPolicies({ projectRoot: rootPath });
+    if (run.index_state !== "ready") {
+      if (jsonMode) {
+        process.stdout.write(JSON.stringify({
+          summary: { rules_evaluated: 0, rules_passed: 0, violations: 0, scopes: run.contexts_scanned, schema_invalid: invalid, schema_missing: missing },
+          error: run.index_state === "stale" ? "index_stale" : "index_missing",
+          message: "policy: index is missing or stale — run `context index` first.",
+          violations: [],
+          schema_findings: options.strict ? schemaFindings : [],
+        }, null, 2) + "\n");
+      } else {
+        console.log(errorMsg("policy: index is missing or stale — run `context index` first."));
+      }
+      process.exit(2);
+    }
+    policyPayload = run;
+    if (run.rules_evaluated === 0) {
+      if (!jsonMode) console.log("policy: no rules defined in any .context.yaml — nothing to evaluate.");
+    } else if (!jsonMode) {
+      printPolicyHuman(run, options.strict === true);
+    }
+    if (run.violations.length > 0) policyExit = 1;
+  }
+
+  if (jsonMode) {
+    const policyRun = policyPayload as Awaited<ReturnType<typeof import("../policy/engine.js").runPolicies>> | null;
+    process.stdout.write(JSON.stringify({
+      summary: {
+        rules_evaluated: policyRun?.rules_evaluated ?? 0,
+        rules_passed: policyRun?.rules_passed ?? 0,
+        violations: policyRun?.violations.length ?? 0,
+        scopes: policyRun?.contexts_scanned ?? 0,
+        schema_invalid: invalid,
+        schema_missing: missing,
+        truncated: policyRun?.truncated ?? false,
+      },
+      violations: policyRun?.violations ?? [],
+      schema_findings: options.strict ? schemaFindings : [],
+    }, null, 2) + "\n");
+  }
+
+  if (invalid > 0 || policyExit === 1) {
     process.exit(1);
   }
+}
+
+function printPolicyHuman(run: Awaited<ReturnType<typeof import("../policy/engine.js").runPolicies>>, verbose: boolean): void {
+  console.log("policy:");
+  const byScope = new Map<string, typeof run.violations>();
+  for (const v of run.violations) {
+    const list = byScope.get(v.scope) ?? [];
+    list.push(v);
+    byScope.set(v.scope, list);
+  }
+  const scopesSorted = [...byScope.keys()].sort();
+  for (const scope of scopesSorted) {
+    const label = scope === "." ? "(root)" : scope;
+    console.log(`  ${label}`);
+    for (const v of byScope.get(scope)!) {
+      console.log(`    ${errorMsg("\u2717")} ${v.message}`);
+    }
+  }
+  const suffix = verbose
+    ? ` (${run.rules_evaluated} rule${run.rules_evaluated === 1 ? "" : "s"} evaluated, ${run.rules_passed} passed)`
+    : "";
+  const scopeCount = byScope.size;
+  console.log(`\npolicy: ${run.violations.length} violation${run.violations.length === 1 ? "" : "s"} across ${scopeCount} scope${scopeCount === 1 ? "" : "s"}${suffix}.`);
+  if (run.truncated) console.log(warnMsg("policy: output truncated at 500 violations"));
+  console.log("");
 }

@@ -2,25 +2,47 @@ import { resolve, join } from "node:path";
 import { readFile, writeFile } from "node:fs/promises";
 import { scanProject, flattenBottomUp } from "../core/scanner.js";
 import { readContext, UnsupportedVersionError } from "../core/writer.js";
-import { checkFreshness } from "../core/fingerprint.js";
+import { checkFreshness, legacyState } from "../core/fingerprint.js";
 import { createProvider } from "../providers/index.js";
 import { loadConfig, resolveApiKey } from "../utils/config.js";
 import { loadScanOptions } from "../utils/scan-options.js";
 import { heading, dim, errorMsg, warnMsg, progressBar } from "../utils/display.js";
 import type { ContextFile } from "../core/schema.js";
-import type { BenchOptions, BenchReport, MultiRepoReport } from "../bench/types.js";
+import {
+  ARMS,
+  DEFAULT_ARM_SET,
+  type BenchOptions,
+  type BenchReport,
+  type ConditionName,
+  type MultiRepoReport,
+  type TaskCategory,
+} from "../bench/types.js";
 import {
   buildDepSets,
   buildReverseDeps,
   buildDirFacts,
 } from "../bench/ground-truth.js";
+import { generateSymbolTasks } from "../bench/ground-truth-symbols.js";
+import { generateImpactTasks } from "../bench/ground-truth-impact.js";
 import { isGitRepo, getFixCommits, getFeatureCommits } from "../bench/git.js";
-import { generateTasks } from "../bench/tasks.js";
+import { generateTasks, limitTasks } from "../bench/tasks.js";
 import { runBench } from "../bench/runner.js";
 import { aggregateResults, aggregateMultiRepo } from "../bench/scorer.js";
 import { DEFAULT_REPOS, cleanupRepos } from "../bench/repos.js";
 import { cloneRepo } from "../bench/git.js";
+import { buildProvenance, IMPACT_VERSION, PACK_BUDGET_DEFAULT } from "../bench/provenance.js";
+import { openReadOnlyIndex } from "../index/access.js";
+import { runPolicies } from "../policy/engine.js";
+import type { Violation } from "../policy/types.js";
 import { initCommand } from "./init.js";
+
+const INDEX_BACKED_CATEGORIES = new Set([
+  "find-definition",
+  "find-callers",
+  "impact-of-change",
+] as const);
+
+const INDEX_REQUIRED_ARMS = new Set<ConditionName>(["pack+impact", "pack+policy"]);
 
 export async function benchCommand(options: BenchOptions): Promise<void> {
   const configRootPath = resolve(options.path ?? ".");
@@ -95,6 +117,10 @@ async function runSingleBench(
 
   const provider = await createProvider(config.provider, apiKey, config.model);
   const modelName = config.model ?? config.provider;
+  const armSet = parseArmSet(options.arm);
+  const packBudget = resolvePackBudget(options.packBudget);
+  const seed = options.seed ?? 42;
+  const iterations = options.iterations ?? 1;
 
   // Scan project
   const scanOptions = await loadScanOptions(rootPath);
@@ -122,7 +148,7 @@ async function runSingleBench(
 
       if (!options.allowStale) {
         const { state } = await checkFreshness(dir.path, ctx.fingerprint);
-        if (state === "stale") staleCount++;
+        if (legacyState(state) === "stale") staleCount++;
       }
     }
   }
@@ -139,36 +165,92 @@ async function runSingleBench(
     throw new Error("Stale contexts");
   }
 
-  // Build ground truth
-  const [depSets, reverseDeps, dirFacts] = await Promise.all([
-    buildDepSets(scanResult),
-    buildReverseDeps(scanResult),
-    buildDirFacts(scanResult),
-  ]);
+  const wantsLegacyTasks = shouldGenerateLegacyTasks(options.category);
+  const wantsIndexTasks = shouldGenerateIndexTasks(options.category);
+  const requestedIndexCategory =
+    options.category !== undefined && shouldGenerateIndexTasks(options.category) && !shouldGenerateLegacyTasks(options.category);
 
-  const hasGit = isGitRepo(rootPath);
-  const fixCommits = hasGit ? getFixCommits(rootPath, 10) : [];
-  const featureCommits = hasGit ? getFeatureCommits(rootPath, 10) : [];
+  let legacyTasks: Awaited<ReturnType<typeof generateTasks>> = [];
+  if (wantsLegacyTasks) {
+    const [depSets, reverseDeps, dirFacts] = await Promise.all([
+      buildDepSets(scanResult),
+      buildReverseDeps(scanResult),
+      buildDirFacts(scanResult),
+    ]);
 
-  if (!hasGit && !options.json) {
-    console.log(dim("  not a git repo — skipping bug_localization and patch_planning\n"));
+    const hasGit = isGitRepo(rootPath);
+    const fixCommits = hasGit ? getFixCommits(rootPath, 10) : [];
+    const featureCommits = hasGit ? getFeatureCommits(rootPath, 10) : [];
+
+    if (!hasGit && !options.json) {
+      console.log(dim("  not a git repo — skipping bug_localization and patch_planning\n"));
+    }
+
+    legacyTasks = await generateTasks({
+      scanResult,
+      dirFacts,
+      depSets,
+      reverseDeps,
+      fixCommits,
+      featureCommits,
+      category: options.category,
+      seed,
+    });
   }
 
-  // Generate tasks
-  const seed = options.seed ?? 42;
-  const iterations = options.iterations ?? 1;
+  const needsIndex = wantsIndexTasks || armSet.some((arm) => INDEX_REQUIRED_ARMS.has(arm));
+  let indexTasks: Awaited<ReturnType<typeof generateTasks>> = [];
+  if (needsIndex) {
+    const access = await openReadOnlyIndex(rootPath);
+    if (access.state !== "ready") {
+      if (armSet.some((arm) => INDEX_REQUIRED_ARMS.has(arm))) {
+        failIndexRequired(
+          `Selected arm(s) require a usable code index: ${armSet.filter((arm) => INDEX_REQUIRED_ARMS.has(arm)).join(", ")}.`,
+          access.state,
+        );
+      }
+      if (requestedIndexCategory) {
+        failIndexRequired(
+          `Task category ${options.category} requires a usable code index.`,
+          access.state,
+        );
+      }
+    } else {
+      const store = access.store;
+      try {
+        const [{ findDefinitionTasks, findCallersTasks }, impactTasks] = await Promise.all([
+          generateSymbolTasks({
+            index: store,
+            indexVersion: store.manifest.index_version,
+            seed,
+          }),
+          generateImpactTasks({
+            index: store,
+            indexVersion: store.manifest.index_version,
+            impactVersion: IMPACT_VERSION,
+            seed,
+          }),
+        ]);
 
-  const tasks = await generateTasks({
-    scanResult,
-    dirFacts,
-    depSets,
-    reverseDeps,
-    fixCommits,
-    featureCommits,
-    maxTasks: options.maxTasks,
-    category: options.category,
-    seed,
-  });
+        if (!options.category || options.category === "find-definition") {
+          indexTasks.push(...findDefinitionTasks);
+        }
+        if (!options.category || options.category === "find-callers") {
+          indexTasks.push(...findCallersTasks);
+        }
+        if (!options.category || options.category === "impact-of-change") {
+          indexTasks.push(...impactTasks);
+        }
+      } finally {
+        await store.close();
+      }
+    }
+  }
+
+  let tasks = [...legacyTasks, ...indexTasks];
+  if (options.maxTasks && tasks.length > options.maxTasks) {
+    tasks = limitTasks(tasks, options.maxTasks, seed);
+  }
 
   if (tasks.length === 0) {
     console.error(errorMsg("No tasks generated. Need files with exports, dependencies, or git history."));
@@ -187,11 +269,33 @@ async function runSingleBench(
     console.log("");
     console.log(`  provider: ${config.provider} (${modelName})`);
     console.log(`  tasks: ${tasks.length}  iterations: ${iterations}  seed: ${seed}`);
-    console.log("  conditions: baseline (scoped tree + README excerpt) vs context (scoped .context.yaml)\n");
+    console.log(`  arms: ${armSet.join(", ")}\n`);
   }
+
+  let policyViolations: Violation[] = [];
+  if (armSet.includes("pack+policy")) {
+    const policyRun = await runPolicies({ projectRoot: rootPath });
+    if (policyRun.index_state !== "ready") {
+      failIndexRequired("pack+policy requires a usable code index.", policyRun.index_state);
+    }
+    policyViolations = policyRun.violations;
+  }
+
+  const categorySet = [...new Set(tasks.map((task) => task.category))].sort() as TaskCategory[];
+  const provenance = await buildProvenance({
+    projectRoot: rootPath,
+    seed,
+    iterations,
+    armSet,
+    categorySet,
+    provider: config.provider,
+    model: modelName,
+    packBudgetDefault: packBudget,
+  });
 
   // Run benchmark
   const results = await runBench({
+    projectRoot: rootPath,
     tasks,
     provider,
     providerName: config.provider,
@@ -200,6 +304,9 @@ async function runSingleBench(
     readme,
     contextFiles,
     iterations,
+    armSet,
+    packBudget,
+    policyViolations,
     onProgress: options.json
       ? undefined
       : (completed, total) => {
@@ -220,6 +327,7 @@ async function runSingleBench(
     tasks,
     results,
     options.repo,
+    { armSet, provenance },
   );
 }
 
@@ -444,4 +552,52 @@ function printMultiRepoReport(report: MultiRepoReport): void {
     `  ${report.repos.length} repos, ~${totalTasks} tasks, ~${totalCalls} LLM calls completed in ${(totalTime / 1000 / 60).toFixed(0)}m ${((totalTime / 1000) % 60).toFixed(0)}s`,
   );
   console.log("");
+}
+
+function parseArmSet(raw?: string): ConditionName[] {
+  if (!raw) return [...DEFAULT_ARM_SET];
+  const selected = new Set(
+    raw.split(",").map((part) => part.trim()).filter(Boolean),
+  );
+  if (selected.size === 0) {
+    failUsage("`--arm` must include at least one arm.");
+  }
+
+  const invalid = [...selected].filter((arm) => !ARMS.includes(arm as ConditionName));
+  if (invalid.length > 0) {
+    failUsage(`Unknown bench arm(s): ${invalid.join(", ")}. Valid arms: ${ARMS.join(", ")}.`);
+  }
+
+  return ARMS.filter((arm) => selected.has(arm));
+}
+
+function resolvePackBudget(raw?: number): number {
+  if (raw === undefined) return PACK_BUDGET_DEFAULT;
+  if (!Number.isInteger(raw) || raw <= 0) {
+    failUsage("`--pack-budget` must be a positive integer.");
+  }
+  return raw;
+}
+
+function shouldGenerateIndexTasks(category?: BenchOptions["category"]): boolean {
+  return category === undefined || INDEX_BACKED_CATEGORIES.has(category as typeof INDEX_BACKED_CATEGORIES extends Set<infer T> ? T : never);
+}
+
+function shouldGenerateLegacyTasks(category?: BenchOptions["category"]): boolean {
+  return category === undefined || !INDEX_BACKED_CATEGORIES.has(category as typeof INDEX_BACKED_CATEGORIES extends Set<infer T> ? T : never);
+}
+
+function failIndexRequired(prefix: string, state: "missing" | "stale"): never {
+  const remediation = state === "stale"
+    ? "Run `context index --rebuild` (or `context index` if only sources changed) and retry."
+    : "Run `context index` and retry.";
+  console.error(errorMsg(`${prefix} ${remediation}`));
+  process.exitCode = 2;
+  throw new Error(`Bench index ${state}`);
+}
+
+function failUsage(message: string): never {
+  console.error(errorMsg(message));
+  process.exitCode = 2;
+  throw new Error(message);
 }

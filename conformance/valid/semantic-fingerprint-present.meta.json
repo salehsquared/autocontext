@@ -1,0 +1,5 @@
+{
+  "description": "Valid .context.yaml with both the legacy directory fingerprint and the new optional semantic_fingerprint (12-hex)",
+  "expected": "valid",
+  "category": "semantic-fingerprint"
+}

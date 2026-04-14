@@ -2,7 +2,7 @@ import { resolve, posix } from "node:path";
 import { watch as chokidarWatch } from "chokidar";
 import { scanProject, flattenBottomUp } from "../core/scanner.js";
 import { readContext, UnsupportedVersionError } from "../core/writer.js";
-import { checkFreshness } from "../core/fingerprint.js";
+import { checkFreshness, legacyState } from "../core/fingerprint.js";
 import { freshnessIcon, heading, dim } from "../utils/display.js";
 import { loadScanOptions } from "../utils/scan-options.js";
 import { loadConfig } from "../utils/config.js";
@@ -96,7 +96,7 @@ export async function watchCommand(
     console.log(`  ${freshnessIcon(state)}  ${label}`);
 
     if (state === "fresh") freshCount++;
-    else if (state === "stale") staleCount++;
+    else if (legacyState(state) === "stale") staleCount++;
     else missingCount++;
   }
 
