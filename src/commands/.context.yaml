@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T06:00:07.491Z
-fingerprint: 84fb3b90
+last_updated: 2026-04-14T06:04:37.964Z
+fingerprint: 2bc0af68
 scope: src/commands
 summary: CLI command implementations.
 maintenance: |-
@@ -31,13 +31,15 @@ dependencies:
     - ../generator/llm.js
     - ../generator/markdown.js
     - ../generator/static.js
-    - ../index/analyzer.js
+    - ../impact/impact.js
 exports:
   - "async function benchCommand(options: BenchOptions): Promise<void>"
   - "async function configCommand( options:"
   - "async function doctorCommand(options:"
   - "async function healthCommand(options:"
   - "async function ignoreCommand(targetPath: string, options:"
+  - interface ImpactCommandOptions
+  - "async function impactCommand( target: string | undefined, options: ImpactCommandOptions ="
   - interface IndexCommandOptions
   - "async function indexCommand(options: IndexCommandOptions ="
   - "async function collectIndexableFiles(rootPath: string): Promise<FileId[]>"
@@ -134,9 +136,11 @@ imports:
       - SummarySource
       - detectExportsWithFallback
       - generateStaticContext
-  - path: ../index/analyzer.js
+  - path: ../impact/impact.js
     symbols:
-      - analyzerSupports
+      - ImpactReport
+      - ImpactSeed
+      - computeImpact
 derived_fields:
   - version
   - last_updated
@@ -145,4 +149,4 @@ derived_fields:
   - exports
   - dependencies.internal
   - imports
-semantic_fingerprint: c748e4d441f2
+semantic_fingerprint: 2ea51086d7f9

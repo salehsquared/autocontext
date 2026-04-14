@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T03:06:01.288Z
-fingerprint: 24da5d81
+last_updated: 2026-04-14T06:04:38.094Z
+fingerprint: 5ca9267a
 scope: src
 summary: Source code.
 maintenance: |-
@@ -10,27 +10,6 @@ maintenance: |-
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-subdirectories:
-  - name: bench/
-    summary: Source directory.
-  - name: commands/
-    summary: CLI command implementations.
-  - name: core/
-    summary: Core functionality.
-  - name: generator/
-    summary: Code generation.
-  - name: index/
-    summary: Source directory.
-  - name: mcp/
-    summary: MCP server integration.
-  - name: providers/
-    summary: Abstract LLM provider interface.
-  - name: utils/
-    summary: Utility functions.
-exports:
-  - interface CommandHandlers
-  - "function createProgram(handlers: CommandHandlers = defaultHandlers): Command"
-  - "async function runCli( argv: string[] = process.argv, handlers: CommandHandlers = defaultHandlers, ): Promise<void>"
 dependencies:
   internal:
     - ./commands/bench.js
@@ -38,6 +17,7 @@ dependencies:
     - ./commands/doctor.js
     - ./commands/health.js
     - ./commands/ignore.js
+    - ./commands/impact.js
     - ./commands/index-cmd.js
     - ./commands/init.js
     - ./commands/regen.js
@@ -50,6 +30,29 @@ dependencies:
     - ./mcp/server.js
     - ./utils/display.js
     - ./utils/env.js
+subdirectories:
+  - name: bench/
+    summary: Source directory.
+  - name: commands/
+    summary: CLI command implementations.
+  - name: core/
+    summary: Core functionality.
+  - name: generator/
+    summary: Code generation.
+  - name: impact/
+    summary: Documentation.
+  - name: index/
+    summary: Source directory.
+  - name: mcp/
+    summary: MCP server integration.
+  - name: providers/
+    summary: Abstract LLM provider interface.
+  - name: utils/
+    summary: Utility functions.
+exports:
+  - interface CommandHandlers
+  - "function createProgram(handlers: CommandHandlers = defaultHandlers): Command"
+  - "async function runCli( argv: string[] = process.argv, handlers: CommandHandlers = defaultHandlers, ): Promise<void>"
 imports:
   - path: ./commands/bench.js
     symbols:
@@ -66,6 +69,9 @@ imports:
   - path: ./commands/ignore.js
     symbols:
       - ignoreCommand
+  - path: ./commands/impact.js
+    symbols:
+      - impactCommand
   - path: ./commands/index-cmd.js
     symbols:
       - indexCommand
@@ -111,3 +117,4 @@ derived_fields:
   - dependencies.internal
   - imports
   - subdirectories
+semantic_fingerprint: 164d5a782f2f

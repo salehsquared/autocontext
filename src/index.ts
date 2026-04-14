@@ -18,6 +18,7 @@ import { statsCommand } from "./commands/stats.js";
 import { healthCommand } from "./commands/health.js";
 import { benchCommand } from "./commands/bench.js";
 import { indexCommand } from "./commands/index-cmd.js";
+import { impactCommand } from "./commands/impact.js";
 import { startMcpServer } from "./mcp/server.js";
 import { loadEnvForCli } from "./utils/env.js";
 import { errorMsg } from "./utils/display.js";
@@ -37,6 +38,7 @@ export interface CommandHandlers {
   healthCommand: typeof healthCommand;
   benchCommand: typeof benchCommand;
   indexCommand: typeof indexCommand;
+  impactCommand: typeof impactCommand;
   startMcpServer: typeof startMcpServer;
 }
 
@@ -55,6 +57,7 @@ const defaultHandlers: CommandHandlers = {
   healthCommand,
   benchCommand,
   indexCommand,
+  impactCommand,
   startMcpServer,
 };
 
@@ -280,6 +283,22 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
     .option("-p, --path <path>", "Project root path")
     .action(async (opts) => {
       await handlers.indexCommand({ rebuild: opts.rebuild, path: opts.path });
+    });
+
+  program
+    .command("impact <target>")
+    .description("List directories affected by changes to a file or symbol")
+    .option("--json", "Output machine-readable JSON")
+    .option("--max-depth <n>", "Maximum BFS hops (default 3)", parseInt)
+    .option("--max <n>", "Maximum affected files (default 100)", parseInt)
+    .option("-p, --path <path>", "Project root path")
+    .action(async (target, opts) => {
+      await handlers.impactCommand(target, {
+        path: opts.path,
+        json: opts.json,
+        maxDepth: opts.maxDepth,
+        max: opts.max,
+      });
     });
 
   program

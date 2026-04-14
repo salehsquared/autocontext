@@ -1,0 +1,42 @@
+version: 1
+last_updated: 2026-04-14T06:04:38.090Z
+fingerprint: e4a3af17
+scope: src/impact
+summary: Documentation.
+maintenance: |-
+  If you modify files in this directory, update this .context.yaml to reflect
+  your changes. Update the summary, and any decisions or constraints that changed.
+  Do NOT update the fingerprint manually — run `context rehash` or it will be
+  updated automatically on the next `context status` check.
+  If you only read files in this directory, do not modify this file.
+  Do not include secrets, API keys, passwords, or PII in this file.
+dependencies:
+  internal:
+    - ../index/store.js
+    - ../index/types.js
+exports:
+  - interface ImpactSeed
+  - interface ImpactEdge
+  - interface ImpactAffected
+  - interface ImpactAffectedScope
+  - interface ImpactReport
+  - IMPACT_CAVEAT
+  - interface ImpactOptions
+  - "async function computeImpact( store: IndexStore, seeds: ImpactSeed[], opts: ImpactOptions ="
+imports:
+  - path: ../index/store.js
+    symbols:
+      - IndexStore
+  - path: ../index/types.js
+    symbols:
+      - FileId
+      - IndexSymbol
+derived_fields:
+  - version
+  - last_updated
+  - fingerprint
+  - scope
+  - exports
+  - dependencies.internal
+  - imports
+semantic_fingerprint: d1ed28329d10
