@@ -150,6 +150,8 @@ export async function generateLLMContext(
   const { extractTesting } = await import("./extractors/testing.js");
   const { extractTodos } = await import("./extractors/todos.js");
   const { extractConfig } = await import("./extractors/config.js");
+  const { extractDataModels } = await import("./extractors/data-models.js");
+  const { extractEvents } = await import("./extractors/events.js");
   const envVars = await extractEnvironment(scanResult);
   if (envVars.length > 0) context.environment = envVars;
   else delete context.environment;
@@ -162,6 +164,12 @@ export async function generateLLMContext(
   const configEntries = await extractConfig(scanResult);
   if (configEntries.length > 0) context.config = configEntries;
   else delete context.config;
+  const dataModels = await extractDataModels(scanResult);
+  if (dataModels.length > 0) context.data_models = dataModels;
+  else delete context.data_models;
+  const eventsEntries = await extractEvents(scanResult);
+  if (eventsEntries.length > 0) context.events = eventsEntries;
+  else delete context.events;
 
   // Collect evidence (per-directory, opt-in)
   if (options?.evidence) {
@@ -195,6 +203,8 @@ export async function generateLLMContext(
   if (context.testing) derivedFields.push("testing");
   if (context.todos) derivedFields.push("todos");
   if (context.config) derivedFields.push("config");
+  if (context.data_models) derivedFields.push("data_models");
+  if (context.events) derivedFields.push("events");
   context.derived_fields = derivedFields;
 
   // Validate against schema — if it fails, fall back to a minimal valid context

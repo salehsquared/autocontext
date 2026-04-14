@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T06:13:57.737Z
-fingerprint: 976df774
+last_updated: 2026-04-14T06:17:01.652Z
+fingerprint: f8ea3f83
 scope: src/generator/extractors
 summary: Source directory.
 maintenance: |-
@@ -13,10 +13,13 @@ maintenance: |-
 dependencies:
   internal:
     - ../../core/scanner.js
+    - ../ast.js
     - ./shared.js
 exports:
   - "async function extractConfig(scanResult: ScanResult): Promise<string[]>"
+  - "async function extractDataModels(scanResult: ScanResult): Promise<string[]>"
   - "async function extractEnvironment(scanResult: ScanResult): Promise<string[]>"
+  - "async function extractEvents(scanResult: ScanResult): Promise<string[]>"
   - "async function readIfExists(path: string): Promise<string | null>"
   - "async function statIfExists(path: string): Promise<boolean>"
   - "function stripComments(content: string, ext: string): string"
@@ -26,6 +29,13 @@ imports:
   - path: ../../core/scanner.js
     symbols:
       - ScanResult
+  - path: ../ast.js
+    symbols:
+      - getGrammarsDir
+      - getLanguage
+      - getParser
+      - getQuery
+      - loadTreeSitter
   - path: ./shared.js
     symbols:
       - readIfExists
@@ -39,4 +49,4 @@ derived_fields:
   - exports
   - dependencies.internal
   - imports
-semantic_fingerprint: 76440f882a5f
+semantic_fingerprint: c32875d13de6

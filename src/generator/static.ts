@@ -13,6 +13,8 @@ import { extractEnvironment } from "./extractors/environment.js";
 import { extractTesting } from "./extractors/testing.js";
 import { extractTodos } from "./extractors/todos.js";
 import { extractConfig } from "./extractors/config.js";
+import { extractDataModels } from "./extractors/data-models.js";
+import { extractEvents } from "./extractors/events.js";
 
 export type SummarySource = "project" | "docstring" | "dirname" | "pattern" | "fallback";
 
@@ -137,6 +139,12 @@ export async function generateStaticContext(
   const configEntries = await extractConfig(scanResult);
   if (configEntries.length > 0) context.config = configEntries;
 
+  const dataModels = await extractDataModels(scanResult);
+  if (dataModels.length > 0) context.data_models = dataModels;
+
+  const eventsEntries = await extractEvents(scanResult);
+  if (eventsEntries.length > 0) context.events = eventsEntries;
+
   // Root-level: always add project metadata and structure
   if (isRoot) {
     context.project = (await detectProjectMeta(scanResult.path)) ?? {
@@ -190,6 +198,8 @@ export async function generateStaticContext(
   if (context.testing) derivedFields.push("testing");
   if (context.todos) derivedFields.push("todos");
   if (context.config) derivedFields.push("config");
+  if (context.data_models) derivedFields.push("data_models");
+  if (context.events) derivedFields.push("events");
   context.derived_fields = derivedFields;
 
   return { context, summarySource };
