@@ -161,6 +161,10 @@ Only present in the root `.context.yaml` (where `scope` is `"."`):
 |---|---|---|
 | `derived_fields` | `array of string` | JSON pointer-style paths listing which fields were machine-generated rather than LLM-narrated. See [trust-model.md](trust-model.md) for what this means. |
 | `evidence` | `object` | Machine-collected code health data. Never from LLM generation — always from reading existing artifacts. Fields: `collected_at` (ISO 8601, required), `commit_sha` (git SHA), `test_status` / `test_count` / `failing_tests` / `test_tool` (test results), `typecheck` / `typecheck_tool` (type checking), `lint_status` / `lint_tool` (linting), `coverage_percent` (line coverage 0-100). Uses `.strict()` validation. See [evidence.md](evidence.md) for the full contract. |
+| `semantic_fingerprint` | `string` (12-hex lowercase) | Semantic fingerprint over exported API + resolved imports + policy facts. Optional. When present, enables `explain_staleness` to distinguish `cosmetic_stale` from `semantic_stale`. See [freshness.md](freshness.md). |
+| `rules` | `array of Rule` | Typed policy rules enforced by `context validate --policy`. Seven discriminated-union shapes: `forbid_import`, `require_import`, `require_export`, `max_file_lines`, `require_test_file`, `dependency_boundary`, `evidence_requires`. See [policies.md](policies.md). |
+
+The six fields `environment`, `testing`, `todos`, `data_models`, `events`, and `config` are now populated automatically by static extractors in `init` / `regen`. Their shape is unchanged (all `string[]`); what changed is that they stop being sparse.
 
 ## Config File Schema
 
@@ -187,3 +191,4 @@ min_tokens: 4096              # skip tiny directories unless needed for routing
 | `max_depth` | `integer` | no | Maximum directory depth for scanning. Must be >= 1. |
 | `mode` | `enum` | no | `"lean"` or `"full"` default generation mode. |
 | `min_tokens` | `integer` | no | Minimum estimated token size for a directory to be tracked. Default is `4096`; set `0` to disable threshold filtering. |
+| `verify` | `object` | no | Commands the `context verify` command runs (test / typecheck / lint / coverage / build). Strings or `{command, cwd, timeout_seconds, env, artifact, parser}` objects, plus an optional `scope_overrides` map. See [docs/verify.md](verify.md). |

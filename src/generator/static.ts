@@ -32,6 +32,7 @@ export async function generateStaticContext(
   childContexts: Map<string, ContextFile>,
   options?: { evidence?: boolean; mode?: "lean" | "full" },
 ): Promise<StaticContextResult> {
+  const existing = childContexts.get(scanResult.path);
   const mode = options?.mode ?? "lean";
   const isFull = mode === "full";
 
@@ -175,6 +176,21 @@ export async function generateStaticContext(
     }
     const evidence = await collectBasicEvidence(scanResult.path, newestMtimeMs);
     if (evidence) context.evidence = evidence;
+  }
+
+  // Preserve user-authored narrative + policy fields from the existing
+  // .context.yaml. Extractors never synthesize these; regen must not wipe them.
+  if (existing?.decisions && existing.decisions.length > 0) {
+    context.decisions = existing.decisions;
+  }
+  if (existing?.constraints && existing.constraints.length > 0) {
+    context.constraints = existing.constraints;
+  }
+  if (existing?.rules && existing.rules.length > 0) {
+    context.rules = existing.rules;
+  }
+  if (existing?.current_state && !context.current_state) {
+    context.current_state = existing.current_state;
   }
 
   // Populate derived_fields

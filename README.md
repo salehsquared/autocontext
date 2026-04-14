@@ -1,6 +1,6 @@
 # autocontext
 
-Every coding agent gets the same repo-native context via `.context.yaml` — portable across tools, git-visible, local-first.
+Local code-intelligence for every coding agent. `.context.yaml` routing, a local symbol + reference graph, token-budgeted prompt packs, and typed policy rules — all git-visible, offline, and portable across tools.
 
 ```
 $ npx context init
@@ -77,12 +77,18 @@ Why `.context.yaml` helps where README alone does not:
 ## Core Features
 
 - **Lean by default** — context files contain only what LLMs can't infer from code: summaries, decisions, constraints. Use `--full` for verbose output with file listings, interfaces, and dependencies.
-- **Schema validation** — `.context.yaml` files are validated against a strict schema for consistent, machine-readable structure.
-- **MCP queryability** — LLM clients can query context through MCP tools instead of scraping text.
-- **Field filtering** — `query_context` can return only selected fields (for example `decisions` or `constraints`) to reduce token usage.
-- **Fingerprint-based freshness** — each directory has a content fingerprint with `fresh`, `stale`, and `missing` state tracking.
-- **`derived_fields` provenance tracking** — machine-derived fields are explicitly marked so agents can distinguish high-confidence facts from narrative.
-- **Strict cross-check validation** — `context validate --strict` can detect drift between declared context and actual code.
+- **Local symbol + reference graph** — `context index` builds a tree-sitter index at `.autocontext/index/` (TS/JS/Python in v1). Powers `find_definition`, `find_references`, impact analysis, and semantic staleness. Import-bound references only — see [docs/limitations.md](docs/limitations.md).
+- **Token-budgeted prompt packs** — `context pack` compiles a budget-respecting brief using BM25F retrieval over the `.context.yaml` corpus plus graph proximity. Seeds accept query text, a file path, or a symbol name.
+- **Typed policy rules** — `rules:` blocks in `.context.yaml` enforce import boundaries, file-size caps, evidence thresholds, and more. `context validate --policy` runs them mechanically against the index.
+- **4-state semantic staleness** — distinguishes cosmetic edits from API-surface changes via a semantic fingerprint over exports, imports, and policy facts. Legacy 3-state stays the default for compat.
+- **Active verification** — `context verify` runs your configured test/typecheck/lint/coverage commands, normalizes the output, and writes the result back into each scope's evidence block. Opt-in; never auto-runs.
+- **Deterministic LLM cache** — content-addressed cache at `.autocontext/llm-cache/` skips redundant provider calls between regens.
+- **Git-aware history** — `context diff`, `context timeline`, `context hotspots` — read-only git helpers for review and discovery.
+- **Schema validation** — `.context.yaml` files are validated against a strict schema; `context validate --policy` adds rule enforcement on top.
+- **MCP queryability** — 12 tools via MCP (stdio). Query context, navigate symbols, evaluate policies, build packs.
+- **Fingerprint-based freshness** — each directory has a content fingerprint with `fresh`, `stale`, and `missing` states.
+- **Self-contained HTML viewer** — `context view` generates a single offline HTML report (tree + detail pane + optional dep graph) ready to share in a PR.
+- **Library API** — `import { buildPack, runPolicies, computeImpact } from "autocontext"` — every capability the CLI uses, with stability tiers.
 
 ## Schema
 
@@ -102,12 +108,16 @@ The schemas are published in the npm package and can be used for editor autocomp
 | Git-visible | Yes — committed, diffable | Yes | No | No |
 | Works offline | Yes — static analysis default | Yes | Depends | No |
 | Machine-queryable | Yes — MCP + schema | No — unstructured | Partial | Partial |
-| Staleness detection | Yes — fingerprint-based | No | Varies | N/A |
+| Staleness detection | Yes — fingerprint + semantic fingerprint | No | Varies | N/A |
+| Symbol / reference graph | Yes — local, git-visible | No | Yes — remote, proprietary | No |
+| Token-budgeted prompt assembly | Yes — `context pack` | No | Varies | No |
+| Policy enforcement via static analysis | Yes — `rules:` + `validate --policy` | No | No | No |
 | Self-maintaining | Yes — embedded instructions | No | Auto-updated | Auto-updated |
 
 **autocontext is not:**
 - An agent framework (no tool calling, no execution)
 - A vector database (no embeddings, no semantic search)
+- A type-aware analyzer (tree-sitter is syntactic — see [docs/limitations.md](docs/limitations.md) for the per-language honest status)
 - Behavioral rules (that's what CLAUDE.md is for)
 - A cloud service (everything local, data stays on disk)
 
@@ -140,6 +150,8 @@ npx context show src/core       # Pretty-print a context file
 Requires Node.js >= 18. No accounts, no cloud services, works fully offline. See [docs/quickstart.md](docs/quickstart.md) for the full 5-minute guide.
 Want a global binary instead? Use `npm install -g autocontext` and run `context ...` directly.
 
+A `.autocontext/` directory is created on first run for the index, LLM cache, and policy results. `context init` adds it to `.gitignore` automatically; existing projects can run `context doctor` to surface the check.
+
 ## Commands
 
 | Command | Description |
@@ -160,6 +172,7 @@ Want a global binary instead? Use `npm install -g autocontext` and run `context 
 | `context rehash` | Recompute fingerprints without regenerating content |
 | `context validate` | Schema compliance check |
 | `context validate --strict` | Cross-reference against actual source code |
+| `context validate --policy` | Evaluate typed `rules:` blocks against the code index |
 | `context watch` | Real-time staleness monitoring |
 | `context show <path>` | Pretty-print a context file |
 | `context config` | View/edit provider settings |
@@ -167,7 +180,16 @@ Want a global binary instead? Use `npm install -g autocontext` and run `context 
 | `context ignore <path>` | Add directory to `.contextignore` |
 | `context health` | Aggregate code health evidence across all scopes |
 | `context health --json` | Machine-readable health evidence for CI |
-| `context bench` | Benchmark baseline prompts vs `.context.yaml` prompts |
+| `context index [--rebuild]` | Build or refresh the local symbol + reference index |
+| `context impact <target>` | List scopes affected by a file or symbol change (import-bound) |
+| `context pack` | Assemble a token-budgeted prompt pack (query / file / symbol seed) |
+| `context diff` | Show the diff of `.context.yaml` files between two git revs |
+| `context timeline <path>` | Show context history for a scope across commits |
+| `context hotspots` | Surface churn-vs-complexity hotspots from git history |
+| `context verify` | Run configured tests/typecheck/lint/coverage and write evidence |
+| `context view` | Generate a self-contained HTML report (tree + detail + dep graph) |
+| `context cache stats` / `context cache clear` | Inspect or clear the LLM cache |
+| `context bench` | Benchmark baseline / context / pack / pack+impact / pack+policy arms |
 | `context bench --repo <url>` | Clone and benchmark another repository |
 | `context serve` | Start MCP server for LLM tool integration |
 
@@ -244,12 +266,15 @@ A typical lean `.context.yaml` is ~20-25 lines vs ~60-80 lines in full mode. The
 
 ## MCP Server
 
-Three tools via [Model Context Protocol](https://modelcontextprotocol.io) (stdio transport):
+Twelve tools via [Model Context Protocol](https://modelcontextprotocol.io) (stdio transport). Grouped by intent:
 
-- **`query_context`** — Retrieve context for a directory, with optional field filtering
-- **`check_freshness`** — Check if context is fresh, stale, or missing
-- **`list_contexts`** — List all directories with staleness status
-- **`aggregate_evidence`** — Aggregate code health evidence (tests, typecheck, lint, coverage) across all scopes
+- **Discover:** `list_contexts`, `search_context`
+- **Read:** `query_context`, `check_freshness`, `aggregate_evidence`
+- **Navigate:** `find_definition`, `find_references`, `find_related`
+- **Analyze:** `explain_staleness`, `impact`, `check_policies`
+- **Assemble:** `build_context_pack`
+
+Full request/response shapes, error envelopes, and response-size limits live in [docs/mcp.md](docs/mcp.md). Server version is exposed via the `autocontext://capabilities` resource (`server_version`, `tools_version`, per-tool `since`).
 
 ```bash
 # Claude Code
@@ -317,14 +342,22 @@ npx context config              # View current settings
 | [Quickstart](docs/quickstart.md) | Install to MCP in 5 minutes |
 | [Schema Reference](docs/schema.md) | Full `.context.yaml` field reference with examples |
 | [Trust Model](docs/trust-model.md) | Machine-derived vs LLM-generated fields, freshness guarantees |
-| [Validation](docs/validation.md) | Standard and strict mode semantics |
-| [Bench](docs/bench.md) | Benchmark command options, outputs, and current caveats |
+| [Validation](docs/validation.md) | Schema, strict cross-reference, and `--policy` enforcement |
+| [Policies](docs/policies.md) | Typed `rules:` reference: seven rule kinds + glob dialect + CI integration |
+| [Pack](docs/pack.md) | `context pack` user guide: seeds, budget, MCP tool |
+| [Index](docs/index.md) | Local code index: layout, versioning, precision boundary, consumers |
+| [Library API](docs/library.md) | `import … from "autocontext"`: stable + experimental surface |
+| [Freshness](docs/freshness.md) | 4-state model: fresh / cosmetic_stale / semantic_stale / missing |
+| [Impact](docs/impact.md) | `context impact` — reverse-BFS over import graph |
+| [Verify](docs/verify.md) | `context verify` active-verification command |
+| [View](docs/view.md) | `context view` self-contained HTML report |
+| [Bench](docs/bench.md) | Comparator arms, task categories, provenance, regression canary |
 | [Integrations](docs/integrations.md) | Claude Code, Cursor, Windsurf, Continue, non-MCP, CI/CD |
 | [CI/CD Guide](docs/ci.md) | GitHub Actions, GitLab CI, fail policies |
 | [Versioning](docs/versioning.md) | Schema version policy and compatibility guarantees |
 | [Troubleshooting](docs/troubleshooting.md) | Common issues with fixes |
 | [Limitations](docs/limitations.md) | What autocontext does not guarantee |
-| [MCP Contract](docs/mcp.md) | MCP tool request/response shapes and error semantics |
+| [MCP Contract](docs/mcp.md) | 12-tool request/response shapes + error envelopes + capability resource |
 | [Evidence](docs/evidence.md) | Evidence contract: artifact formats, search paths, freshness |
 
 ## License

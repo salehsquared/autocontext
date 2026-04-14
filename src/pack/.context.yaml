@@ -2,7 +2,17 @@ version: 1
 last_updated: 2026-04-14T12:10:00.471Z
 fingerprint: 1c2a01fe
 scope: src/pack
-summary: Source directory.
+summary: Token-budgeted context-bundle compiler. BM25F over seven .context.yaml zones + graph proximity over the T1 DirEdge graph + tiered greedy assembly.
+decisions:
+  - what: "BM25F, not embeddings"
+    why: "Deterministic byte-for-byte across same inputs + same index version. Embeddings would add a model dependency, a vector index, and a re-rank policy — none of which beat BM25 on the .context.yaml corpus."
+  - what: "Composite score: 0.55·BM25 + 0.35·proximity + must-include bias"
+    why: "BM25 alone misses scopes that are structurally close to a high-ranked scope. Graph proximity catches the neighborhood; must-include bias keeps obvious answers on top."
+  - what: "Tier-0 root summary (≤200 tokens) + tier-1 greedy (max 85% of remaining budget)"
+    why: "Root context is the fastest orientation; reserving a small slot for it keeps every pack self-contained. Tier-1 cap leaves headroom for downstream tier-2/3 expansion if it ever ships."
+constraints:
+  - "Output must be deterministic for (inputs, index_version, code_version). Required for cache hits and reproducibility tests."
+  - "BM25 zone weights and k1/b are version-locked via BM25_VERSION (T12 provenance). Bumping them invalidates bench baselines."
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
   your changes. Update the summary, and any decisions or constraints that changed.

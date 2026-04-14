@@ -12,7 +12,17 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) an
 
 ---
 
-## [Unreleased]
+## [Unreleased] — 0.2.0
+
+Major minor: the 0.2.x line ships a local code index, token-budgeted prompt packs, typed policy rules, 4-state freshness, active verification, a self-contained HTML viewer, a library API, and a twelve-tool MCP surface. **Schema stays at v1** — every addition is optional; every legacy `.context.yaml` keeps parsing.
+
+**Upgrade note.** Existing projects only need three one-shot actions after installing 0.2.x:
+
+1. `context index --rebuild` — build the local symbol + reference graph at `.autocontext/index/`.
+2. `context regen --all --stale` — populate the new `semantic_fingerprint` and the `environment`/`testing`/`todos`/`data_models`/`events`/`config` fields.
+3. `context doctor` — confirm `.autocontext/` is gitignored (first run of `context init` does this automatically; older checkouts may need `echo '.autocontext/' >> .gitignore`).
+
+Nothing else changes. `context status`, `check_freshness`, `list_contexts`, `query_context`, and `aggregate_evidence` all keep their v1 output shapes byte-for-byte — a compat snapshot at `tests/mcp/compat.test.ts` locks that down.
 
 ### Added — Bench expansion (T12)
 

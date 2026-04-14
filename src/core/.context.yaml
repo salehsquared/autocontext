@@ -2,7 +2,20 @@ version: 1
 last_updated: 2026-04-14T14:40:27.040Z
 fingerprint: 7973e7fb
 scope: src/core
-summary: Core functionality.
+summary: Schema, scanner, fingerprint, reader/writer, semantic fingerprint, git helpers — the read-only foundation every other track builds on.
+decisions:
+  - what: "Fingerprint uses stat() only, not file content"
+    why: "Performance — avoids reading every file on every status check. Content hashing happens separately in the index."
+  - what: "Semantic fingerprint layered on top of stat fingerprint, not replacing it"
+    why: "Stat fingerprint stays the cheap first-pass detector; semantic fingerprint is the rich explainer for when the first pass fires."
+  - what: "FreshnessState extended to 4 values via opt-in; legacy 3-state preserved via legacyState() helper"
+    why: "~12 consumer files depended on the old 3-state contract. Breaking changes would ripple through display/watch/stats/doctor/bench/MCP output; legacyState() keeps the compat surface byte-identical."
+  - what: "Index versioned separately from schema"
+    why: "INDEX_VERSION can bump freely for layout changes without affecting the .context.yaml SCHEMA_VERSION contract users commit to git."
+constraints:
+  - "FreshnessState changes must preserve legacyState() collapse for all existing JSON outputs."
+  - "semantic_fingerprint field is optional; .context.yaml files without it are treated as cosmetic_stale, not semantic_stale."
+  - "checkFreshness default return shape stays 3-state; 4-state info is behind opts.index."
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
   your changes. Update the summary, and any decisions or constraints that changed.

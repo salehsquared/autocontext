@@ -85,6 +85,33 @@ The fingerprint is computed from `stat()` calls only — no file reads. It captu
 | `validate --strict` reports phantom files | Context lists files that no longer exist — regenerate |
 | `validate --strict` reports phantom interfaces | Context declares interfaces not found in exports — cross-check |
 
+## Index trust model
+
+The local code index at `.autocontext/index/` (built by `context index`) is a **syntactic** artifact, not a semantic one. It's powered by tree-sitter grammars and records only what a parser can extract without type inference.
+
+| What the index claims | What it explicitly does NOT claim |
+|---|---|
+| Every top-level symbol definition per language (TS/JS/Python in v1). | Method-level resolution on classes is v1-deferred (class *definitions* are indexed; their methods are not separate symbols). |
+| One `ImportEdge` per static import / `require` / `from …` / `use` statement. | Imports synthesized at runtime (template-literal `import()`, dynamic require) are not indexed. |
+| `Reference` rows for identifier uses **bound** by a static import in the same file that resolve to a concrete symbol. | Free identifier uses, member-access chains, polymorphic dispatch, and type-only uses are NOT reference rows. |
+| Directory-level import edges (`DirEdge`). | Call graph / control flow / data flow. |
+
+Precision / recall targets (measured on the test fixtures):
+
+- **TypeScript / JavaScript** — precision ≥ 0.95, recall ≥ 0.70.
+- **Python** — precision ≥ 0.90, recall ≥ 0.70.
+- **Go / Rust** — deferred in v1; WASM grammars are copied, analyzers are specced. Tools that need the index on these languages should error cleanly (`INDEX_MISSING` or similar) until a later release.
+
+Every user-facing output that consumes references surfaces this boundary:
+
+- `find_references` MCP tool pins `reference_kind: "import_bound"` plus a caveat string.
+- `context impact` prints the pinned `IMPACT_CAVEAT` on every invocation.
+- Bench ground truth carries `ground_truth_provenance.precision_class` (`"authoritative"` vs `"import_bound"`) so analyzers can weight by confidence tier.
+
+Treat a zero result from `find_references` / `impact` as "no import-bound callers," **not** as "no callers at all." Agents that need dynamic-dispatch or runtime-injection coverage should supplement with actual execution (tests, tracing).
+
+See [docs/limitations.md](limitations.md) for the per-language honest status, and [docs/index.md](index.md) for the full layout + versioning story.
+
 ## For LLM Tool Developers
 
 If you're building an MCP client or tool that reads `.context.yaml`:

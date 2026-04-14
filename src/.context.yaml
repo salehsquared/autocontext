@@ -2,7 +2,25 @@ version: 1
 last_updated: 2026-04-14T15:27:16.407Z
 fingerprint: 51fdb3ee
 scope: src
-summary: Source code.
+summary: Source code — core, commands, generator, MCP, index, pack, policy, cache, verify, view, bench, providers.
+decisions:
+  - what: "rules: block enforces architectural boundaries mechanically"
+    why: "Prose constraints drift. The policy engine verifies these every CI run against the local index."
+constraints:
+  - "Architectural boundaries are enforced by `context validate --policy`. Adding an import that crosses a forbidden boundary fails the policy check."
+rules:
+  - kind: forbid_import
+    from: "src/generator/**"
+    to: "src/mcp/**"
+    message: "Generators must not depend on the MCP layer."
+  - kind: forbid_import
+    from: "src/core/**"
+    to: "src/commands/**"
+    message: "Core must not depend on CLI commands."
+  - kind: max_file_lines
+    value: 800
+    exclude:
+      - "src/generator/ast.ts"
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
   your changes. Update the summary, and any decisions or constraints that changed.

@@ -63,12 +63,25 @@ This project uses [autocontext](https://github.com/salehsquared/autocontext) for
 
 ${table}
 
+### MCP Tools (if your client connects to \`context serve\`)
+
+- **Discover:** \`list_contexts\`, \`search_context\` — what scopes exist, and which match your query.
+- **Read:** \`query_context\`, \`check_freshness\`, \`aggregate_evidence\` — fetch a scope's body; check staleness; roll up test/typecheck/lint.
+- **Navigate:** \`find_definition\`, \`find_references\`, \`find_related\` — locate symbols, their import-bound callers, and a file's neighborhood. References are import-bound only.
+- **Analyze:** \`explain_staleness\`, \`impact\`, \`check_policies\` — 4-state freshness with reasons; reverse-BFS impact set; typed-rule violations.
+- **Assemble:** \`build_context_pack\` — a token-budgeted Markdown/JSON brief for a given seed.
+
+### Policy Rules
+
+When a scope declares \`rules:\` in its \`.context.yaml\`, those constraints are **mechanically enforced** by \`context validate --policy\` (and the \`check_policies\` MCP tool). Do not propose edits that would introduce a new violation — check first via the MCP tool or \`context validate --policy --json\`. Seven rule kinds exist today: \`forbid_import\`, \`require_import\`, \`require_export\`, \`max_file_lines\`, \`require_test_file\`, \`dependency_boundary\`, \`evidence_requires\`.
+
 ### Maintenance
 
 When you significantly change files in a directory, update its \`.context.yaml\`:
 - Update \`summary\` if the directory's purpose shifted
 - Update \`decisions\` if architectural choices changed
 - Update \`constraints\` if hard rules changed
+- Update \`rules:\` only when an architectural boundary changes — these are enforced
 
 The \`maintenance\` field in each \`.context.yaml\` contains specific instructions.
 ${AGENTS_SECTION_END}`;
