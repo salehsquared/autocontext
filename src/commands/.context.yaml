@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T12:10:00.334Z
-fingerprint: 1f70634c
+last_updated: 2026-04-14T14:40:26.882Z
+fingerprint: 79ff894d
 scope: src/commands
 summary: CLI command implementations.
 maintenance: |-
@@ -56,11 +56,14 @@ data_models:
     string | null }'
   - "interface TimelineCommandOptions { path: string, max: number, json: boolean }"
   - 'interface StrictFinding { severity: "warning" | "info", message: string }'
+  - "interface VerifyCommandOptions { path: string, scope: string, only: string, timeout: string, merge: boolean,
+    strict: boolean, dryRun: boolean, yes: boolean, …+1 more }"
   - "interface DirState { dir: ScanResult, state: FreshnessState }"
 events:
   - on("SIGINT") via process
   - on("SIGTERM") via process
   - on("all") via watcher
+  - once("data") via stdin
 exports:
   - "async function benchCommand(options: BenchOptions): Promise<void>"
   - interface CacheCommandOptions
@@ -159,6 +162,7 @@ imports:
       - CONTEXT_FILENAME
       - ConfigFile
       - ContextFile
+      - VerifyKind
       - contextSchema
   - path: ../core/semantic-fingerprint-writer.js
     symbols:
@@ -188,4 +192,4 @@ derived_fields:
   - imports
   - data_models
   - events
-semantic_fingerprint: 9667c8e6deb6
+semantic_fingerprint: 7fd57314a021

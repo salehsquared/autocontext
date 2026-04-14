@@ -252,6 +252,25 @@ export async function doctorCommand(options: { path?: string; json?: boolean }):
     });
   }
 
+  // verify: security advisory — warn when configured but first-run marker is absent
+  if (config?.verify) {
+    const markerExists = existsSync(join(rootPath, ".autocontext/verify.first-run"));
+    if (!markerExists) {
+      checks.push({
+        name: "verify_config",
+        status: "warn",
+        message: "verify: is configured but has never been run on this checkout",
+        fix: "Review commands in .context.config.yaml, then run `context verify --dry-run`",
+      });
+    } else {
+      checks.push({
+        name: "verify_config",
+        status: "pass",
+        message: "verify: is configured and has been acknowledged",
+      });
+    }
+  }
+
   // Compute summary
   const summary = { pass: 0, warn: 0, fail: 0 };
   for (const check of checks) {

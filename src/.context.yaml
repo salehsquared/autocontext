@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T12:10:00.491Z
-fingerprint: fa3641aa
+last_updated: 2026-04-14T14:40:27.102Z
+fingerprint: 26d90caf
 scope: src
 summary: Source code.
 maintenance: |-
@@ -31,7 +31,7 @@ dependencies:
     - ./commands/status.js
     - ./commands/timeline.js
     - ./commands/validate.js
-    - ./commands/watch.js
+    - ./commands/verify.js
 subdirectories:
   - name: bench/
     summary: Source directory.
@@ -51,14 +51,18 @@ subdirectories:
     summary: MCP server integration.
   - name: pack/
     summary: Source directory.
+  - name: policy/
+    summary: Source directory.
   - name: providers/
     summary: Abstract LLM provider interface.
   - name: utils/
     summary: Utility functions.
+  - name: verify/
+    summary: Source directory.
 data_models:
   - "interface CommandHandlers { initCommand: typeof initCommand, statusCommand: typeof statusCommand, regenCommand:
     typeof regenCommand, rehashCommand: typeof rehashCommand, validateCommand: typeof validateCommand, showCommand:
-    typeof showCommand, configCommand: typeof configCommand, ignoreCommand: typeof ignoreCommand, …+14 more }"
+    typeof showCommand, configCommand: typeof configCommand, ignoreCommand: typeof ignoreCommand, …+15 more }"
 exports:
   - interface CommandHandlers
   - "function createProgram(handlers: CommandHandlers = defaultHandlers): Command"
@@ -144,9 +148,9 @@ imports:
   - path: ./commands/validate.js
     symbols:
       - validateCommand
-  - path: ./commands/watch.js
+  - path: ./commands/verify.js
     symbols:
-      - watchCommand
+      - verifyCommand
 derived_fields:
   - version
   - last_updated
@@ -157,4 +161,4 @@ derived_fields:
   - imports
   - subdirectories
   - data_models
-semantic_fingerprint: 83c6e62dda79
+semantic_fingerprint: 9e58bdeae430

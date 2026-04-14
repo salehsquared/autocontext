@@ -1,0 +1,103 @@
+version: 1
+last_updated: 2026-04-14T14:40:27.090Z
+fingerprint: ab960510
+scope: src/verify
+summary: Source directory.
+maintenance: |-
+  If you modify files in this directory, update this .context.yaml to reflect
+  your changes. Update the summary, and any decisions or constraints that changed.
+  Do NOT update the fingerprint manually — run `context rehash` or it will be
+  updated automatically on the next `context status` check.
+  If you only read files in this directory, do not modify this file.
+  Do not include secrets, API keys, passwords, or PII in this file.
+dependencies:
+  internal:
+    - ../core/schema.js
+    - ../core/writer.js
+    - ../generator/evidence.js
+    - ../utils/config.js
+    - ./parsers/index.js
+    - ./parsers/types.js
+    - ./runner.js
+    - ./writeback.js
+subdirectories:
+  - name: parsers/
+    summary: Source directory.
+data_models:
+  - "interface VerifyKindRun { kind: VerifyKind, command: string, exit_code: number | null, duration_ms: number,
+    timed_out: boolean, parser: ParserId, parsed_to: Partial<Evidence>, parser_warnings: string[] }"
+  - 'interface VerifyKindSkipped { kind: VerifyKind, reason: "not_configured" | "filtered_out" }'
+  - 'interface VerifyScopeReport { scope: string, ran: VerifyKindRun[], skipped: VerifyKindSkipped[], evidence_written:
+    boolean, status: "ok" | "partial" | "failed" | "no_contex… }'
+  - "interface VerifyRunReport { root: string, started_at: string, finished_at: string, scopes: VerifyScopeReport[],
+    totals: { passing: number; failing: number; clea… }"
+  - "interface OrchestratorOptions { projectRoot: string, scopes: Array, config: ConfigFile, onlyKinds: Set<VerifyKind>,
+    timeoutSecondsOverride: number, merge: boolean, dryRun: boolean, runFn: (command: string, opts: { cwd: string; t…,
+    …+1 more }"
+  - "interface ResolvedCommand { commandString: string, cwd: string, timeoutMs: number, env: NodeJS.ProcessEnv,
+    artifact: string, parser: ParserId }"
+  - "interface SpawnResult { stdout: string, stderr: string, exitCode: number | null, signal: NodeJS.Signals | null,
+    durationMs: number, timedOut: boolean, stdoutTruncated: boolean, stderrTruncated: boolean }"
+  - "interface RunOptions { cwd: string, timeoutMs: number, env: NodeJS.ProcessEnv }"
+events:
+  - on("close") via child
+  - on("error") via child
+exports:
+  - "VERIFY_KINDS: VerifyKind[]"
+  - interface VerifyKindRun
+  - interface VerifyKindSkipped
+  - interface VerifyScopeReport
+  - interface VerifyRunReport
+  - interface OrchestratorOptions
+  - "async function runVerify(opts: OrchestratorOptions): Promise<VerifyRunReport>"
+  - "function resolveCommandForKind( command: VerifyCommand, kind: VerifyKind, projectRoot: string, scopeAbsolute:
+    string, defaultTimeoutMs: number, ): ResolvedCommand"
+  - interface SpawnResult
+  - interface RunOptions
+  - "async function runVerifyCommand( command: string, opts: RunOptions, ): Promise<SpawnResult>"
+  - "async function writeContextAtomic( dirPath: string, data: ContextFile, ): Promise<void>"
+imports:
+  - path: ../core/schema.js
+    symbols:
+      - CONTEXT_FILENAME
+      - ConfigFile
+      - ContextFile
+      - Evidence
+      - VerifyCommand
+      - VerifyKind
+      - contextSchema
+  - path: ../core/writer.js
+    symbols:
+      - readContext
+  - path: ../generator/evidence.js
+    symbols:
+      - resolveGitHeadSha
+  - path: ../utils/config.js
+    symbols:
+      - getVerifyCommand
+  - path: ./parsers/index.js
+    symbols:
+      - PARSERS
+      - pickParser
+  - path: ./parsers/types.js
+    symbols:
+      - ParserId
+  - path: ./runner.js
+    symbols:
+      - SpawnResult
+      - runVerifyCommand
+  - path: ./writeback.js
+    symbols:
+      - writeContextAtomic
+derived_fields:
+  - version
+  - last_updated
+  - fingerprint
+  - scope
+  - exports
+  - dependencies.internal
+  - imports
+  - subdirectories
+  - data_models
+  - events
+semantic_fingerprint: dc9da1edcaf4

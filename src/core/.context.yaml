@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T13:47:09.801Z
-fingerprint: be54e08d
+last_updated: 2026-04-14T14:40:27.040Z
+fingerprint: 7973e7fb
 scope: src/core
 summary: Core functionality.
 maintenance: |-
@@ -139,4 +139,4 @@ derived_fields:
   - dependencies.internal
   - imports
   - data_models
-semantic_fingerprint: 84c40368411c
+semantic_fingerprint: 442a71ffa3ce

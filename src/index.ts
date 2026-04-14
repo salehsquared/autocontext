@@ -24,6 +24,7 @@ import { diffCommand } from "./commands/diff.js";
 import { timelineCommand } from "./commands/timeline.js";
 import { hotspotsCommand } from "./commands/hotspots.js";
 import { packCommand } from "./commands/pack.js";
+import { verifyCommand } from "./commands/verify.js";
 import { startMcpServer } from "./mcp/server.js";
 import { loadEnvForCli } from "./utils/env.js";
 import { errorMsg } from "./utils/display.js";
@@ -50,6 +51,7 @@ export interface CommandHandlers {
   timelineCommand: typeof timelineCommand;
   hotspotsCommand: typeof hotspotsCommand;
   packCommand: typeof packCommand;
+  verifyCommand: typeof verifyCommand;
   startMcpServer: typeof startMcpServer;
 }
 
@@ -75,6 +77,7 @@ const defaultHandlers: CommandHandlers = {
   timelineCommand,
   hotspotsCommand,
   packCommand,
+  verifyCommand,
   startMcpServer,
 };
 
@@ -405,6 +408,31 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
         json: opts.json,
         maxDepth: opts.maxDepth,
         max: opts.max,
+      });
+    });
+
+  program
+    .command("verify [scope]")
+    .description("Run configured test/typecheck/lint/coverage commands and write evidence back into .context.yaml")
+    .option("--only <kinds>", "Comma-separated subset: test,typecheck,lint,coverage,build")
+    .option("--timeout <s>", "Override per-command timeout (seconds)")
+    .option("--merge", "Merge new evidence over old instead of replacing")
+    .option("--strict", "Treat any unknown status as a non-zero exit")
+    .option("--dry-run", "Print the resolved plan; do not run or write")
+    .option("-y, --yes", "Skip the first-run confirmation prompt")
+    .option("--json", "Emit VerifyRunReport JSON to stdout")
+    .option("-p, --path <path>", "Project root path")
+    .action(async (scope, opts) => {
+      await handlers.verifyCommand({
+        path: opts.path,
+        scope,
+        only: opts.only,
+        timeout: opts.timeout,
+        merge: opts.merge,
+        strict: opts.strict,
+        dryRun: opts.dryRun,
+        yes: opts.yes,
+        json: opts.json,
       });
     });
 

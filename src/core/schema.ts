@@ -137,6 +137,47 @@ export const contextSchema = z.object({
 
 export { ruleSchema, type Rule } from "../policy/rules.js";
 
+// --- verify: block (T9) ---
+
+const verifyCommandObjectSchema = z.object({
+  command: z.string().describe("Shell command to execute"),
+  cwd: z.string().optional().describe("Working directory relative to project root (defaults to resolved scope)"),
+  timeout_seconds: z.number().int().positive().optional().describe("Per-command timeout (default: 600)"),
+  env: z.record(z.string(), z.string()).optional().describe("Extra env vars merged into process.env"),
+  artifact: z.string().optional().describe("Path to JSON/XML the runner produces; if absent, parser reads stdout"),
+  parser: z.enum([
+    "vitest-json",
+    "jest-json",
+    "junit-xml",
+    "go-test-json",
+    "tsc",
+    "eslint-json",
+    "istanbul-summary",
+    "pytest-cov",
+    "exit-code",
+  ]).optional().describe("Override auto-detected parser"),
+}).strict();
+
+const verifyCommandSchema = z.union([z.string(), verifyCommandObjectSchema]);
+
+const verifyScopeOverrideSchema = z.object({
+  test: verifyCommandSchema.optional(),
+  typecheck: verifyCommandSchema.optional(),
+  lint: verifyCommandSchema.optional(),
+  build: verifyCommandSchema.optional(),
+  coverage: verifyCommandSchema.optional(),
+}).strict();
+
+const verifyBlockSchema = z.object({
+  test: verifyCommandSchema.optional(),
+  typecheck: verifyCommandSchema.optional(),
+  lint: verifyCommandSchema.optional(),
+  build: verifyCommandSchema.optional(),
+  coverage: verifyCommandSchema.optional(),
+  default_timeout_seconds: z.number().int().positive().optional(),
+  scope_overrides: z.record(z.string(), verifyScopeOverrideSchema).optional(),
+}).strict();
+
 // --- Config file schema (.context.config.yaml) ---
 
 export const configSchema = z.object({
@@ -148,7 +189,13 @@ export const configSchema = z.object({
   mode: z.enum(["lean", "full"]).optional().describe("Default generation mode (lean omits files/interfaces)"),
   min_tokens: z.number().int().optional()
     .describe("Minimum estimated tokens for a directory to get a .context.yaml (default: 4096)"),
+  verify: verifyBlockSchema.optional()
+    .describe("Commands the `context verify` command runs to populate evidence"),
 });
+
+export type VerifyCommand = z.infer<typeof verifyCommandSchema>;
+export type VerifyBlock = z.infer<typeof verifyBlockSchema>;
+export type VerifyKind = "test" | "typecheck" | "lint" | "build" | "coverage";
 
 // --- Types ---
 
