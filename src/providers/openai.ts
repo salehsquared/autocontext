@@ -2,8 +2,9 @@ import OpenAI from "openai";
 import type { LLMProvider } from "./index.js";
 
 export class OpenAIProvider implements LLMProvider {
+  readonly name = "openai";
+  readonly model: string;
   private client: OpenAI;
-  private model: string;
 
   constructor(apiKey: string, model = "gpt-4o-mini") {
     this.client = new OpenAI({ apiKey });

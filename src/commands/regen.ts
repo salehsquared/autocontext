@@ -214,7 +214,7 @@ export async function regenCommand(
   let completed = 0;
   const configMode = config?.mode ?? "lean";
   const mode = options.full ? "full" as const : configMode;
-  const genOptions = { evidence: options.evidence, mode };
+  const genOptions = { evidence: options.evidence, mode, projectRoot: rootPath };
 
   const metrics: GenerationMetrics = {
     total_scanned: allDirs.length,

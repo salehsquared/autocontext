@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T06:04:37.964Z
-fingerprint: 2bc0af68
+last_updated: 2026-04-14T06:21:24.341Z
+fingerprint: 14be7b6b
 scope: src/commands
 summary: CLI command implementations.
 maintenance: |-
@@ -19,6 +19,7 @@ dependencies:
     - ../bench/scorer.js
     - ../bench/tasks.js
     - ../bench/types.js
+    - ../cache/cache-store.js
     - ../core/fingerprint.js
     - ../core/gitignore.js
     - ../core/health.js
@@ -31,9 +32,12 @@ dependencies:
     - ../generator/llm.js
     - ../generator/markdown.js
     - ../generator/static.js
-    - ../impact/impact.js
 exports:
   - "async function benchCommand(options: BenchOptions): Promise<void>"
+  - interface CacheCommandOptions
+  - "async function cacheStatsCommand(options: CacheCommandOptions ="
+  - "async function cacheClearCommand(options: CacheCommandOptions ="
+  - "function cacheRuntimeStatus():"
   - "async function configCommand( options:"
   - "async function doctorCommand(options:"
   - "async function healthCommand(options:"
@@ -84,6 +88,11 @@ imports:
       - BenchOptions
       - BenchReport
       - MultiRepoReport
+  - path: ../cache/cache-store.js
+    symbols:
+      - cacheClear
+      - cacheStats
+      - isCacheEnabled
   - path: ../core/fingerprint.js
     symbols:
       - FreshnessState
@@ -136,11 +145,6 @@ imports:
       - SummarySource
       - detectExportsWithFallback
       - generateStaticContext
-  - path: ../impact/impact.js
-    symbols:
-      - ImpactReport
-      - ImpactSeed
-      - computeImpact
 derived_fields:
   - version
   - last_updated
@@ -149,4 +153,4 @@ derived_fields:
   - exports
   - dependencies.internal
   - imports
-semantic_fingerprint: 2ea51086d7f9
+semantic_fingerprint: fb3219c6c8e4

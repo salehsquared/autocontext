@@ -2,8 +2,9 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { LLMProvider } from "./index.js";
 
 export class AnthropicProvider implements LLMProvider {
+  readonly name = "anthropic";
+  readonly model: string;
   private client: Anthropic;
-  private model: string;
 
   constructor(apiKey: string, model = "claude-3-5-haiku-latest") {
     this.client = new Anthropic({ apiKey });

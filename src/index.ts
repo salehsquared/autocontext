@@ -19,6 +19,7 @@ import { healthCommand } from "./commands/health.js";
 import { benchCommand } from "./commands/bench.js";
 import { indexCommand } from "./commands/index-cmd.js";
 import { impactCommand } from "./commands/impact.js";
+import { cacheClearCommand, cacheStatsCommand } from "./commands/cache.js";
 import { startMcpServer } from "./mcp/server.js";
 import { loadEnvForCli } from "./utils/env.js";
 import { errorMsg } from "./utils/display.js";
@@ -39,6 +40,8 @@ export interface CommandHandlers {
   benchCommand: typeof benchCommand;
   indexCommand: typeof indexCommand;
   impactCommand: typeof impactCommand;
+  cacheStatsCommand: typeof cacheStatsCommand;
+  cacheClearCommand: typeof cacheClearCommand;
   startMcpServer: typeof startMcpServer;
 }
 
@@ -58,6 +61,8 @@ const defaultHandlers: CommandHandlers = {
   benchCommand,
   indexCommand,
   impactCommand,
+  cacheStatsCommand,
+  cacheClearCommand,
   startMcpServer,
 };
 
@@ -285,6 +290,25 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
     .option("-p, --path <path>", "Project root path")
     .action(async (opts) => {
       await handlers.indexCommand({ rebuild: opts.rebuild, path: opts.path });
+    });
+
+  const cacheCmd = program
+    .command("cache")
+    .description("Manage the deterministic LLM response cache");
+  cacheCmd
+    .command("stats")
+    .description("Show cache status + size")
+    .option("--json", "Output machine-readable JSON")
+    .option("-p, --path <path>", "Project root path")
+    .action(async (opts) => {
+      await handlers.cacheStatsCommand({ path: opts.path, json: opts.json });
+    });
+  cacheCmd
+    .command("clear")
+    .description("Remove every cached LLM response from .autocontext/llm-cache/")
+    .option("-p, --path <path>", "Project root path")
+    .action(async (opts) => {
+      await handlers.cacheClearCommand({ path: opts.path });
     });
 
   program

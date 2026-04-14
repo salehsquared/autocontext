@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T06:04:38.094Z
-fingerprint: 5ca9267a
+last_updated: 2026-04-14T06:21:24.376Z
+fingerprint: 938b2060
 scope: src
 summary: Source code.
 maintenance: |-
@@ -13,6 +13,7 @@ maintenance: |-
 dependencies:
   internal:
     - ./commands/bench.js
+    - ./commands/cache.js
     - ./commands/config.js
     - ./commands/doctor.js
     - ./commands/health.js
@@ -32,6 +33,8 @@ dependencies:
     - ./utils/env.js
 subdirectories:
   - name: bench/
+    summary: Source directory.
+  - name: cache/
     summary: Source directory.
   - name: commands/
     summary: CLI command implementations.
@@ -57,6 +60,10 @@ imports:
   - path: ./commands/bench.js
     symbols:
       - benchCommand
+  - path: ./commands/cache.js
+    symbols:
+      - cacheClearCommand
+      - cacheStatsCommand
   - path: ./commands/config.js
     symbols:
       - configCommand
@@ -117,4 +124,4 @@ derived_fields:
   - dependencies.internal
   - imports
   - subdirectories
-semantic_fingerprint: 164d5a782f2f
+semantic_fingerprint: 145ac3f24a0c

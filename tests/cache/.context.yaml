@@ -1,0 +1,47 @@
+version: 1
+last_updated: 2026-04-14T06:21:24.381Z
+fingerprint: 52b406c6
+scope: tests/cache
+summary: Test suite.
+maintenance: |-
+  If you modify files in this directory, update this .context.yaml to reflect
+  your changes. Update the summary, and any decisions or constraints that changed.
+  Do NOT update the fingerprint manually — run `context rehash` or it will be
+  updated automatically on the next `context status` check.
+  If you only read files in this directory, do not modify this file.
+  Do not include secrets, API keys, passwords, or PII in this file.
+dependencies:
+  internal:
+    - ../../src/cache/cache-store.js
+    - ../../src/cache/key.js
+    - ../../src/cache/types.js
+    - ../helpers.js
+imports:
+  - path: ../../src/cache/cache-store.js
+    symbols:
+      - cacheClear
+      - cacheGet
+      - cachePut
+      - cacheRoot
+      - cacheStats
+      - isCacheEnabled
+  - path: ../../src/cache/key.js
+    symbols:
+      - computeCacheKey
+      - sha256Hex
+  - path: ../../src/cache/types.js
+    symbols:
+      - CACHE_VERSION
+      - CacheEnvelope
+  - path: ../helpers.js
+    symbols:
+      - cleanupTmpDir
+      - createTmpDir
+derived_fields:
+  - version
+  - last_updated
+  - fingerprint
+  - scope
+  - dependencies.internal
+  - imports
+semantic_fingerprint: 336ababf8cf4

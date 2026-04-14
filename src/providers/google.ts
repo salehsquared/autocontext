@@ -1,8 +1,9 @@
 import type { LLMProvider } from "./index.js";
 
 export class GoogleProvider implements LLMProvider {
+  readonly name = "google";
+  readonly model: string;
   private apiKey: string;
-  private model: string;
 
   constructor(apiKey: string, model = "gemini-2.0-flash-lite") {
     this.apiKey = apiKey;

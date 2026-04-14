@@ -2,6 +2,14 @@ import { relative, basename } from "node:path";
 import type { ScanResult } from "../core/scanner.js";
 import type { ContextFile } from "../core/schema.js";
 
+/**
+ * Bump whenever SYSTEM_PROMPT, LEAN_SYSTEM_PROMPT, or buildUserPrompt
+ * changes in a way that could alter LLM output for the same directory
+ * inputs. Monotonically increasing; never reuse old values. T7's LLM
+ * cache includes this in its key, so a bump invalidates all entries.
+ */
+export const PROMPT_TEMPLATE_VERSION = 1;
+
 export const SYSTEM_PROMPT = `You are a technical documentation generator. Your job is to analyze source code files and produce structured YAML documentation for a .context.yaml file.
 
 Rules:

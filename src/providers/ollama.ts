@@ -1,8 +1,9 @@
 import type { LLMProvider } from "./index.js";
 
 export class OllamaProvider implements LLMProvider {
+  readonly name = "ollama";
+  readonly model: string;
   private baseUrl: string;
-  private model: string;
 
   constructor(host = "http://localhost:11434", model = "llama3.2:3b") {
     this.baseUrl = host.replace(/\/$/, "");

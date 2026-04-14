@@ -159,7 +159,7 @@ export async function initCommand(options: { noLlm?: boolean; path?: string; evi
   let completed = 0;
   const configMode = existingConfig?.mode ?? "lean";
   const mode = options.full ? "full" as const : configMode;
-  const genOptions = { evidence: options.evidence, mode };
+  const genOptions = { evidence: options.evidence, mode, projectRoot: rootPath };
 
   const metrics: GenerationMetrics = {
     total_scanned: allDirs.length,

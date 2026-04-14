@@ -6,7 +6,19 @@ import type { ScanResult } from "../core/scanner.js";
 import type { ContextFile } from "../core/schema.js";
 import { SCHEMA_VERSION, DEFAULT_MAINTENANCE, FULL_MAINTENANCE, contextSchema } from "../core/schema.js";
 import { computeFingerprint } from "../core/fingerprint.js";
-import { SYSTEM_PROMPT, LEAN_SYSTEM_PROMPT, buildUserPrompt } from "./prompts.js";
+import {
+  SYSTEM_PROMPT,
+  LEAN_SYSTEM_PROMPT,
+  buildUserPrompt,
+  PROMPT_TEMPLATE_VERSION,
+} from "./prompts.js";
+import {
+  cacheGet,
+  cachePut,
+  isCacheEnabled,
+} from "../cache/cache-store.js";
+import { computeCacheKey, sha256Hex } from "../cache/key.js";
+import { CACHE_VERSION } from "../cache/types.js";
 import { detectExternalDeps, detectInternalDeps } from "./dependencies.js";
 import { detectImportBindings } from "./imports.js";
 import { detectInternals } from "./internals.js";
@@ -22,7 +34,14 @@ export async function generateLLMContext(
   provider: LLMProvider,
   scanResult: ScanResult,
   childContexts: Map<string, ContextFile>,
-  options?: { evidence?: boolean; mode?: "lean" | "full" },
+  options?: {
+    evidence?: boolean;
+    mode?: "lean" | "full";
+    /** Project root — enables the LLM response cache when provided. */
+    projectRoot?: string;
+    /** Explicit opt-out; defaults to `true` unless AUTOCONTEXT_CACHE=0. */
+    cacheEnabled?: boolean;
+  },
 ): Promise<ContextFile> {
   const mode = options?.mode ?? "lean";
   const isFull = mode === "full";
@@ -42,9 +61,53 @@ export async function generateLLMContext(
   const preDetectedDeps = isFull ? await detectExternalDeps(scanResult.path) : [];
   const userPrompt = buildUserPrompt(scanResult, fileContents, childContexts, isRoot, preDetectedDeps, mode);
 
-  // Call LLM
+  // Call LLM (with optional deterministic cache).
   const systemPrompt = isFull ? SYSTEM_PROMPT : LEAN_SYSTEM_PROMPT;
-  const rawResponse = await provider.generate(systemPrompt, userPrompt);
+  const fingerprint = await computeFingerprint(scanResult.path);
+
+  const cacheOn =
+    (options?.cacheEnabled ?? true) && isCacheEnabled() && !!options?.projectRoot;
+  let cacheKey: string | null = null;
+  if (cacheOn && options?.projectRoot) {
+    cacheKey = computeCacheKey({
+      cache_version: CACHE_VERSION,
+      schema_version: SCHEMA_VERSION,
+      prompt_template_ver: PROMPT_TEMPLATE_VERSION,
+      provider: provider.name,
+      model: provider.model,
+      mode,
+      system_prompt_sha: sha256Hex(systemPrompt),
+      user_prompt_sha: sha256Hex(userPrompt),
+      input_fingerprint: fingerprint,
+      scope: scanResult.relativePath,
+    });
+  }
+
+  let rawResponse: string | null = null;
+  if (cacheKey && options?.projectRoot) {
+    const hit = await cacheGet(options.projectRoot, cacheKey);
+    if (hit) rawResponse = hit.response;
+  }
+  if (rawResponse === null) {
+    rawResponse = await provider.generate(systemPrompt, userPrompt);
+    if (cacheKey && options?.projectRoot) {
+      await cachePut(options.projectRoot, {
+        key: cacheKey,
+        created_at: new Date().toISOString(),
+        meta: {
+          cache_version: CACHE_VERSION,
+          schema_version: SCHEMA_VERSION,
+          prompt_template_ver: PROMPT_TEMPLATE_VERSION,
+          provider: provider.name,
+          model: provider.model,
+          mode,
+          scope: scanResult.relativePath,
+          input_fingerprint: fingerprint,
+        },
+        response: rawResponse,
+      });
+    }
+  }
 
   // Strip markdown fences if present
   const yamlStr = rawResponse
@@ -54,7 +117,6 @@ export async function generateLLMContext(
 
   // Parse and merge with required fields
   const llmOutput = parse(yamlStr) as Record<string, unknown>;
-  const fingerprint = await computeFingerprint(scanResult.path);
 
   const context: ContextFile = {
     version: SCHEMA_VERSION,
