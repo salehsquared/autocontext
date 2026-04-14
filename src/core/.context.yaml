@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T06:00:07.606Z
-fingerprint: 815c33e5
+last_updated: 2026-04-14T06:25:55.711Z
+fingerprint: c83c9c15
 scope: src/core
 summary: Core functionality.
 maintenance: |-
@@ -23,6 +23,26 @@ dependencies:
     - ./schema.js
     - ./semantic-fingerprint.js
     - ./writer.js
+data_models:
+  - 'interface CheckFreshnessOptions { storedSemanticFingerprint: string, index: import("../index/store.js").IndexStore,
+    contextFacts: import, projectRoot: string }'
+  - "interface CheckFreshnessResult { state: FreshnessState, computed: string, computedSemantic: string }"
+  - "interface CommitMeta { sha: string, authorName: string, authorEmail: string, timestamp: number, subject: string }"
+  - "interface LogOpts { since: string, until: string, max: number, follow: boolean }"
+  - "interface HealthSummary { tests: { passing: number; failing: number; unkn…, typecheck: { clean: number; errors:
+    number; unknown…, lint: { clean: number; errors: number; unknown…, coverage: { scopes_reported: number;
+    average_perce… }"
+  - "interface EvidenceEntry { scope: string, has_evidence: boolean, evidence: Evidence }"
+  - "interface AggregateEvidenceResult { root: string, total_scopes: number, scopes_with_evidence: number, health:
+    HealthSummary, scopes: EvidenceEntry[], scope_errors: Array<{ scope: string; error: string }>, error: string }"
+  - "interface ScanResult { path: string, relativePath: string, files: string[], hasContext: boolean, children:
+    ScanResult[] }"
+  - "interface ScanOptions { maxDepth: number, extraIgnore: string[] }"
+  - "interface StampResult { updated: number, skipped: number, changed: number }"
+  - "interface PolicyFacts { constraints: string[], rules: Array<Record<string, unknown>>, environment: string[] }"
+  - "interface FilePreimage { file: string, exported_symbols: Array, public_signatures: string[], import_edges: Array }"
+  - "interface DirectoryPreimage { schema_version_marker: typeof SEMANTIC_FINGERPRINT_MARKER, files: FilePreimage[],
+    policy_relevant_facts: { constraints: string[]; rules: Array<Re… }"
 exports:
   - "async function computeFingerprint(dirPath: string, ignorePatterns: string[] = []): Promise<string>"
   - type FreshnessState
@@ -32,6 +52,16 @@ exports:
   - interface CheckFreshnessResult
   - "async function checkFreshness( dirPath: string, storedFingerprint: string | undefined, ignorePatterns: string[] =
     [], opts?: CheckFreshnessOptions, ): Promise<CheckFreshnessResult>"
+  - class GitError
+  - interface CommitMeta
+  - "function isGitRepo(dirPath: string): boolean"
+  - "function revParse(repoPath: string, rev: string): string"
+  - "function showFileAtRev( repoPath: string, rev: string, relPath: string, ): string | null"
+  - interface LogOpts
+  - 'function logForPath( repoPath: string, relPath: string | ".", opts: LogOpts ='
+  - "function getChangedFiles(repoPath: string, sha: string): string[]"
+  - "function lsTreeFiles( repoPath: string, rev: string, filter?: ((path: string) => boolean) | string, ): string[]"
+  - "function mergeBase( repoPath: string, a: string, b: string, ): string | null"
   - type EnsureResult
   - "async function ensureAutocontextGitignored( rootPath: string, ): Promise<EnsureResult>"
   - "function hasAutocontextEntry(gitignoreContent: string): boolean"
@@ -40,17 +70,6 @@ exports:
   - interface AggregateEvidenceResult
   - "async function aggregateEvidence(rootPath: string): Promise<AggregateEvidenceResult>"
   - AGENTS_FILENAME
-  - "async function readAgentsMd(rootPath: string): Promise<string | null>"
-  - "async function writeAgentsMd(rootPath: string, content: string): Promise<void>"
-  - 'async function updateAgentsMd( rootPath: string, entries: AgentsEntry[], projectName: string, ): Promise<"created"
-    | "appended" | "replaced" | "skipped">'
-  - interface ScanResult
-  - interface ScanOptions
-  - "async function scanProject( rootPath: string, options: ScanOptions ="
-  - "function groupByDepth(root: ScanResult): ScanResult[][]"
-  - "function flattenBottomUp(result: ScanResult): ScanResult[]"
-  - SCHEMA_VERSION
-  - contextSchema
 imports:
   - path: ../generator/markdown.js
     symbols:
@@ -114,4 +133,5 @@ derived_fields:
   - exports
   - dependencies.internal
   - imports
-semantic_fingerprint: a91166610195
+  - data_models
+semantic_fingerprint: 624c4eae6d37

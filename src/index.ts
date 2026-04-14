@@ -20,6 +20,9 @@ import { benchCommand } from "./commands/bench.js";
 import { indexCommand } from "./commands/index-cmd.js";
 import { impactCommand } from "./commands/impact.js";
 import { cacheClearCommand, cacheStatsCommand } from "./commands/cache.js";
+import { diffCommand } from "./commands/diff.js";
+import { timelineCommand } from "./commands/timeline.js";
+import { hotspotsCommand } from "./commands/hotspots.js";
 import { startMcpServer } from "./mcp/server.js";
 import { loadEnvForCli } from "./utils/env.js";
 import { errorMsg } from "./utils/display.js";
@@ -42,6 +45,9 @@ export interface CommandHandlers {
   impactCommand: typeof impactCommand;
   cacheStatsCommand: typeof cacheStatsCommand;
   cacheClearCommand: typeof cacheClearCommand;
+  diffCommand: typeof diffCommand;
+  timelineCommand: typeof timelineCommand;
+  hotspotsCommand: typeof hotspotsCommand;
   startMcpServer: typeof startMcpServer;
 }
 
@@ -63,6 +69,9 @@ const defaultHandlers: CommandHandlers = {
   impactCommand,
   cacheStatsCommand,
   cacheClearCommand,
+  diffCommand,
+  timelineCommand,
+  hotspotsCommand,
   startMcpServer,
 };
 
@@ -309,6 +318,46 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
     .option("-p, --path <path>", "Project root path")
     .action(async (opts) => {
       await handlers.cacheClearCommand({ path: opts.path });
+    });
+
+  program
+    .command("diff <range>")
+    .description("Diff meaningful .context.yaml fields between two git revisions (e.g. main..feature)")
+    .option("--scope <path>", "Restrict to a single scope")
+    .option("--json", "Output machine-readable JSON")
+    .option("-p, --path <path>", "Project root path")
+    .action(async (range, opts) => {
+      await handlers.diffCommand(range, { path: opts.path, scope: opts.scope, json: opts.json });
+    });
+
+  program
+    .command("timeline [target]")
+    .description("Show git history of a scope's .context.yaml")
+    .option("--max <n>", "Maximum number of commits (default 50)", parseInt)
+    .option("--json", "Output machine-readable JSON")
+    .option("-p, --path <path>", "Project root path")
+    .action(async (target, opts) => {
+      await handlers.timelineCommand(target, {
+        path: opts.path,
+        max: opts.max,
+        json: opts.json,
+      });
+    });
+
+  program
+    .command("hotspots")
+    .description("Rank scopes by context churn (semantic fingerprint changes, or raw commits)")
+    .option("--max <n>", "Maximum rows (default 20)", parseInt)
+    .option("--raw-count", "Force raw commit count metric even if semantic fingerprints are present")
+    .option("--json", "Output machine-readable JSON")
+    .option("-p, --path <path>", "Project root path")
+    .action(async (opts) => {
+      await handlers.hotspotsCommand({
+        path: opts.path,
+        max: opts.max,
+        rawCount: opts.rawCount,
+        json: opts.json,
+      });
     });
 
   program

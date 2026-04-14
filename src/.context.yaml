@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T06:21:24.376Z
-fingerprint: 938b2060
+last_updated: 2026-04-14T06:25:55.742Z
+fingerprint: 76c35ec3
 scope: src
 summary: Source code.
 maintenance: |-
@@ -15,8 +15,10 @@ dependencies:
     - ./commands/bench.js
     - ./commands/cache.js
     - ./commands/config.js
+    - ./commands/diff.js
     - ./commands/doctor.js
     - ./commands/health.js
+    - ./commands/hotspots.js
     - ./commands/ignore.js
     - ./commands/impact.js
     - ./commands/index-cmd.js
@@ -26,11 +28,10 @@ dependencies:
     - ./commands/show.js
     - ./commands/stats.js
     - ./commands/status.js
+    - ./commands/timeline.js
     - ./commands/validate.js
     - ./commands/watch.js
     - ./mcp/server.js
-    - ./utils/display.js
-    - ./utils/env.js
 subdirectories:
   - name: bench/
     summary: Source directory.
@@ -52,6 +53,10 @@ subdirectories:
     summary: Abstract LLM provider interface.
   - name: utils/
     summary: Utility functions.
+data_models:
+  - "interface CommandHandlers { initCommand: typeof initCommand, statusCommand: typeof statusCommand, regenCommand:
+    typeof regenCommand, rehashCommand: typeof rehashCommand, validateCommand: typeof validateCommand, showCommand:
+    typeof showCommand, configCommand: typeof configCommand, ignoreCommand: typeof ignoreCommand, …+13 more }"
 exports:
   - interface CommandHandlers
   - "function createProgram(handlers: CommandHandlers = defaultHandlers): Command"
@@ -67,12 +72,18 @@ imports:
   - path: ./commands/config.js
     symbols:
       - configCommand
+  - path: ./commands/diff.js
+    symbols:
+      - diffCommand
   - path: ./commands/doctor.js
     symbols:
       - doctorCommand
   - path: ./commands/health.js
     symbols:
       - healthCommand
+  - path: ./commands/hotspots.js
+    symbols:
+      - hotspotsCommand
   - path: ./commands/ignore.js
     symbols:
       - ignoreCommand
@@ -100,6 +111,9 @@ imports:
   - path: ./commands/status.js
     symbols:
       - statusCommand
+  - path: ./commands/timeline.js
+    symbols:
+      - timelineCommand
   - path: ./commands/validate.js
     symbols:
       - validateCommand
@@ -109,12 +123,6 @@ imports:
   - path: ./mcp/server.js
     symbols:
       - startMcpServer
-  - path: ./utils/display.js
-    symbols:
-      - errorMsg
-  - path: ./utils/env.js
-    symbols:
-      - loadEnvForCli
 derived_fields:
   - version
   - last_updated
@@ -124,4 +132,5 @@ derived_fields:
   - dependencies.internal
   - imports
   - subdirectories
-semantic_fingerprint: 145ac3f24a0c
+  - data_models
+semantic_fingerprint: fbaabf0a14f8

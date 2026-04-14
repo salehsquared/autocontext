@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T06:21:24.341Z
-fingerprint: 14be7b6b
+last_updated: 2026-04-14T06:25:55.562Z
+fingerprint: deefcd38
 scope: src/commands
 summary: CLI command implementations.
 maintenance: |-
@@ -21,6 +21,7 @@ dependencies:
     - ../bench/types.js
     - ../cache/cache-store.js
     - ../core/fingerprint.js
+    - ../core/git.js
     - ../core/gitignore.js
     - ../core/health.js
     - ../core/markdown-writer.js
@@ -31,7 +32,33 @@ dependencies:
     - ../generator/dependencies.js
     - ../generator/llm.js
     - ../generator/markdown.js
-    - ../generator/static.js
+data_models:
+  - "interface CacheCommandOptions { path: string, json: boolean }"
+  - "interface DiffCommandOptions { path: string, scope: string, json: boolean }"
+  - "interface ScopeDiff { scope: string, present_in_a: boolean, present_in_b: boolean, changes: Array }"
+  - 'interface CheckResult { name: string, status: "pass" | "warn" | "fail", message: string, fix: string }'
+  - "interface HotspotsCommandOptions { path: string, max: number, json: boolean, rawCount: boolean }"
+  - "interface HotspotRow { scope: string, commit_count: number, semantic_changes: number, last_touched_sha: string,
+    last_touched_at: number }"
+  - "interface ImpactCommandOptions { path: string, json: boolean, maxDepth: number, max: number }"
+  - "interface IndexCommandOptions { rebuild: boolean, path: string, dryRun: boolean }"
+  - "interface GenerationMetrics { total_scanned: number, skipped_min_tokens: number, generated: number,
+    exports_extracted: number, exports_total: number, summary_from_docstring: number, summary_from_dirname: number,
+    summary_from_pattern: number, …+5 more }"
+  - "interface GenerationMetrics { total_scanned: number, skipped_min_tokens: number, generated: number,
+    exports_extracted: number, exports_total: number, summary_from_docstring: number, summary_from_dirname: number,
+    summary_from_pattern: number, …+5 more }"
+  - 'interface DirStats { scope: string, sourceTokens: number, contextTokens: number, reductionPercent: number,
+    freshness: FreshnessState | "missing", fileCount: number, exportCount: number, hasDecisions: boolean, …+7 more }'
+  - 'interface StatusEntry { scope: string, state: FreshnessState | "missing", fingerprint: string | null, summary:
+    string | null }'
+  - "interface TimelineCommandOptions { path: string, max: number, json: boolean }"
+  - 'interface StrictFinding { severity: "warning" | "info", message: string }'
+  - "interface DirState { dir: ScanResult, state: FreshnessState }"
+events:
+  - on("SIGINT") via process
+  - on("SIGTERM") via process
+  - on("all") via watcher
 exports:
   - "async function benchCommand(options: BenchOptions): Promise<void>"
   - interface CacheCommandOptions
@@ -39,8 +66,12 @@ exports:
   - "async function cacheClearCommand(options: CacheCommandOptions ="
   - "function cacheRuntimeStatus():"
   - "async function configCommand( options:"
+  - interface DiffCommandOptions
+  - "async function diffCommand( range: string | undefined, options: DiffCommandOptions ="
   - "async function doctorCommand(options:"
   - "async function healthCommand(options:"
+  - interface HotspotsCommandOptions
+  - "async function hotspotsCommand(options: HotspotsCommandOptions ="
   - "async function ignoreCommand(targetPath: string, options:"
   - interface ImpactCommandOptions
   - "async function impactCommand( target: string | undefined, options: ImpactCommandOptions ="
@@ -53,10 +84,7 @@ exports:
   - "async function showCommand(targetPath: string): Promise<void>"
   - "async function statsCommand(options:"
   - "async function statusCommand(options:"
-  - "async function validateCommand(options:"
-  - "function findTrackedDirForFile( filePath: string, rootPath: string, trackedDirPaths: Iterable<string>, ): string |
-    undefined"
-  - "async function watchCommand( options:"
+  - interface TimelineCommandOptions
 imports:
   - path: ../bench/git.js
     symbols:
@@ -99,6 +127,14 @@ imports:
       - checkFreshness
       - computeFingerprint
       - legacyState
+  - path: ../core/git.js
+    symbols:
+      - GitError
+      - isGitRepo
+      - logForPath
+      - lsTreeFiles
+      - revParse
+      - showFileAtRev
   - path: ../core/gitignore.js
     symbols:
       - ensureAutocontextGitignored
@@ -140,11 +176,6 @@ imports:
   - path: ../generator/markdown.js
     symbols:
       - AGENTS_SECTION_START
-  - path: ../generator/static.js
-    symbols:
-      - SummarySource
-      - detectExportsWithFallback
-      - generateStaticContext
 derived_fields:
   - version
   - last_updated
@@ -153,4 +184,6 @@ derived_fields:
   - exports
   - dependencies.internal
   - imports
-semantic_fingerprint: fb3219c6c8e4
+  - data_models
+  - events
+semantic_fingerprint: 93f0daa2f831
