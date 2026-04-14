@@ -88,6 +88,11 @@ export const contextSchema = z.object({
   version: z.literal(SCHEMA_VERSION).describe("Schema version (must be 1)"),
   last_updated: z.string().describe("ISO 8601 timestamp"),
   fingerprint: z.string().describe("Short hash of directory contents"),
+  semantic_fingerprint: z
+    .string()
+    .regex(/^[0-9a-f]{12}$/)
+    .optional()
+    .describe("Semantic fingerprint (12-hex sha256) over exported API, imports, and policy facts"),
   scope: z.string().describe("Relative path from project root"),
   summary: z.string().describe("1-3 sentence description of this directory"),
   files: z.array(fileEntrySchema).optional().describe("Files in this directory"),

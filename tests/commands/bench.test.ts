@@ -50,6 +50,7 @@ vi.mock("../../src/core/writer.js", () => ({
 
 vi.mock("../../src/core/fingerprint.js", () => ({
   checkFreshness: checkFreshnessMock,
+  legacyState: (s: string) => (s === "fresh" || s === "missing" ? s : "stale"),
 }));
 
 vi.mock("../../src/bench/ground-truth.js", () => ({

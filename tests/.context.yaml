@@ -1,46 +1,15 @@
 version: 1
-last_updated: 2026-02-20T16:42:19.081Z
-fingerprint: a12e1f33
+last_updated: 2026-04-14T05:57:17.774Z
+fingerprint: 11de4ac0
 scope: tests
 summary: Test suite.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the files list, interfaces, and current_state sections.
+  your changes. Update the summary, and any decisions or constraints that changed.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-files:
-  - name: ast.test.ts
-    purpose: Test file
-  - name: dependencies.test.ts
-    purpose: Test file
-  - name: env.test.ts
-    purpose: Test file
-  - name: fingerprint.test.ts
-    purpose: Test file
-  - name: generator.test.ts
-    purpose: Test file
-  - name: helpers.ts
-    purpose: "Exports: createTmpDir, cleanupTmpDir, createFile (+4 more)"
-  - name: imports.test.ts
-    purpose: Test file
-  - name: index.test.ts
-    purpose: Test file
-  - name: internals.test.ts
-    purpose: Test file
-  - name: prompts.test.ts
-    purpose: Test file
-  - name: providers.test.ts
-    purpose: Test file
-  - name: scan-options.test.ts
-    purpose: Test file
-  - name: scanner.test.ts
-    purpose: Test file
-  - name: schema.test.ts
-    purpose: Test file
-  - name: writer.test.ts
-    purpose: Test file
 subdirectories:
   - name: bench/
     summary: Test suite.
@@ -54,6 +23,8 @@ subdirectories:
     summary: Test fixtures.
   - name: generator/
     summary: Code generation.
+  - name: index/
+    summary: Test suite.
   - name: mcp/
     summary: MCP server integration.
   - name: utils/
@@ -66,17 +37,6 @@ exports:
   - "function makeValidContext(overrides?: Partial<ContextFile>): ContextFile"
   - "function makeLeanContext(overrides?: Partial<ContextFile>): ContextFile"
   - "function makeScanResult(path: string, overrides?: Partial<ScanResult>): ScanResult"
-interfaces:
-  - name: createTmpDir
-    description: Exported from helpers.ts
-  - name: cleanupTmpDir
-    description: Exported from helpers.ts
-  - name: createFile
-    description: Exported from helpers.ts
-  - name: createNestedFile
-    description: Exported from helpers.ts
-  - name: makeValidContext
-    description: Exported from helpers.ts
 dependencies:
   internal:
     - ../core/scanner.js
@@ -85,6 +45,7 @@ dependencies:
     - ../src/core/fingerprint.js
     - ../src/core/scanner.js
     - ../src/core/schema.js
+    - ../src/core/semantic-fingerprint.js
     - ../src/core/writer.js
     - ../src/generator/ast.js
     - ../src/generator/dependencies.js
@@ -94,11 +55,10 @@ dependencies:
     - ../src/generator/prompts.js
     - ../src/generator/static.js
     - ../src/index.js
+    - ../src/index/builder.js
+    - ../src/index/store.js
     - ../src/providers/index.js
     - ../src/utils/config.js
-    - ../src/utils/env.js
-    - ../src/utils/scan-options.js
-    - ../utils/helper.js
 imports:
   - path: ../core/scanner.js
     symbols:
@@ -110,8 +70,10 @@ imports:
       - foo
   - path: ../src/core/fingerprint.js
     symbols:
+      - FreshnessState
       - checkFreshness
       - computeFingerprint
+      - legacyState
   - path: ../src/core/scanner.js
     symbols:
       - ScanResult
@@ -129,6 +91,11 @@ imports:
       - SCHEMA_VERSION
       - configSchema
       - contextSchema
+  - path: ../src/core/semantic-fingerprint.js
+    symbols:
+      - SEMANTIC_FINGERPRINT_MARKER
+      - computeSemanticFingerprint
+      - stableStringify
   - path: ../src/core/writer.js
     symbols:
       - UnsupportedVersionError
@@ -167,6 +134,13 @@ imports:
     symbols:
       - CommandHandlers
       - createProgram
+  - path: ../src/index/builder.js
+    symbols:
+      - buildIndex
+      - commitBuild
+  - path: ../src/index/store.js
+    symbols:
+      - openIndex
   - path: ../src/providers/index.js
     symbols:
       - LLMProvider
@@ -180,40 +154,12 @@ imports:
       - loadEnvLocal
       - parseEnvLine
       - resolvePathFromArgv
-  - path: ../src/utils/scan-options.js
-    symbols:
-      - loadScanOptions
-  - path: ../utils/helper.js
-    symbols:
-      - default as helper
-  - path: ./alpha.js
-    symbols:
-      - a
-internals:
-  - name: available
-    kind: constant
-    file: ast.test.ts
-  - name: TEST_ENV_KEYS
-    kind: constant
-    file: env.test.ts
-  - name: createMockProvider
-    kind: function
-    file: generator.test.ts
-  - name: makeHandlers
-    kind: function
-    file: index.test.ts
-  - name: parse
-    kind: function
-    file: index.test.ts
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
-  - files
-  - interfaces
   - exports
   - dependencies.internal
   - imports
-  - internals
   - subdirectories

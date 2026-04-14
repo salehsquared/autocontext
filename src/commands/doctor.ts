@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { parse } from "yaml";
 import { scanProject, flattenBottomUp } from "../core/scanner.js";
-import { checkFreshness } from "../core/fingerprint.js";
+import { checkFreshness, legacyState } from "../core/fingerprint.js";
 import { contextSchema, CONTEXT_FILENAME, type ContextFile } from "../core/schema.js";
 import { loadConfig, resolveApiKey, getDefaultApiKeyEnv } from "../utils/config.js";
 import { loadScanOptions } from "../utils/scan-options.js";
@@ -123,7 +123,7 @@ export async function doctorCommand(options: { path?: string; json?: boolean }):
   for (const { dir, result } of dirResults) {
     if ("ctx" in result) {
       const { state } = await checkFreshness(dir.path, result.ctx.fingerprint);
-      if (state === "stale") staleCount++;
+      if (legacyState(state) === "stale") staleCount++;
     }
   }
 

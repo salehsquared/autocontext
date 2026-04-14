@@ -2,7 +2,7 @@ import { resolve, join } from "node:path";
 import { readFile, writeFile } from "node:fs/promises";
 import { scanProject, flattenBottomUp } from "../core/scanner.js";
 import { readContext, UnsupportedVersionError } from "../core/writer.js";
-import { checkFreshness } from "../core/fingerprint.js";
+import { checkFreshness, legacyState } from "../core/fingerprint.js";
 import { createProvider } from "../providers/index.js";
 import { loadConfig, resolveApiKey } from "../utils/config.js";
 import { loadScanOptions } from "../utils/scan-options.js";
@@ -122,7 +122,7 @@ async function runSingleBench(
 
       if (!options.allowStale) {
         const { state } = await checkFreshness(dir.path, ctx.fingerprint);
-        if (state === "stale") staleCount++;
+        if (legacyState(state) === "stale") staleCount++;
       }
     }
   }

@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T03:07:08.941Z
-fingerprint: 440db67c
+last_updated: 2026-04-14T05:57:17.551Z
+fingerprint: bdb3ab4c
 scope: src/commands
 summary: CLI command implementations.
 maintenance: |-
@@ -87,6 +87,7 @@ imports:
       - FreshnessState
       - checkFreshness
       - computeFingerprint
+      - legacyState
   - path: ../core/gitignore.js
     symbols:
       - ensureAutocontextGitignored

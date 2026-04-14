@@ -173,6 +173,7 @@ function extractSymbols(
         kind,
         exported: isInsideExport(nameNode),
         span,
+        signature: extractSignature(nameNode, kind, name),
         lang,
       });
     }
@@ -204,6 +205,33 @@ function extractSymbols(
   }
 
   return out;
+}
+
+function extractSignature(
+  nameNode: TSNode,
+  kind: SymbolKind,
+  name: string,
+): string | undefined {
+  const parent = nameNode.parent;
+  if (!parent) return undefined;
+  const text: string = parent.text;
+
+  if (parent.type === "function_declaration" || parent.type === "generator_function_declaration") {
+    const brace = text.indexOf("{");
+    const sig = brace >= 0 ? text.slice(0, brace) : text;
+    return sig.replace(/^export\s+(default\s+)?/, "").replace(/\s+/g, " ").trim();
+  }
+  if (parent.type === "class_declaration") return `class ${name}`;
+  if (parent.type === "interface_declaration") return `interface ${name}`;
+  if (parent.type === "type_alias_declaration") return `type ${name}`;
+  if (parent.type === "enum_declaration") return `enum ${name}`;
+  if (parent.type === "variable_declarator") {
+    // `const foo: Type = ...` — keep the LHS type annotation.
+    const eq = text.indexOf("=");
+    const lhs = eq >= 0 ? text.slice(0, eq) : text;
+    return lhs.replace(/\s+/g, " ").trim();
+  }
+  return undefined;
 }
 
 function enclosingDeclNode(nameNode: TSNode): TSNode {

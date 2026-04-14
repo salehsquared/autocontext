@@ -1,7 +1,18 @@
 import chalk from "chalk";
-import type { FreshnessState } from "../core/fingerprint.js";
+import type { FreshnessState, LegacyFreshnessState } from "../core/fingerprint.js";
 
 export function freshnessIcon(state: FreshnessState): string {
+  switch (state) {
+    case "fresh": return chalk.green("✓ fresh    ");
+    case "cosmetic_stale": return chalk.yellow.dim("~ cosmetic ");
+    case "semantic_stale": return chalk.yellow("⚠ semantic ");
+    case "missing": return chalk.red("✗ missing  ");
+  }
+}
+
+/** Renders using the legacy three-state vocabulary for contexts that haven't
+ *  migrated to the 4-state enum yet. */
+export function freshnessIconLegacy(state: LegacyFreshnessState): string {
   switch (state) {
     case "fresh": return chalk.green("✓ fresh  ");
     case "stale": return chalk.yellow("⚠ stale  ");

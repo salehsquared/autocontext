@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T01:58:41.342Z
-fingerprint: f43d4567
+last_updated: 2026-04-14T05:57:17.678Z
+fingerprint: 91c047e8
 scope: src/core
 summary: Core functionality.
 maintenance: |-
@@ -13,8 +13,12 @@ maintenance: |-
 exports:
   - "async function computeFingerprint(dirPath: string, ignorePatterns: string[] = []): Promise<string>"
   - type FreshnessState
+  - type LegacyFreshnessState
+  - "function legacyState(state: FreshnessState): LegacyFreshnessState"
+  - interface CheckFreshnessOptions
+  - interface CheckFreshnessResult
   - "async function checkFreshness( dirPath: string, storedFingerprint: string | undefined, ignorePatterns: string[] =
-    [], ): Promise<"
+    [], opts?: CheckFreshnessOptions, ): Promise<CheckFreshnessResult>"
   - type EnsureResult
   - "async function ensureAutocontextGitignored( rootPath: string, ): Promise<EnsureResult>"
   - "function hasAutocontextEntry(gitignoreContent: string): boolean"
@@ -34,14 +38,12 @@ exports:
   - "function flattenBottomUp(result: ScanResult): ScanResult[]"
   - SCHEMA_VERSION
   - contextSchema
-  - configSchema
-  - type ContextFile
-  - type ConfigFile
-  - type FileEntry
 dependencies:
   internal:
     - ../generator/markdown.js
     - ../index/paths.js
+    - ../index/store.js
+    - ../index/types.js
     - ../utils/config.js
     - ../utils/scan-options.js
     - ../utils/tokens.js
@@ -59,6 +61,15 @@ imports:
   - path: ../index/paths.js
     symbols:
       - AUTOCONTEXT_DIR
+      - toFileId
+  - path: ../index/store.js
+    symbols:
+      - IndexStore
+  - path: ../index/types.js
+    symbols:
+      - FileId
+      - ImportEdge
+      - IndexSymbol
   - path: ../utils/config.js
     symbols:
       - loadConfig

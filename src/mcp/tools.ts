@@ -4,10 +4,10 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { readContext, UnsupportedVersionError } from "../core/writer.js";
 import { scanProject, flattenBottomUp } from "../core/scanner.js";
-import { checkFreshness, computeFingerprint } from "../core/fingerprint.js";
+import { checkFreshness, computeFingerprint, legacyState } from "../core/fingerprint.js";
 import { CONTEXT_FILENAME } from "../core/schema.js";
 import type { ContextFile } from "../core/schema.js";
-import type { FreshnessState } from "../core/fingerprint.js";
+import type { FreshnessState, LegacyFreshnessState } from "../core/fingerprint.js";
 import { loadScanOptions } from "../utils/scan-options.js";
 import { loadConfig } from "../utils/config.js";
 import { filterByMinTokens } from "../utils/tokens.js";
@@ -72,7 +72,9 @@ export interface CheckFreshnessInput {
 
 export interface CheckFreshnessResult {
   scope: string;
-  state: FreshnessState;
+  /** Legacy 3-state projection. New consumers opt into the 4-state enum via
+   *  the T2 `explain_staleness` tool. */
+  state: LegacyFreshnessState;
   fingerprint?: {
     stored: string;
     computed: string;
@@ -87,7 +89,9 @@ export interface ListContextsInput {
 
 export interface ContextEntry {
   scope: string;
-  state: FreshnessState;
+  /** Legacy 3-state projection. Expanded 4-state info lives on the T2
+   *  `explain_staleness` tool. */
+  state: LegacyFreshnessState;
   has_context: boolean;
   last_updated?: string;
   summary?: string;
@@ -186,7 +190,7 @@ export async function handleCheckFreshness(
     context = await readContext(targetDir);
   } catch (err) {
     if (err instanceof UnsupportedVersionError) {
-      return { scope: input.scope, state: "missing" as FreshnessState, error: err.message };
+      return { scope: input.scope, state: "missing", error: err.message };
     }
     throw err;
   }
@@ -198,7 +202,7 @@ export async function handleCheckFreshness(
 
   return {
     scope: input.scope,
-    state,
+    state: legacyState(state),
     fingerprint: {
       stored: context.fingerprint,
       computed,
@@ -241,7 +245,7 @@ export async function handleListContexts(
         const { state } = await checkFreshness(dir.path, context.fingerprint);
         entries.push({
           scope,
-          state,
+          state: legacyState(state),
           has_context: true,
           last_updated: context.last_updated,
           summary: context.summary,

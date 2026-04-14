@@ -1,36 +1,22 @@
 version: 1
-last_updated: 2026-02-20T16:42:18.817Z
-fingerprint: 2b109cff
+last_updated: 2026-04-14T05:57:17.729Z
+fingerprint: f5fdac24
 scope: src/utils
 summary: Utility functions.
 maintenance: |-
   If you modify files in this directory, update this .context.yaml to reflect
-  your changes. Update the files list, interfaces, and current_state sections.
+  your changes. Update the summary, and any decisions or constraints that changed.
   Do NOT update the fingerprint manually — run `context rehash` or it will be
   updated automatically on the next `context status` check.
   If you only read files in this directory, do not modify this file.
   Do not include secrets, API keys, passwords, or PII in this file.
-files:
-  - name: config.ts
-    purpose: "Exports: loadConfig, saveConfig, resolveApiKey (+1 more)"
-  - name: display.ts
-    purpose: "Exports: freshnessIcon, successMsg, warnMsg (+4 more)"
-  - name: env.ts
-    purpose: "Exports: loadEnvForCli, resolvePathFromArgv, loadEnvLocal (+1 more)"
-  - name: ignore.ts
-    purpose: "Exports: addToIgnore"
-  - name: pool.ts
-    purpose: "* Process items in parallel with bounded concurrency."
-  - name: scan-options.ts
-    purpose: "Exports: loadScanOptions"
-  - name: tokens.ts
-    purpose: "Exports: DEFAULT_MIN_TOKENS, estimateDirectoryTokens, estimateContextFileTokens (+2 more)"
 exports:
   - "async function loadConfig(rootPath: string): Promise<ConfigFile | null>"
   - "async function saveConfig(rootPath: string, config: ConfigFile): Promise<void>"
   - "function resolveApiKey(config: ConfigFile): string | undefined"
   - "function getDefaultApiKeyEnv(provider: string): string"
   - "function freshnessIcon(state: FreshnessState): string"
+  - "function freshnessIconLegacy(state: LegacyFreshnessState): string"
   - "function successMsg(msg: string): string"
   - "function warnMsg(msg: string): string"
   - "function errorMsg(msg: string): string"
@@ -49,37 +35,6 @@ exports:
   - "async function estimateContextFileTokens(dirPath: string): Promise<number>"
   - "function collectExtensions(dirs: ScanResult[]): Record<string, number>"
   - "async function filterByMinTokens( dirs: ScanResult[], minTokens?: number, ): Promise<"
-interfaces:
-  - name: loadConfig
-    description: Exported from config.ts
-  - name: saveConfig
-    description: Exported from config.ts
-  - name: resolveApiKey
-    description: Exported from config.ts
-  - name: getDefaultApiKeyEnv
-    description: Exported from config.ts
-  - name: freshnessIcon
-    description: Exported from display.ts
-  - name: successMsg
-    description: Exported from display.ts
-  - name: warnMsg
-    description: Exported from display.ts
-  - name: errorMsg
-    description: Exported from display.ts
-  - name: heading
-    description: Exported from display.ts
-  - name: loadEnvForCli
-    description: Exported from env.ts
-  - name: resolvePathFromArgv
-    description: Exported from env.ts
-  - name: loadEnvLocal
-    description: Exported from env.ts
-  - name: parseEnvLine
-    description: Exported from env.ts
-  - name: addToIgnore
-    description: Exported from ignore.ts
-  - name: poolMap
-    description: Exported from pool.ts
 dependencies:
   internal:
     - ../core/fingerprint.js
@@ -91,6 +46,7 @@ imports:
   - path: ../core/fingerprint.js
     symbols:
       - FreshnessState
+      - LegacyFreshnessState
   - path: ../core/scanner.js
     symbols:
       - ScanOptions
@@ -106,24 +62,11 @@ imports:
   - path: ./config.js
     symbols:
       - loadConfig
-internals:
-  - name: ENV_LOCAL_FILENAME
-    kind: constant
-    file: env.ts
-  - name: CONTEXTIGNORE
-    kind: constant
-    file: ignore.ts
-  - name: BYTES_PER_TOKEN
-    kind: constant
-    file: tokens.ts
 derived_fields:
   - version
   - last_updated
   - fingerprint
   - scope
-  - files
-  - interfaces
   - exports
   - dependencies.internal
   - imports
-  - internals
