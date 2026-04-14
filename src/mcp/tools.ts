@@ -550,6 +550,152 @@ export function registerTools(server: McpServer, defaultRoot: string): void {
   );
 
   server.registerTool(
+    "find_definition",
+    {
+      title: "Find Definition",
+      description:
+        "Return every definition location for a bare symbol name. Backed by the T1 index; " +
+        "results are precise for exported symbols and deterministic (sorted by file, line). " +
+        "Scope to a directory or file when a name is common. Since v0.2.",
+      inputSchema: {
+        symbol: z.string().min(1).describe("Bare symbol name. Case-sensitive. No dotted paths."),
+        scope: z
+          .object({
+            file: z.string().optional(),
+            dir: z.string().optional(),
+          })
+          .optional(),
+        limit: z.number().int().positive().max(50).optional().describe("Default 25; hard cap 50."),
+        path: z.string().optional(),
+      },
+    },
+    async (input) => {
+      const { handleFindDefinition } = await import("./nav.js");
+      const result = await handleFindDefinition(input, defaultRoot);
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+        isError: !result.ok,
+      };
+    },
+  );
+
+  server.registerTool(
+    "find_references",
+    {
+      title: "Find References",
+      description:
+        "Import-bound references only — returns identifier uses bound by a static import " +
+        "statement in the same file. Free identifiers, member-access chains, and dynamic " +
+        "imports are NOT indexed; a zero result is not proof of zero callers. Pass " +
+        "`symbol_id` from find_definition for precise results. Since v0.2.",
+      inputSchema: {
+        symbol: z.string().optional(),
+        symbol_id: z.string().optional(),
+        scope: z
+          .object({
+            file: z.string().optional(),
+            dir: z.string().optional(),
+          })
+          .optional(),
+        limit: z.number().int().positive().max(50).optional(),
+        path: z.string().optional(),
+      },
+    },
+    async (input) => {
+      const { handleFindReferences } = await import("./nav.js");
+      const result = await handleFindReferences(input, defaultRoot);
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+        isError: !result.ok,
+      };
+    },
+  );
+
+  server.registerTool(
+    "find_related",
+    {
+      title: "Find Related",
+      description:
+        "Expand a file or symbol seed into a neighborhood: importers, importees, siblings, " +
+        "and directory neighbors. Use as a precursor to build_context_pack. Results sorted " +
+        "by strength desc, then file asc. Since v0.2.",
+      inputSchema: {
+        seed: z.object({
+          file: z.string().optional(),
+          symbol: z.string().optional(),
+        }),
+        kinds: z
+          .array(z.enum(["importers", "importees", "siblings", "dir_neighbors"]))
+          .optional()
+          .describe("Default: importers, importees, dir_neighbors."),
+        max_results: z.number().int().positive().max(50).optional(),
+        path: z.string().optional(),
+      },
+    },
+    async (input) => {
+      const { handleFindRelated } = await import("./nav.js");
+      const result = await handleFindRelated(input, defaultRoot);
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+        isError: !result.ok,
+      };
+    },
+  );
+
+  server.registerTool(
+    "search_context",
+    {
+      title: "Search Context",
+      description:
+        "BM25F search over the .context.yaml corpus. Returns ranked scopes with short " +
+        "excerpts. Use the results as seeds for build_context_pack or query_context. " +
+        "Since v0.2.",
+      inputSchema: {
+        query: z.string().min(1),
+        fields: z
+          .array(z.enum(["summary", "decisions", "constraints", "symbols", "state", "facets", "path"]))
+          .optional(),
+        limit: z.number().int().positive().max(50).optional().describe("Default 10; cap 50."),
+        path: z.string().optional(),
+      },
+    },
+    async (input) => {
+      const { handleSearchContext } = await import("./nav.js");
+      const result = await handleSearchContext(input, defaultRoot);
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+        isError: !result.ok,
+      };
+    },
+  );
+
+  server.registerTool(
+    "impact",
+    {
+      title: "Impact",
+      description:
+        "Reverse-BFS over the import graph to surface files affected by a change seed " +
+        "(file or symbol). Recall-imperfect: only import-bound references are followed. " +
+        "Use to narrow scope, not to prove absence of effect. Since v0.2.",
+      inputSchema: {
+        seed: z.string().min(1),
+        kind: z.enum(["file", "symbol", "diff"]).optional().describe("Default 'file'. 'diff' is not supported in v1."),
+        max_depth: z.number().int().positive().max(10).optional(),
+        max_results: z.number().int().positive().max(500).optional(),
+        path: z.string().optional(),
+      },
+    },
+    async (input) => {
+      const { handleImpact } = await import("./nav.js");
+      const result = await handleImpact(input, defaultRoot);
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+        isError: !result.ok,
+      };
+    },
+  );
+
+  server.registerTool(
     "check_policies",
     {
       title: "Check Policies",

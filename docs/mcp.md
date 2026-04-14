@@ -1,18 +1,56 @@
 # MCP Contract
 
-autocontext exposes its tools via [Model Context Protocol](https://modelcontextprotocol.io) (stdio transport). This document defines their exact request/response shapes.
+autocontext exposes twelve tools via [Model Context Protocol](https://modelcontextprotocol.io) (stdio transport). Transport: stdio. Server version: `0.2.0`, `tools_version: 2`. Tool availability and index requirements are also advertised at the `autocontext://capabilities` resource.
 
 ## Tools Overview
 
-| Tool | Purpose | When to use |
+Grouped by intent. Recommended call sequences:
+
+- **Symbol navigation:** `find_definition` → `find_references` → `build_context_pack`
+- **Diff review:** `impact` → `explain_staleness` → `build_context_pack`
+- **Policy gating:** `check_policies` → `query_context`
+- **Corpus search:** `search_context` → `query_context` → `build_context_pack`
+
+| Group | Tool | Purpose |
 |---|---|---|
-| `list_contexts` | List all tracked directories with staleness status | First call — discover what scopes exist |
-| `check_freshness` | Check if a specific context is fresh, stale, or missing | Before relying on a context — verify it's current |
-| `query_context` | Retrieve context content with optional field filtering | Read the actual context data for a scope |
-| `aggregate_evidence` | Aggregate code health evidence across all scopes | Get project-wide test, typecheck, lint, and coverage summary |
-| `explain_staleness` | 4-state freshness classification (fresh / cosmetic_stale / semantic_stale / missing) | Distinguish cosmetic edits from API-surface changes |
-| `build_context_pack` | Token-budgeted Markdown or JSON pack from query / file / symbol seed | Assemble a focused brief for an agent |
-| `check_policies` | Evaluate typed `rules:` blocks against the local code index | Enforce import boundaries, exports, max lines, evidence, etc. |
+| Discover | `list_contexts` | List all tracked scopes with staleness status |
+| Discover | `search_context` | BM25F search over the `.context.yaml` corpus |
+| Read | `query_context` | Retrieve a scope's context content (optional field filter) |
+| Read | `check_freshness` | 3-state freshness (`fresh` / `stale` / `missing`) |
+| Read | `aggregate_evidence` | Project-wide test / typecheck / lint / coverage rollup |
+| Navigate | `find_definition` | Definition locations for a bare symbol name |
+| Navigate | `find_references` | Import-bound references to a symbol |
+| Navigate | `find_related` | Importers / importees / siblings / directory neighbors |
+| Analyze | `explain_staleness` | 4-state freshness (adds `cosmetic_stale` / `semantic_stale`) |
+| Analyze | `impact` | Reverse-BFS over import graph from a seed file or symbol |
+| Analyze | `check_policies` | Evaluate typed `rules:` blocks from the `.context.yaml` corpus |
+| Assemble | `build_context_pack` | Token-budgeted Markdown or JSON pack from a seed |
+
+### Index / BM25 requirements
+
+- **Requires the code index** (`.autocontext/index/`): `find_definition`, `find_references`, `find_related`, `impact`, `check_policies`, `explain_staleness`. Returns `{ok:false, error:{code:"INDEX_MISSING", remediation:"Run `context index`…"}}` if the index is absent. **No MCP handler rebuilds the index** (a long rebuild looks indistinguishable from a hang).
+- **Requires the context corpus** (`.context.yaml` files): `search_context`, `build_context_pack`. BM25 is built in-memory on each call (the persistent BM25 cache is deferred; see `docs/pack.md`).
+- **No prerequisites:** `query_context`, `check_freshness`, `list_contexts`, `aggregate_evidence`.
+
+### Capability resource
+
+Clients may read `autocontext://capabilities` to discover tool versioning:
+
+```json
+{
+  "server_version": "0.2.0",
+  "tools_version": 2,
+  "tools": [
+    { "name": "aggregate_evidence", "since": 1 },
+    { "name": "build_context_pack", "since": 2 },
+    ...
+  ],
+  "index": { "required_by": ["find_definition", "find_references", "find_related", "impact", "check_policies", "explain_staleness"] },
+  "bm25": { "required_by": ["search_context", "build_context_pack"] }
+}
+```
+
+Additive changes to existing tools (new optional inputs or output fields) do not bump `tools_version`. Breaking changes do; removed tools get one release cycle of `stderr` deprecation warnings first.
 
 **Recommended call sequences:**
 - Content: `list_contexts` → `check_freshness` → `query_context`
@@ -336,11 +374,99 @@ Per-scope errors do not prevent aggregation of valid scopes.
 
 ---
 
+## Navigation Tools (since v0.2)
+
+### `find_definition`
+
+Return every definition location for a bare symbol name.
+
+**Input:** `{ symbol, scope?: { file?, dir? }, limit?, path? }` — default limit 25, hard cap 50.
+**Output:** `{ ok, symbol, results[], truncated, total_matched }` where each result carries `symbol_id`, `file`, `kind`, `exported`, `span`, `signature?`, `lang`. Results sort by `(file, span.startLine)`. Empty result set is `ok: true`, not an error.
+
+### `find_references`
+
+**Import-bound references only.** Returns identifier uses bound by a static import statement in the same file. Free identifiers, member-access chains, and dynamic imports are NOT indexed — a zero result is not proof of zero callers.
+
+**Input:** `{ symbol? | symbol_id?, scope?, limit?, path? }` — exactly one of `symbol`/`symbol_id`. Prefer `symbol_id` (from `find_definition`) for disambiguation.
+**Output:** `{ ok, targets[], references[], truncated, total_matched, reference_kind: "import_bound", caveat }`. The caveat string is pinned.
+
+### `find_related`
+
+Expand a seed into a neighborhood before assembling a pack.
+
+**Input:** `{ seed: { file? | symbol? }, kinds?, max_results?, path? }` — default kinds `["importers","importees","dir_neighbors"]`. `siblings` is opt-in (often dominates on flat directories).
+**Output:** `{ ok, seed: { kind, resolved_file, resolved_symbol_id? }, related[], truncated, total_matched }`. Each entry: `{ file, reason, strength }`. Sorts by `strength DESC, file ASC`.
+
+### `search_context`
+
+BM25F over the `.context.yaml` corpus — zones: `summary`, `decisions`, `constraints`, `symbols`, `state`, `facets`, `path`.
+
+**Input:** `{ query, fields?, limit?, path? }` — default limit 10, hard cap 50.
+**Output:** `{ ok, query, results[], truncated, total_matched }`. Each result carries `{ scope, score, matches: [{ zone, excerpt }], summary?, last_updated? }`. Scores round to 4 decimals; same query on unchanged corpus returns byte-identical JSON.
+
+### `impact`
+
+Reverse-BFS over the import graph.
+
+**Input:** `{ seed, kind?: "file" | "symbol" | "diff", max_depth?, max_results?, path? }` — default `kind: "file"`. `kind: "diff"` is reserved; v1 returns `INVALID_INPUT`.
+**Output:** `{ ok, seeds, affected, affected_scopes, stopped, caveat }`. Recall-imperfect — use to narrow a review, not to prove absence of effect. See [docs/impact.md](impact.md).
+
+### `build_context_pack`
+
+Token-budgeted pack. See [docs/pack.md](pack.md) for the full reference. Inputs: `{ query? | file? | symbol?, budget?, format?: "md"|"json", path? }`. Default budget 4000. Output delivered as a single `text` content item.
+
+### `explain_staleness`
+
+4-state freshness classification (`fresh` / `cosmetic_stale` / `semantic_stale` / `missing`). See [docs/freshness.md](freshness.md). Degrades to the disk-fingerprint-only view when the code index is absent (logs `error: "INDEX_MISSING"` but still returns a usable envelope).
+
+### `check_policies`
+
+Evaluate typed `rules:` blocks. See [docs/policies.md](policies.md). Input: `{ scope?, rule_kinds?, path? }`. Output: `{ ok, scope, rules_evaluated, rules_passed, violations, index_state, truncated, contexts_scanned }`. Violation array capped at 500; `truncated: true` signals the cap.
+
+## Error Envelopes (since v0.2)
+
+Navigation tools (and `impact`, `check_policies`, `explain_staleness`, `build_context_pack`) use a uniform error shape:
+
+```json
+{
+  "ok": false,
+  "error": {
+    "code": "INDEX_MISSING",
+    "message": "Code index not found at .autocontext/index/.",
+    "remediation": "Run `context index` in the project root, then retry."
+  }
+}
+```
+
+| Code | When |
+|---|---|
+| `INDEX_MISSING` | `.autocontext/index/` absent or version-mismatched |
+| `NOT_FOUND` | `symbol_id` / seed file does not resolve |
+| `INVALID_INPUT` | mutually-exclusive input violated, or unsupported seed kind |
+| `PATH_TRAVERSAL` | `scope.file`, `scope.dir`, or `seed.file` escapes project root |
+| `INTERNAL` | unhandled exception, message sanitized |
+
+Legacy tools (`query_context`, `check_freshness`, `list_contexts`, `aggregate_evidence`) keep their existing ad-hoc error strings for compat.
+
+## Response Size Limits (since v0.2)
+
+| Tool | Default limit | Hard cap | Serialized ceiling |
+|---|---|---|---|
+| `find_definition` | 25 | 50 | 10 KB |
+| `find_references` | 50 | 50 | 10 KB |
+| `find_related` | 25 | 50 | 10 KB |
+| `search_context` | 10 | 50 | 10 KB |
+| `impact` | 100 files | 500 | — |
+| `check_policies` | 500 violations | 500 | — |
+| `build_context_pack` | budget-aware | 50 KB | — |
+
+No cursor-based pagination in v1. When a caller hits truncation (`truncated: true`, `total_matched` set), narrow via `scope.dir` / `scope.file` / `symbol_id` / a more specific `query`.
+
 ## Common Patterns
 
 ### Path override
 
-All four tools accept an optional `path` parameter that overrides the default project root configured when the MCP server was started. This is useful when a single MCP server instance needs to serve multiple projects.
+All tools accept an optional `path` parameter that overrides the default project root configured when the MCP server was started. Useful when a single MCP server instance needs to serve multiple projects.
 
 ### Backslash normalization
 
@@ -350,7 +476,9 @@ Scope paths with backslashes (Windows-style) are automatically normalized to for
 
 ## Compatibility Rules
 
-- Within schema v1, existing response fields will not change type or be removed
-- New optional fields may be added to response objects at any time
-- New tools may be added; existing tool input schemas may gain optional parameters
-- Consumers should ignore unknown fields rather than fail on them
+- Within schema v1, existing response fields will not change type or be removed.
+- New optional fields may be added to response objects at any time.
+- New tools may be added; existing tool input schemas may gain optional parameters.
+- Consumers should ignore unknown fields rather than fail on them.
+- Capability resource shape is guaranteed stable within `tools_version: 2`.
+- `list_contexts` and `check_freshness` stay on the 3-state enum for legacy clients; 4-state freshness lives exclusively on `explain_staleness`.

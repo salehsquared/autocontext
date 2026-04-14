@@ -476,7 +476,7 @@ describe("registerTools", () => {
     };
 
     registerTools(server, tmpDir);
-    expect(registered).toHaveLength(7);
+    expect(registered).toHaveLength(12);
   });
 
   it("all tool names are correct", async () => {
@@ -498,6 +498,11 @@ describe("registerTools", () => {
     expect(registered).toContain("explain_staleness");
     expect(registered).toContain("build_context_pack");
     expect(registered).toContain("check_policies");
+    expect(registered).toContain("find_definition");
+    expect(registered).toContain("find_references");
+    expect(registered).toContain("find_related");
+    expect(registered).toContain("search_context");
+    expect(registered).toContain("impact");
   });
 
   it("tool descriptions are non-empty strings", async () => {

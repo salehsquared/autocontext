@@ -37,7 +37,7 @@ describe("startMcpServer", () => {
   it("creates server, registers tools, and connects stdio transport", async () => {
     await startMcpServer("/tmp/project");
 
-    expect(McpServer).toHaveBeenCalledWith({ name: "autocontext", version: "0.1.0" });
+    expect(McpServer).toHaveBeenCalledWith({ name: "autocontext", version: "0.2.0" });
     expect(registerTools).toHaveBeenCalledWith(mockServer, "/tmp/project");
     expect(StdioServerTransport).toHaveBeenCalledTimes(1);
     expect(connect).toHaveBeenCalledTimes(1);
