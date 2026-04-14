@@ -1,6 +1,6 @@
-# AGENTS.md
+# Copilot instructions
 
-> Instructions for AI coding agents working in this repository.
+> These apply to all GitHub Copilot chat sessions in this repository.
 > Project: autocontext
 
 <!-- autocontext:agents-section -->

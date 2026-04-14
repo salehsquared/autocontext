@@ -423,15 +423,24 @@ describe("constants", () => {
     expect(SCHEMA_VERSION).toBe(1);
   });
 
-  it("DEFAULT_MAINTENANCE contains lean update instruction", () => {
-    expect(DEFAULT_MAINTENANCE).toContain("update this .context.yaml");
-    expect(DEFAULT_MAINTENANCE).toContain("summary, and any decisions or constraints");
-    expect(DEFAULT_MAINTENANCE).toContain("Do not include secrets");
+  it("DEFAULT_MAINTENANCE is a compact lean-mode instruction", () => {
+    expect(DEFAULT_MAINTENANCE).toContain("Read-only visit");
+    expect(DEFAULT_MAINTENANCE).toContain("summary");
+    expect(DEFAULT_MAINTENANCE).toContain("decisions");
+    expect(DEFAULT_MAINTENANCE).toContain("constraints");
+    expect(DEFAULT_MAINTENANCE).toContain("context rehash");
+    expect(DEFAULT_MAINTENANCE).toContain("No secrets");
+    // Compression target: one line.
+    expect(DEFAULT_MAINTENANCE.includes("\n")).toBe(false);
   });
 
-  it("FULL_MAINTENANCE contains verbose update instruction", () => {
-    expect(FULL_MAINTENANCE).toContain("update this .context.yaml");
-    expect(FULL_MAINTENANCE).toContain("files list, interfaces, and current_state");
-    expect(FULL_MAINTENANCE).toContain("Do not include secrets");
+  it("FULL_MAINTENANCE is a compact full-mode instruction", () => {
+    expect(FULL_MAINTENANCE).toContain("Read-only visit");
+    expect(FULL_MAINTENANCE).toContain("files");
+    expect(FULL_MAINTENANCE).toContain("interfaces");
+    expect(FULL_MAINTENANCE).toContain("current_state");
+    expect(FULL_MAINTENANCE).toContain("context rehash");
+    expect(FULL_MAINTENANCE).toContain("No secrets");
+    expect(FULL_MAINTENANCE.includes("\n")).toBe(false);
   });
 });

@@ -8,7 +8,12 @@ import { createProvider } from "../providers/index.js";
 import { loadConfig, resolveApiKey } from "../utils/config.js";
 import { loadScanOptions } from "../utils/scan-options.js";
 import { successMsg, errorMsg, warnMsg, progressBar, freshnessIcon, dim } from "../utils/display.js";
-import { updateAgentsMd } from "../core/markdown-writer.js";
+import {
+  updateAgentsFiles,
+  resolveAgentsFormats,
+  parseAgentsFormats,
+  type AgentsUpdateResult,
+} from "../core/markdown-writer.js";
 import { poolMap } from "../utils/pool.js";
 import { filterByMinTokens, estimateDirectoryTokens, estimateContextFileTokens } from "../utils/tokens.js";
 import type { ContextFile } from "../core/schema.js";
@@ -60,6 +65,17 @@ function printMetrics(metrics: GenerationMetrics): void {
   console.log(dim(`    completed in ${elapsed}s`));
 }
 
+function reportAgentsResults(results: AgentsUpdateResult[]): void {
+  for (const r of results) {
+    if (r.action === "skipped") continue;
+    const verb =
+      r.action === "created" ? "created"
+      : r.action === "appended" ? "updated (section appended)"
+      : "updated (section refreshed)";
+    console.log(successMsg(`${r.path} ${verb}`));
+  }
+}
+
 export async function regenCommand(
   targetPath: string | undefined,
   options: {
@@ -69,6 +85,7 @@ export async function regenCommand(
     path?: string;
     evidence?: boolean;
     noAgents?: boolean;
+    agentsFormat?: string;
     stale?: boolean;
     /** Subset of --stale: regenerate only directories whose semantic
      *  fingerprint differs. Skips cosmetic_stale (formatter churn). Used by
@@ -317,13 +334,13 @@ export async function regenCommand(
     const projectName = rootContext?.project?.name ?? "this project";
 
     try {
-      const action = await updateAgentsMd(rootPath, entries, projectName);
-      if (action === "created") console.log(successMsg("AGENTS.md created"));
-      else if (action === "appended") console.log(successMsg("AGENTS.md updated (section appended)"));
-      else if (action === "replaced") console.log(successMsg("AGENTS.md updated (section refreshed)"));
+      const cliFormats = parseAgentsFormats(options.agentsFormat);
+      const formats = resolveAgentsFormats(rootPath, cliFormats, config?.agents?.formats);
+      const results = await updateAgentsFiles(rootPath, entries, projectName, formats);
+      reportAgentsResults(results);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      console.log(warnMsg(`AGENTS.md: ${msg}`));
+      console.log(warnMsg(`agent instructions: ${msg}`));
     }
   }
 

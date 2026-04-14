@@ -118,7 +118,8 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
     .description("Scan project and generate all .context.yaml files")
     .option("--llm", "Use LLM provider for richer context generation")
     .option("--evidence", "Collect test/typecheck evidence from existing artifacts")
-    .option("--no-agents", "Skip AGENTS.md generation")
+    .option("--no-agents", "Skip agent instruction file generation")
+    .option("--agents-format <csv>", "Which agent files to emit: agents,claude,copilot,cursor,all,none")
     .option("--full", "Generate verbose context (files, interfaces, dependencies)")
     .option("--parallel <n>", "Process directories in parallel (n = concurrency)", parseInt)
     .option("-p, --path <path>", "Project root path")
@@ -133,6 +134,7 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
         path: opts.path,
         evidence: opts.evidence,
         noAgents: opts.agents === false,
+        agentsFormat: opts.agentsFormat,
         parallel: opts.parallel,
         full: opts.full,
       });
@@ -154,7 +156,8 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
     .option("--force", "Overwrite without confirmation")
     .option("--no-llm", "Use static analysis only")
     .option("--evidence", "Collect test/typecheck evidence from existing artifacts")
-    .option("--no-agents", "Skip AGENTS.md generation")
+    .option("--no-agents", "Skip agent instruction file generation")
+    .option("--agents-format <csv>", "Which agent files to emit: agents,claude,copilot,cursor,all,none")
     .option("--stale", "Only regenerate stale or missing contexts")
     .option("--semantic-stale", "Like --stale, but skip cosmetic-only drift (requires index)")
     .option("--dry-run", "Preview what would be regenerated without changes")
@@ -174,6 +177,7 @@ export function createProgram(handlers: CommandHandlers = defaultHandlers): Comm
         path: opts.path,
         evidence: opts.evidence,
         noAgents: opts.agents === false,
+        agentsFormat: opts.agentsFormat,
         stale: opts.stale,
         semanticStale: opts.semanticStale,
         dryRun: opts.dryRun,

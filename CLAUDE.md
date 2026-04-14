@@ -1,6 +1,6 @@
-# AGENTS.md
+# CLAUDE.md
 
-> Instructions for AI coding agents working in this repository.
+> Instructions for Claude (and other AI coding agents) in this repository.
 > Project: autocontext
 
 <!-- autocontext:agents-section -->

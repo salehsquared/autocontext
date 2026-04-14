@@ -660,6 +660,26 @@
         }
       },
       "additionalProperties": false
+    },
+    "agents": {
+      "description": "Which agent instruction files to emit (AGENTS / CLAUDE / Copilot / Cursor)",
+      "type": "object",
+      "properties": {
+        "formats": {
+          "description": "Which agent instruction files to emit/update. Defaults: auto-detect existing, else ['agents'].",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "agents",
+              "claude",
+              "copilot",
+              "cursor"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
     }
   },
   "required": [
