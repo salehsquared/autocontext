@@ -1,6 +1,6 @@
 version: 1
-last_updated: 2026-04-14T02:54:00.365Z
-fingerprint: 176da665
+last_updated: 2026-04-14T02:58:11.545Z
+fingerprint: b4d786d5
 scope: src/index
 summary: Source directory.
 maintenance: |-
@@ -46,6 +46,7 @@ dependencies:
     - ./fingerprint.js
     - ./lock.js
     - ./paths.js
+    - ./py-analyzer.js
     - ./resolve.js
     - ./shard.js
     - ./store.js
@@ -87,6 +88,10 @@ imports:
       - shardPath
       - tmpDir
       - toFileId
+  - path: ./py-analyzer.js
+    symbols:
+      - analyzePython
+      - isPython
   - path: ./resolve.js
     symbols:
       - createResolverContext
@@ -100,7 +105,10 @@ imports:
       - OpenIndexOptions
   - path: ./ts-analyzer.js
     symbols:
+      - AnalysisMode
       - AnalysisOutput
+      - LocalBinding
+      - TentativeReference
       - analyzeTsLike
       - isTsLike
   - path: ./types.js

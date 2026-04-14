@@ -1,4 +1,5 @@
 import { extname } from "node:path";
+import { analyzePython, isPython } from "./py-analyzer.js";
 import { analyzeTsLike, isTsLike, type AnalysisOutput } from "./ts-analyzer.js";
 import type { FileId } from "./types.js";
 
@@ -15,6 +16,9 @@ export async function analyzeFile(
   if (isTsLike(ext)) {
     return analyzeTsLike(content, fileId, ext);
   }
+  if (isPython(ext)) {
+    return analyzePython(content, fileId);
+  }
   return {
     symbols: [],
     imports: [],
@@ -24,7 +28,7 @@ export async function analyzeFile(
 }
 
 export function analyzerSupports(ext: string): boolean {
-  return isTsLike(ext);
+  return isTsLike(ext) || isPython(ext);
 }
 
 export type { AnalysisOutput, TentativeReference } from "./ts-analyzer.js";

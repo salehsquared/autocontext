@@ -87,7 +87,61 @@ export function resolveImport(
   if ([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"].includes(ext)) {
     return resolveTsImport(fromFile, rawSpecifier, ctx);
   }
+  if (ext === ".py") {
+    return resolvePyImport(fromFile, rawSpecifier, ctx);
+  }
   // Other languages handled in future commits.
+  return null;
+}
+
+/**
+ * Resolve a Python import. Handles both `from X import Y` and `import X`.
+ * Absolute imports walk up from the file's directory looking for the module
+ * as either `<name>.py` or `<name>/__init__.py`. Relative imports (`.x`,
+ * `..pkg.x`) apply the dot count then join with the rest.
+ */
+export function resolvePyImport(
+  fromFile: FileId,
+  rawSpecifier: string,
+  ctx: ResolverContext,
+): FileId | null {
+  const dotMatch = rawSpecifier.match(/^(\.+)(.*)$/);
+  const fromDir = posix.dirname(fromFile);
+
+  if (dotMatch) {
+    const dots = dotMatch[1].length;
+    const rest = dotMatch[2];
+    let base = fromDir;
+    for (let i = 1; i < dots; i++) {
+      base = posix.dirname(base);
+      if (base === ".") base = "";
+    }
+    const joined = rest
+      ? posix.join(base || ".", rest.replace(/\./g, "/"))
+      : base || ".";
+    return pyCandidate(joined, ctx);
+  }
+
+  const modulePath = rawSpecifier.replace(/\./g, "/");
+  let cur = fromDir;
+  // Cap the ancestor walk so we can't loop forever on odd FileId shapes.
+  for (let depth = 0; depth < 32; depth++) {
+    const joined = cur === "." || cur === "" ? modulePath : posix.join(cur, modulePath);
+    const found = pyCandidate(joined, ctx);
+    if (found) return found;
+    const parent = posix.dirname(cur);
+    if (parent === cur) break;
+    cur = parent;
+  }
+  return null;
+}
+
+function pyCandidate(joined: string, ctx: ResolverContext): FileId | null {
+  const normalized = joined.replace(/^\.?\//, "").replace(/^\.$/, "");
+  const withExt = normalized === "" ? "" : `${normalized}.py`;
+  if (withExt && ctx.fileSet.has(withExt)) return withExt;
+  const pkg = normalized === "" ? "__init__.py" : `${normalized}/__init__.py`;
+  if (ctx.fileSet.has(pkg)) return pkg;
   return null;
 }
 
