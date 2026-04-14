@@ -144,6 +144,25 @@ export async function generateLLMContext(
     }
   }
 
+  // Overlay lightweight T5-A extractors — static extraction is authoritative
+  // for these fields, so any LLM output is overwritten.
+  const { extractEnvironment } = await import("./extractors/environment.js");
+  const { extractTesting } = await import("./extractors/testing.js");
+  const { extractTodos } = await import("./extractors/todos.js");
+  const { extractConfig } = await import("./extractors/config.js");
+  const envVars = await extractEnvironment(scanResult);
+  if (envVars.length > 0) context.environment = envVars;
+  else delete context.environment;
+  const testingEntries = await extractTesting(scanResult);
+  if (testingEntries.length > 0) context.testing = testingEntries;
+  else delete context.testing;
+  const todoEntries = await extractTodos(scanResult);
+  if (todoEntries.length > 0) context.todos = todoEntries;
+  else delete context.todos;
+  const configEntries = await extractConfig(scanResult);
+  if (configEntries.length > 0) context.config = configEntries;
+  else delete context.config;
+
   // Collect evidence (per-directory, opt-in)
   if (options?.evidence) {
     // Compute newest source file mtime for staleness comparison
@@ -172,6 +191,10 @@ export async function generateLLMContext(
   if (context.subdirectories) derivedFields.push("subdirectories");
   if (context.project) derivedFields.push("project");
   if (context.evidence) derivedFields.push("evidence");
+  if (context.environment) derivedFields.push("environment");
+  if (context.testing) derivedFields.push("testing");
+  if (context.todos) derivedFields.push("todos");
+  if (context.config) derivedFields.push("config");
   context.derived_fields = derivedFields;
 
   // Validate against schema — if it fails, fall back to a minimal valid context

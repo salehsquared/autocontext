@@ -9,6 +9,10 @@ import { detectExternalDeps, detectInternalDeps } from "./dependencies.js";
 import { detectImportBindings } from "./imports.js";
 import { detectInternals } from "./internals.js";
 import { collectBasicEvidence } from "./evidence.js";
+import { extractEnvironment } from "./extractors/environment.js";
+import { extractTesting } from "./extractors/testing.js";
+import { extractTodos } from "./extractors/todos.js";
+import { extractConfig } from "./extractors/config.js";
 
 export type SummarySource = "project" | "docstring" | "dirname" | "pattern" | "fallback";
 
@@ -119,6 +123,20 @@ export async function generateStaticContext(
     }
   }
 
+  // Lightweight extractors (T5-A): environment, testing, todos, config.
+  // All run in both lean and full modes — they're small arrays of strings.
+  const envVars = await extractEnvironment(scanResult);
+  if (envVars.length > 0) context.environment = envVars;
+
+  const testingEntries = await extractTesting(scanResult);
+  if (testingEntries.length > 0) context.testing = testingEntries;
+
+  const todoEntries = await extractTodos(scanResult);
+  if (todoEntries.length > 0) context.todos = todoEntries;
+
+  const configEntries = await extractConfig(scanResult);
+  if (configEntries.length > 0) context.config = configEntries;
+
   // Root-level: always add project metadata and structure
   if (isRoot) {
     context.project = (await detectProjectMeta(scanResult.path)) ?? {
@@ -168,6 +186,10 @@ export async function generateStaticContext(
   if (context.project) derivedFields.push("project");
   if (context.structure) derivedFields.push("structure");
   if (context.evidence) derivedFields.push("evidence");
+  if (context.environment) derivedFields.push("environment");
+  if (context.testing) derivedFields.push("testing");
+  if (context.todos) derivedFields.push("todos");
+  if (context.config) derivedFields.push("config");
   context.derived_fields = derivedFields;
 
   return { context, summarySource };

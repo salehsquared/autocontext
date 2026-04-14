@@ -1,0 +1,42 @@
+version: 1
+last_updated: 2026-04-14T06:13:57.737Z
+fingerprint: 976df774
+scope: src/generator/extractors
+summary: Source directory.
+maintenance: |-
+  If you modify files in this directory, update this .context.yaml to reflect
+  your changes. Update the summary, and any decisions or constraints that changed.
+  Do NOT update the fingerprint manually — run `context rehash` or it will be
+  updated automatically on the next `context status` check.
+  If you only read files in this directory, do not modify this file.
+  Do not include secrets, API keys, passwords, or PII in this file.
+dependencies:
+  internal:
+    - ../../core/scanner.js
+    - ./shared.js
+exports:
+  - "async function extractConfig(scanResult: ScanResult): Promise<string[]>"
+  - "async function extractEnvironment(scanResult: ScanResult): Promise<string[]>"
+  - "async function readIfExists(path: string): Promise<string | null>"
+  - "async function statIfExists(path: string): Promise<boolean>"
+  - "function stripComments(content: string, ext: string): string"
+  - "async function extractTesting(scanResult: ScanResult): Promise<string[]>"
+  - "async function extractTodos(scanResult: ScanResult): Promise<string[]>"
+imports:
+  - path: ../../core/scanner.js
+    symbols:
+      - ScanResult
+  - path: ./shared.js
+    symbols:
+      - readIfExists
+      - statIfExists
+      - stripComments
+derived_fields:
+  - version
+  - last_updated
+  - fingerprint
+  - scope
+  - exports
+  - dependencies.internal
+  - imports
+semantic_fingerprint: 76440f882a5f
