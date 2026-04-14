@@ -59,6 +59,18 @@ Shard key = first path segment of the keying file; root files land in
   `fs.rename` into place. A crashed writer leaves a stray tmp file that the
   next open sweeps.
 
+## Not yet indexed
+
+The v1 analyzer supports TypeScript, JavaScript, and Python. Go and Rust
+files are scanned by the existing static analysis pipeline for `.context.yaml`
+generation but do **not** produce `Symbol` / `ImportEdge` / `Reference` rows in
+this index. The tree-sitter queries for Go (`selector_expression` →
+package-qualified references) and Rust (`use_declaration` →
+`use`-introduced bindings) are spec'd in the T1-B plan; dropping them in is
+straightforward when a fixture and precision budget exist. Callers that
+consume the index (impact analysis, pack retrieval, policy) should treat
+Go and Rust files as "no graph data available" for now.
+
 ## Caveats
 
 - **Local filesystems only.** NFS flock semantics are unreliable; NFS-mounted

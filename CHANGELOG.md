@@ -44,6 +44,14 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) an
 - Scanner's `ALWAYS_IGNORE` now includes `.autocontext` so the index
   directory is never traversed during generation.
 
+### Not yet indexed
+
+- **Go and Rust** — tree-sitter queries are spec'd in the T1-B plan
+  (package-qualified `selector_expression` for Go, `use_declaration`
+  bindings for Rust) but no analyzer ships in this release. `.go` / `.rs`
+  files are ignored by the index for now; they continue to work for
+  `.context.yaml` generation via the existing pipeline.
+
 ## [0.1.0] - 2026-02-13
 
 Initial public release.
